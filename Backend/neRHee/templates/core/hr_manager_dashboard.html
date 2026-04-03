@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Responsable RH Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">💼 Tableau de Bord Responsable RH</h1>
+                    <p class="text-muted mb-0">Bienvenue, {{ user.get_full_name }}!</p>
+                </div>
+                <div>
+                    <span class="badge bg-success fs-6">{{ "now"|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if new_employees_today %}
+    <!-- New Employees Today -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="fas fa-star"></i> 🎉 Nouveau(x) Employé(s) du Jour</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for employee in new_employees_today %}
+                        <div class="text-center" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 180px;">
+                            {% if employee.photo %}
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" class="rounded-circle mb-2" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid white;">
+                            {% else %}
+                                <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background: rgba(255,255,255,0.3); font-size: 24px;">👤</div>
+                            {% endif %}
+                            <div class="fw-bold mb-1">{{ employee.user.get_full_name }}</div>
+                            <div class="small opacity-75">{{ employee.poste|default:"Poste non défini" }}</div>
+                            <div class="small opacity-75">{{ employee.service|default:"Service non défini" }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if active_job_offers %}
+    <!-- Job Offers Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="fas fa-briefcase"></i> 💼 Offres d'Emploi Actives</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for job_offer in active_job_offers %}
+                        <div class="text-left" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 280px; flex: 1;">
+                            <div class="fw-bold mb-2" style="font-size: 16px;">{{ job_offer.title }}</div>
+                            <div class="small opacity-75 mb-1">📍 {{ job_offer.department }}</div>
+                            <div class="small opacity-75 mb-2">🎯 {{ job_offer.get_experience_level_display }}</div>
+                            <div class="small opacity-75 mb-3">{{ job_offer.description|truncatewords:15 }}</div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'recruitment:job_offer_detail' job_offer.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none;">Gérer</a>
+                                <a href="{% url 'recruitment:public_job_detail' job_offer.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.3); color: white; border: none;">Voir Public</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Employés Actifs</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_employees|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Demandes Pendantes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_requests|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Formations Actives</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_trainings|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Contrats Expirants</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ expiring_contracts|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-contract fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🛠️ Actions Principales</h4>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Gestion Employés</h5>
+                    <p class="card-text">Consulter et gérer les profils des employés et stagiaires</p>
+                    <a href="{% url 'employee_list' %}" class="btn btn-primary">Voir Employés</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tasks fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">Gestion Demandes</h5>
+                    <p class="card-text">Traiter et approuver les demandes des employés</p>
+                    <a href="{% url 'manage_requests' %}" class="btn btn-warning">Gérer Demandes</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-contract fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Gestion Contrats</h5>
+                    <p class="card-text">Gérer les contrats et renouvellements</p>
+                    <a href="{% url 'manage_contracts' %}" class="btn btn-success">Voir Contrats</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-graduation-cap fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">Formations</h5>
+                    <p class="card-text">Créer et gérer les programmes de formation</p>
+                    <a href="{% url 'manage_training' %}" class="btn btn-info">Gérer Formations</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-book fa-3x text-secondary"></i>
+                    </div>
+                    <h5 class="card-title">Politiques RH</h5>
+                    <p class="card-text">Consulter les politiques de l'entreprise</p>
+                    <a href="{% url 'hr_policies' %}" class="btn btn-secondary">Voir Politiques</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-alt fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="card-title">Événements</h5>
+                    <p class="card-text">Créer et gérer les événements d'entreprise</p>
+                    <a href="{% url 'manage_events' %}" class="btn btn-danger">Gérer Événements</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-tie fa-3x text-purple"></i>
+                    </div>
+                    <h5 class="card-title">Recrutement</h5>
+                    <p class="card-text">Gérer les offres d'emploi et candidatures</p>
+                    <a href="{% url 'recruitment:recruitment_dashboard' %}" class="btn btn-purple">Gérer Recrutement</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-rocket fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Onboarding</h5>
+                    <p class="card-text">Intégration des nouveaux employés</p>
+                    <a href="{% url 'onboarding_dashboard' %}" class="btn btn-success">Gérer Onboarding</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">⚡ Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'create_employee' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-plus"></i> Nouvel Employé
+                        </a>
+                        <a href="{% url 'create_contract_general' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-plus"></i> Nouveau Contrat
+                        </a>
+                        <a href="{% url 'create_training' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-plus"></i> Nouvelle Formation
+                        </a>
+                        <a href="{% url 'expiring_contracts' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-exclamation-triangle"></i> Contrats Expirants
+                        </a>
+                        <a href="{% url 'create_event' %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-calendar-plus"></i> Nouvel Événement
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.text-xs { font-size: 0.7rem; }
+.shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
+</style>
+{% endblock %}

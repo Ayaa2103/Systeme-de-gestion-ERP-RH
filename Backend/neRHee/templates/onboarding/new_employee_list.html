@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Nouveaux Employés{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">👥 Nouveaux Employés</h1>
+                <a href="{% url 'new_employee_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Ajouter Employé
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nom Complet</th>
+                            <th>Poste</th>
+                            <th>Département</th>
+                            <th>Date de Début</th>
+                            <th>Manager Assigné</th>
+                            <th>Progression</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in new_employees %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'new_employee_detail' employee.pk %}" class="text-decoration-none">
+                                    {{ employee.full_name }}
+                                </a>
+                            </td>
+                            <td>{{ employee.position }}</td>
+                            <td>{{ employee.department }}</td>
+                            <td>{{ employee.start_date|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if employee.assigned_manager %}
+                                    {{ employee.assigned_manager.user.get_full_name }}
+                                {% else %}
+                                    <span class="text-muted">Non assigné</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress mr-2" style="width: 100px;">
+                                        <div class="progress-bar {% if employee.onboarding_progress == 100 %}bg-success{% elif employee.onboarding_progress > 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" style="width: {{ employee.onboarding_progress }}%"></div>
+                                    </div>
+                                    <span class="font-weight-bold">{{ employee.onboarding_progress }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'new_employee_detail' employee.pk %}" class="btn btn-sm btn-info" title="Voir détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'new_employee_edit' employee.pk %}" class="btn btn-sm btn-warning" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'checklist_view' employee.pk %}" class="btn btn-sm btn-success" title="Checklist">
+                                        <i class="fas fa-tasks"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Aucun nouvel employé trouvé</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

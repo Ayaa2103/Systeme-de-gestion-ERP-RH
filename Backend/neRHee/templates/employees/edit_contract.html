@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier Contrat{% endblock %}
+
+{% block content %}
+<h1>Modifier le Contrat</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="type">Type de contrat:</label>
+        <select id="type" name="type" required>
+            <option value="CDI" {% if contract.type == 'CDI' %}selected{% endif %}>CDI</option>
+            <option value="CDD" {% if contract.type == 'CDD' %}selected{% endif %}>CDD</option>
+            <option value="Stage" {% if contract.type == 'Stage' %}selected{% endif %}>Stage</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="date_debut">Date de début:</label>
+        <input type="date" id="date_debut" name="date_debut" value="{{ contract.date_debut|date:'Y-m-d' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="date_fin">Date de fin:</label>
+        <input type="date" id="date_fin" name="date_fin" value="{% if contract.date_fin %}{{ contract.date_fin|date:'Y-m-d' }}{% endif %}">
+    </div>
+    <div class="form-group">
+        <label for="salaire">Salaire:</label>
+        <input type="number" step="0.01" id="salaire" name="salaire" value="{{ contract.salaire }}">
+    </div>
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="active" {% if contract.active %}checked{% endif %}> Contrat actif
+        </label>
+    </div>
+    
+    <button type="submit" class="btn">Sauvegarder</button>
+    <a href="{% url 'contract_detail' contract.id %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

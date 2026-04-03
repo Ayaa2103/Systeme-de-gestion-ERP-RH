@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier Politique RH{% endblock %}
+
+{% block content %}
+<h1>Modifier la Politique RH</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="name">Nom de la politique:</label>
+        <input type="text" id="name" name="name" value="{{ policy.name }}" required>
+    </div>
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" rows="6" required>{{ policy.description }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="is_active" {% if policy.is_active %}checked{% endif %}> Politique active
+        </label>
+    </div>
+    
+    <button type="submit" class="btn">Sauvegarder</button>
+    <a href="{% url 'hr_policies' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

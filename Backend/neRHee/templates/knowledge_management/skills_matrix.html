@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Matrice des Compétences par Département{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>Matrice des Compétences par Département</h3>
+                        <div class="d-flex align-items-center">
+                            <select id="departmentFilter" class="form-control form-control-sm mr-2" style="width: 200px;">
+                                <option value="">Sélectionner un département</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>
+                                        {{ dept.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{% url 'knowledge_management:dashboard' %}" class="btn btn-secondary">Retour</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if selected_department_obj %}
+                        <div class="alert alert-info">
+                            <h5>{{ selected_department_obj.name }}</h5>
+                            <p class="mb-0">{{ selected_department_obj.description }}</p>
+                            <small>{{ employees_count }} employés • {{ skills_count }} compétences</small>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Employé</th>
+                                        {% for skill in skills %}
+                                        <th class="text-center" style="min-width: 120px;">
+                                            {{ skill.name }}
+                                            {% if skill.category %}
+                                            <br><small>({{ skill.category }})</small>
+                                            {% endif %}
+                                        </th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in matrix_data %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'knowledge_management:employee_skills' data.employee.id %}">
+                                                {{ data.employee.user.get_full_name }}
+                                            </a>
+                                            <br><small>{{ data.employee.poste }}</small>
+                                        </td>
+                                        {% for emp_skill in data.skills_list %}
+                                        <td class="text-center">
+                                            {% if emp_skill %}
+                                                <a href="{% url 'knowledge_management:quick_skill_update' data.employee.id emp_skill.skill.id %}" 
+                                                   class="badge text-decoration-none
+                                                    {% if emp_skill.level == 4 %}bg-success
+                                                    {% elif emp_skill.level == 3 %}bg-info
+                                                    {% elif emp_skill.level == 2 %}bg-warning
+                                                    {% elif emp_skill.level == 1 %}bg-secondary
+                                                    {% else %}bg-light text-dark{% endif %}" 
+                                                   title="Cliquer pour modifier">
+                                                    {{ emp_skill.get_level_display }}
+                                                    {% if emp_skill.certified %}<i class="fas fa-certificate ml-1"></i>{% endif %}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="{{ skills.count|add:1 }}" class="text-center">
+                                            Aucun employé dans ce département
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                            <h4>Sélectionnez un département</h4>
+                            <p class="text-muted">Choisissez un département pour voir la matrice de compétences de ses employés</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('departmentFilter').addEventListener('change', function() {
+    const deptId = this.value;
+    if (deptId) {
+        window.location.href = `?department=${deptId}`;
+    } else {
+        window.location.href = window.location.pathname;
+    }
+});
+</script>
+{% endblock %}

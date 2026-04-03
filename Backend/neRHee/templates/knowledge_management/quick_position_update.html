@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Mise à jour Niveau d'Autonomie{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Niveau d'Autonomie</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Employé:</strong> {{ employee.user.get_full_name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Poste:</strong> {{ position.name }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Niveau d'autonomie</label>
+                            <select name="autonomy_level" class="form-select" required>
+                                {% for value, label in autonomy_choices %}
+                                <option value="{{ value }}" {% if current_level == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'knowledge_management:versatility_matrix' %}?department={{ employee.department.id }}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

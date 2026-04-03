@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Convertir en CDI Définitif{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Convertir en CDI Définitif</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Information:</strong> Ce contrat CDI en période d'essai peut maintenant être converti en contrat définitif (sans date de fin).
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Employé:</strong> {{ contract.employee.user.get_full_name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Matricule:</strong> {{ contract.employee.matricule }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Type actuel:</strong> {{ contract.type }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Date de début:</strong> {{ contract.date_debut }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Date de fin actuelle:</strong> {{ contract.date_fin }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="convert_permanent" class="btn btn-success">
+                                Convertir en CDI Définitif
+                            </button>
+                            <a href="{% url 'contract_detail' contract.id %}" class="btn btn-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

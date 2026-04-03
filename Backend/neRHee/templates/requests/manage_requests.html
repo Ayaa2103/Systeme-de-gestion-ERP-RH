@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Demandes{% endblock %}
+
+{% block content %}
+<h1>Gestion des Demandes</h1>
+
+<h3>Demandes de Congé en Attente</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Type</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in leave_requests %}
+        <tr>
+            <td>{{ request.requester.user.get_full_name }}</td>
+            <td>{{ request.start_date }}</td>
+            <td>{{ request.end_date }}</td>
+            <td>{{ request.leave_type }}</td>
+            <td>{{ request.created_at|date:"d/m/Y" }}</td>
+            <td>
+                <a href="{% url 'approve_request' 'leave' request.id %}" class="btn btn-success">Approuver</a>
+                <a href="{% url 'reject_request' 'leave' request.id %}" class="btn btn-danger">Rejeter</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Aucune demande de congé en attente</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Demandes d'Attestation en Attente</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Objet</th>
+            <th>Type</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in attestation_requests %}
+        <tr>
+            <td>{{ request.requester.user.get_full_name }}</td>
+            <td>{{ request.purpose }}</td>
+            <td>{{ request.attestation_type }}</td>
+            <td>{{ request.created_at|date:"d/m/Y" }}</td>
+            <td>
+                <a href="{% url 'approve_request' 'attestation' request.id %}" class="btn btn-success">Approuver</a>
+                <a href="{% url 'reject_request' 'attestation' request.id %}" class="btn btn-danger">Rejeter</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Aucune demande d'attestation en attente</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Demandes de Mission en Attente</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Destination</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in mission_requests %}
+        <tr>
+            <td>{{ request.requester.user.get_full_name }}</td>
+            <td>{{ request.destination }}</td>
+            <td>{{ request.start_date }}</td>
+            <td>{{ request.end_date }}</td>
+            <td>{{ request.created_at|date:"d/m/Y" }}</td>
+            <td>
+                <a href="{% url 'approve_request' 'mission' request.id %}" class="btn btn-success">Approuver</a>
+                <a href="{% url 'reject_request' 'mission' request.id %}" class="btn btn-danger">Rejeter</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Aucune demande de mission en attente</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Demandes de Bulletin de Paie en Attente</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Période</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in payslip_requests %}
+        <tr>
+            <td>{{ request.requester.user.get_full_name }}</td>
+            <td>{{ request.periode_mois }}</td>
+            <td>{{ request.created_at|date:"d/m/Y" }}</td>
+            <td>
+                <a href="{% url 'approve_request' 'payslip' request.id %}" class="btn btn-success">Approuver</a>
+                <a href="{% url 'reject_request' 'payslip' request.id %}" class="btn btn-danger">Rejeter</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Aucune demande de bulletin de paie en attente</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

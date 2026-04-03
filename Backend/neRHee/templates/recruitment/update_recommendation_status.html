@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier Statut Recommandation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Modifier Statut de la Recommandation</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Candidat:</strong> {{ recommendation.candidate_name }}<br>
+                        <strong>Poste:</strong> {{ recommendation.job_offer.title }}<br>
+                        <strong>Recommandé par:</strong> {{ recommendation.recommended_by.get_full_name }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Statut</label>
+                            <select name="status" class="form-select" required>
+                                <option value="pending" {% if recommendation.status == 'pending' %}selected{% endif %}>En attente</option>
+                                <option value="contacted" {% if recommendation.status == 'contacted' %}selected{% endif %}>Contacté</option>
+                                <option value="rejected" {% if recommendation.status == 'rejected' %}selected{% endif %}>Rejeté</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'recruitment:profile_recommendations' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

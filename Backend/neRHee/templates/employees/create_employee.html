@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer un Employé{% endblock %}
+
+{% block content %}
+<h1>Créer un Nouvel Employé</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <h3>Informations Utilisateur</h3>
+    <div class="form-group">
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+    <div class="form-group">
+        <label for="first_name">Prénom:</label>
+        <input type="text" id="first_name" name="first_name" required>
+    </div>
+    <div class="form-group">
+        <label for="last_name">Nom:</label>
+        <input type="text" id="last_name" name="last_name" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    
+    <h3>Informations Employé</h3>
+    <div class="form-group">
+        <label for="matricule">Matricule:</label>
+        <input type="text" id="matricule" name="matricule" required>
+    </div>
+    <div class="form-group">
+        <label for="poste">Poste:</label>
+        <input type="text" id="poste" name="poste">
+    </div>
+    <div class="form-group">
+        <label for="service">Service:</label>
+        <input type="text" id="service" name="service">
+    </div>
+    <div class="form-group">
+        <label for="date_embauche">Date d'embauche:</label>
+        <input type="date" id="date_embauche" name="date_embauche">
+    </div>
+    
+    <button type="submit" class="btn">Créer l'Employé</button>
+    <a href="{% url 'employee_list' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

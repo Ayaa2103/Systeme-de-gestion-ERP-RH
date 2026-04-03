@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Recommandations de Formation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h3>Mes Recommandations de Formation</h3>
+                    <a href="{% url 'knowledge_management:dashboard' %}" class="btn btn-secondary">Retour</a>
+                </div>
+                <div class="card-body">
+                    {% if recommendations %}
+                    <div class="row">
+                        {% for rec in recommendations %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-{% if rec.status == 'pending' %}warning{% elif rec.status == 'accepted' %}success{% elif rec.status == 'rejected' %}danger{% else %}info{% endif %}">
+                                <div class="card-body">
+                                    <h6>
+                                        {% if rec.skill %}{{ rec.skill.name }}{% else %}{{ rec.position.name }}{% endif %}
+                                        <span class="badge 
+                                            {% if rec.status == 'pending' %}bg-warning
+                                            {% elif rec.status == 'accepted' %}bg-success
+                                            {% elif rec.status == 'rejected' %}bg-danger
+                                            {% else %}bg-info{% endif %}">
+                                            {{ rec.get_status_display }}
+                                        </span>
+                                    </h6>
+                                    
+                                    <p class="mb-1">
+                                        <strong>Niveau actuel:</strong> 
+                                        <span class="badge bg-secondary">
+                                            {% if rec.current_level == 1 %}Débutant
+                                            {% elif rec.current_level == 2 %}Intermédiaire
+                                            {% elif rec.current_level == 3 %}Confirmé
+                                            {% else %}Expert{% endif %}
+                                        </span>
+                                    </p>
+                                    
+                                    <p class="mb-1">
+                                        <strong>Niveau cible:</strong> 
+                                        <span class="badge bg-primary">
+                                            {% if rec.target_level == 1 %}Débutant
+                                            {% elif rec.target_level == 2 %}Intermédiaire
+                                            {% elif rec.target_level == 3 %}Confirmé
+                                            {% else %}Expert{% endif %}
+                                        </span>
+                                    </p>
+                                    
+                                    {% if rec.reason %}
+                                    <p class="text-muted small">{{ rec.reason }}</p>
+                                    {% endif %}
+                                    
+                                    <small class="text-muted">Recommandé le {{ rec.created_at|date:"d/m/Y" }}</small>
+                                    
+                                    {% if rec.status == 'pending' %}
+                                    <div class="mt-2">
+                                        <form method="post" action="{% url 'knowledge_management:update_recommendation' rec.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="accepted">
+                                            <button type="submit" class="btn btn-sm btn-success">Accepter</button>
+                                        </form>
+                                        <form method="post" action="{% url 'knowledge_management:update_recommendation' rec.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="declined">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Refuser</button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Aucune recommandation de formation pour le moment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

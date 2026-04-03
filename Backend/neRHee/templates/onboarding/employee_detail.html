@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ employee.user.get_full_name }} - Intégration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">🎯 {{ employee.user.get_full_name }}</h1>
+                    <p class="text-muted mb-0">Plan d'Intégration - {{ employee.poste }}</p>
+                </div>
+                <div>
+                    <span class="badge badge-{% if employee.onboarding_progress == 100 %}success{% elif employee.onboarding_progress > 50 %}warning{% else %}danger{% endif %} mr-2 p-2">
+                        {{ employee.onboarding_progress }}% Terminé
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tâches</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.completed_tasks }}/{{ stats.total_tasks }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Formations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.completed_trainings }}/{{ stats.total_trainings }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Suivis</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.completed_followups }}/{{ stats.total_followups }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Employee Info -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">👤 Informations Employé</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Matricule:</strong> {{ employee.matricule }}</p>
+                            <p><strong>Poste:</strong> {{ employee.poste }}</p>
+                            <p><strong>Service:</strong> {{ employee.service }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Email:</strong> <a href="mailto:{{ employee.user.email }}">{{ employee.user.email }}</a></p>
+                            <p><strong>Date d'embauche:</strong> {{ employee.date_embauche|date:"d/m/Y" }}</p>
+                            <p><strong>Manager:</strong> 
+                                {% if employee.assigned_manager %}
+                                    {{ employee.assigned_manager.user.get_full_name }}
+                                {% else %}
+                                    <span class="text-muted">Non assigné</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if onboarding_plan %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>📅 Plan d'Intégration:</strong> 
+                                Du {{ onboarding_plan.start_date|date:"d/m/Y" }} au {{ onboarding_plan.expected_completion_date|date:"d/m/Y" }}
+                                <span class="badge badge-{{ onboarding_plan.status|yesno:'success,warning,secondary' }} ml-2">
+                                    {{ onboarding_plan.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">📋 Tâches d'Intégration</h6>
+                </div>
+                <div class="card-body">
+                    {% for task in tasks %}
+                    <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                        <div class="mr-3">
+                            {% if task.is_completed %}
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            {% else %}
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">{{ task.title }}</div>
+                            <div class="text-muted small">{{ task.description }}</div>
+                            <div class="text-muted small">
+                                <span class="badge badge-{{ task.task_type|yesno:'primary,success,info,warning,secondary' }}">
+                                    {{ task.get_task_type_display }}
+                                </span>
+                                | Assigné à: {{ task.assigned_to.get_full_name }}
+                                | Échéance: {{ task.due_date|date:"d/m/Y" }}
+                                {% if task.priority == 'urgent' %}
+                                    <span class="badge badge-danger ml-1">URGENT</span>
+                                {% elif task.priority == 'high' %}
+                                    <span class="badge badge-warning ml-1">HAUTE</span>
+                                {% endif %}
+                            </div>
+                            {% if task.is_completed %}
+                                <div class="text-success small">
+                                    <i class="fas fa-check"></i> Terminé le {{ task.completed_at|date:"d/m/Y à H:i" }} 
+                                    par {{ task.completed_by.get_full_name }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            {% if not task.is_completed %}
+                                <form method="post" action="{% url 'complete_task' task.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check"></i> Terminer
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="badge badge-success">Terminé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Aucune tâche assignée</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">⚡ Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'checklist_view' employee.pk %}" class="btn btn-success btn-block">
+                            <i class="fas fa-tasks"></i> Gérer Checklist
+                        </a>
+
+                        <a href="{% url 'employee_onboarding_list' %}" class="btn btn-secondary btn-block">
+                            <i class="fas fa-arrow-left"></i> Retour à la Liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trainings -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-info">🎓 Formations</h6>
+                </div>
+                <div class="card-body">
+                    {% for training in trainings %}
+                    <div class="mb-3 p-2 border rounded">
+                        <div class="font-weight-bold small">{{ training.title }}</div>
+                        <div class="text-muted small">
+                            {{ training.duration_hours }}h
+                            {% if training.scheduled_date %}
+                                | {{ training.scheduled_date|date:"d/m/Y" }}
+                            {% endif %}
+                        </div>
+                        <div class="mt-1">
+                            {% if training.is_completed %}
+                                <span class="badge badge-success">Terminée</span>
+                                {% if training.score %}
+                                    <span class="badge badge-info ml-1">{{ training.score }}/100</span>
+                                {% endif %}
+                            {% else %}
+                                <form method="post" action="{% url 'complete_training' training.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="date" name="completion_date" class="form-control form-control-sm d-inline-block" style="width: auto;" required>
+                                    <input type="number" name="score" placeholder="Score" class="form-control form-control-sm d-inline-block ml-1" style="width: 60px;" min="0" max="100">
+                                    <button type="submit" class="btn btn-sm btn-success ml-1">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center small">Aucune formation</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Follow-ups -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-warning">📅 Suivis</h6>
+                </div>
+                <div class="card-body">
+                    {% for followup in followups %}
+                    <div class="mb-3 p-2 border rounded">
+                        <div class="font-weight-bold small">{{ followup.get_follow_up_type_display }}</div>
+                        <div class="text-muted small">{{ followup.scheduled_date|date:"d/m/Y" }}</div>
+                        <div class="mt-1">
+                            {% if followup.is_completed %}
+                                <span class="badge badge-success">Effectué</span>
+                                {% if followup.overall_rating %}
+                                    <span class="badge badge-info ml-1">{{ followup.overall_rating }}/5</span>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'conduct_followup' followup.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-calendar-check"></i> Effectuer
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center small">Aucun suivi</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.text-xs { font-size: 0.7rem; }
+.shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Recommander un Profil{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recommander un Profil</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Poste:</strong> {{ job_offer.title }}<br>
+                        <strong>Département:</strong> {{ job_offer.department }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Nom du candidat *</label>
+                            {{ form.candidate_name }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email du candidat *</label>
+                            {{ form.candidate_email }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Téléphone</label>
+                            {{ form.candidate_phone }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Votre relation avec le candidat *</label>
+                            {{ form.relationship }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Pourquoi recommandez-vous ce profil? *</label>
+                            {{ form.recommendation_reason }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Recommander</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

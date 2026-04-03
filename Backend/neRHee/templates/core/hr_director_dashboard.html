@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Directeur RH{% endblock %}
+
+{% block content %}
+<h1>Dashboard Directeur RH</h1>
+<p>Bienvenue, {{ user.get_full_name }}!</p>
+
+{% if new_employees_today %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 15px 0; display: flex; align-items: center;"><i class="fas fa-star" style="margin-right: 10px;"></i>🎉 Nouveau(x) Employé(s) du Jour</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        {% for employee in new_employees_today %}
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center; min-width: 200px;">
+            {% if employee.photo %}
+                <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid white;">
+            {% else %}
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px;">👤</div>
+            {% endif %}
+            <div style="font-weight: bold; margin-bottom: 5px;">{{ employee.user.get_full_name }}</div>
+            <div style="font-size: 14px; opacity: 0.9;">{{ employee.poste|default:"Poste non défini" }}</div>
+            <div style="font-size: 12px; opacity: 0.8;">{{ employee.service|default:"Service non défini" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if active_job_offers %}
+<div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 15px 0; display: flex; align-items: center;"><i class="fas fa-briefcase" style="margin-right: 10px;"></i>💼 Offres d'Emploi Actives</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        {% for job_offer in active_job_offers %}
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; min-width: 280px; flex: 1;">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">{{ job_offer.title }}</div>
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">📍 {{ job_offer.department }}</div>
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">🎯 {{ job_offer.get_experience_level_display }}</div>
+            <div style="font-size: 12px; opacity: 0.8; margin-bottom: 15px;">{{ job_offer.description|truncatewords:15 }}</div>
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'recruitment:job_offer_detail' job_offer.id %}" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; font-size: 12px;">Gérer</a>
+                <a href="{% url 'recruitment:public_job_detail' job_offer.id %}" style="background: rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; font-size: 12px;">Voir Public</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Consulter Employés</h3>
+        <p>Voir la liste des employés et stagiaires</p>
+        <a href="{% url 'employee_list' %}" class="btn">Voir Employés</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Approuver les Demandes</h3>
+        <p>Approuver ou rejeter les demandes</p>
+        <a href="{% url 'manage_requests' %}" class="btn">Gérer Demandes</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Politiques RH</h3>
+        <p>Définir les politiques RH</p>
+        <a href="{% url 'hr_policies' %}" class="btn">Politiques RH</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Indicateurs KPI</h3>
+        <p>Voir les indicateurs de performance</p>
+        <a href="{% url 'kpi_dashboard' %}" class="btn">Voir KPIs</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Contrats</h3>
+        <p>Gérer les contrats d'employés</p>
+        <a href="{% url 'manage_contracts' %}" class="btn">Voir Contrats</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Formations</h3>
+        <p>Gérer les programmes de formation</p>
+        <a href="{% url 'manage_training' %}" class="btn">Gérer Formations</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Événements</h3>
+        <p>Valider et gérer les événements</p>
+        <a href="{% url 'manage_events' %}" class="btn">Gérer Événements</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Recrutement</h3>
+        <p>Superviser les offres d'emploi et candidatures</p>
+        <a href="{% url 'recruitment:recruitment_dashboard' %}" class="btn">Dashboard Recrutement</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Onboarding</h3>
+        <p>Superviser l'intégration des nouveaux employés</p>
+        <a href="{% url 'onboarding_dashboard' %}" class="btn">Dashboard Onboarding</a>
+    </div>
+</div>
+{% endblock %}

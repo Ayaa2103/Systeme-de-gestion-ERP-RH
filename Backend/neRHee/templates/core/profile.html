@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>Mon Profil</h1>
+            
+            {% if employee %}
+            <!-- Absence Status Badge -->
+            <div class="mb-3">
+                {% if is_absent %}
+                    <span class="badge bg-danger fs-6">🚫 Absent aujourd'hui</span>
+                {% else %}
+                    <span class="badge bg-success fs-6">✅ Présent</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if employee %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Informations Personnelles</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nom:</strong> {{ employee.user.get_full_name }}</p>
+                    <p><strong>Email:</strong> {{ employee.user.email }}</p>
+                    <p><strong>Téléphone:</strong> {{ employee.user.phone|default:"Non renseigné" }}</p>
+                    <p><strong>Matricule:</strong> {{ employee.matricule }}</p>
+                    <p><strong>Poste:</strong> {{ employee.poste|default:"Non renseigné" }}</p>
+                    <p><strong>Service:</strong> {{ employee.service|default:"Non renseigné" }}</p>
+                    <p><strong>Département:</strong> {{ employee.department.name|default:"Non renseigné" }}</p>
+                    <p><strong>Date d'embauche:</strong> {{ employee.date_embauche|date:"d/m/Y"|default:"Non renseigné" }}</p>
+                    <p><strong>Statut:</strong> {{ employee.statut }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Contrats</h3>
+                </div>
+                <div class="card-body">
+                    {% for contract in contracts %}
+                    <div class="border p-3 mb-3 rounded">
+                        <p><strong>Type:</strong> {{ contract.type }}</p>
+                        <p><strong>Début:</strong> {{ contract.date_debut|date:"d/m/Y" }}</p>
+                        {% if contract.date_fin %}
+                        <p><strong>Fin:</strong> {{ contract.date_fin|date:"d/m/Y" }}</p>
+                        {% endif %}
+                        {% if contract.salaire %}
+                        <p><strong>Salaire:</strong> {{ contract.salaire }} €</p>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p>Aucun contrat trouvé</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if skills %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Mes Compétences</h3>
+                    <a href="{% url 'knowledge_management:my_skills' %}" class="btn btn-outline-primary btn-sm">Voir détails</a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for skill in skills %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                <div>
+                                    <h6 class="mb-1">{{ skill.skill.name }}</h6>
+                                    <small class="text-muted">{{ skill.skill.category }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="mb-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= skill.level %}
+                                                <span class="text-warning">★</span>
+                                            {% else %}
+                                                <span class="text-muted">☆</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">{{ skill.get_level_display }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Informations Utilisateur</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
+                    <p><strong>Nom:</strong> {{ user.get_full_name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Rôle:</strong> {{ user.get_role_display }}</p>
+                    <p><strong>Téléphone:</strong> {{ user.phone|default:"Non renseigné" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

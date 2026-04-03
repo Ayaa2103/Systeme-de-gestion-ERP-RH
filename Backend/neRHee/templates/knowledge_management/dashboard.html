@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Formation et Gestion de Connaissances{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>Formation et Gestion de Connaissances</h2>
+        </div>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>{{ total_skills }}</h5>
+                    <p>Compétences</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>{{ total_positions }}</h5>
+                    <p>Postes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>{{ total_documents }}</h5>
+                    <p>Documents</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>{{ my_recommendations }}</h5>
+                    <p>Recommandations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modules -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Maîtrise de Compétences</h5>
+                </div>
+                <div class="card-body">
+                    <p>Suivre le niveau de compétence de chaque employé</p>
+                    <a href="{% url 'knowledge_management:skills_matrix' %}" class="btn btn-primary btn-sm">Matrice des Compétences</a>
+                    <a href="{% url 'knowledge_management:my_skills' %}" class="btn btn-outline-primary btn-sm">Mes Compétences</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-users"></i> Polyvalence</h5>
+                </div>
+                <div class="card-body">
+                    <p>Visualiser la capacité des employés à occuper plusieurs postes</p>
+                    <a href="{% url 'knowledge_management:versatility_matrix' %}" class="btn btn-info btn-sm">Matrice de Polyvalence</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-book"></i> Gestion des Connaissances</h5>
+                </div>
+                <div class="card-body">
+                    <p>Stockage et gestion des documents internes</p>
+                    <a href="{% url 'knowledge_management:documents_list' %}" class="btn btn-success btn-sm">Documents</a>
+                    {% if user.role != 'employee' %}
+                    <a href="{% url 'knowledge_management:upload_document' %}" class="btn btn-outline-success btn-sm">Ajouter</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.role != 'employee' %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-cog"></i> Administration</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'knowledge_management:manage_skills_positions' %}" class="btn btn-secondary">Gérer Compétences & Postes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

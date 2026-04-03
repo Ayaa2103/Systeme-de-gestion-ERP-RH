@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Suggestions{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">🔧 Manage Suggestions</h1>
+            <p class="text-muted">Review and respond to employee suggestions</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for suggestion in suggestions %}
+                                <tr>
+                                    <td>{{ suggestion.employee.get_full_name }}</td>
+                                    <td>
+                                        <strong>{{ suggestion.title }}</strong>
+                                        <br><small class="text-muted">{{ suggestion.suggestion_text|truncatewords:15 }}</small>
+                                    </td>
+                                    <td>{{ suggestion.date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if suggestion.status == 'answered' %}success{% elif suggestion.status == 'received' %}warning{% else %}secondary{% endif %}">
+                                            {{ suggestion.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'respond_suggestion' suggestion.pk %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply"></i> Respond
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No suggestions yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Démarrer Plan d'Intégration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="m-0 font-weight-bold text-primary">
+                        🚀 Créer Plan d'Intégration - {{ employee.user.get_full_name }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6><strong>Informations Employé</strong></h6>
+                            <p><strong>Nom:</strong> {{ employee.user.get_full_name }}</p>
+                            <p><strong>Matricule:</strong> {{ employee.matricule }}</p>
+                            <p><strong>Poste:</strong> {{ employee.poste }}</p>
+                            <p><strong>Service:</strong> {{ employee.service }}</p>
+                            <p><strong>Date d'embauche:</strong> {{ employee.date_embauche|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h6><strong>📋 Le plan d'intégration comprendra:</strong></h6>
+                                <ul class="mb-0">
+                                    <li>Tâches automatiques (RH, IT, Manager, Logistique)</li>
+                                    <li>Formations obligatoires (sécurité, qualité, culture d'entreprise)</li>
+                                    <li>Points de suivi (semaine 1, mois 1, mois 3)</li>
+                                    <li>Checklist personnalisée d'intégration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="start_date"><strong>Date de début d'intégration</strong></label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" 
+                                           value="{{ employee.date_embauche|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="expected_completion_date"><strong>Date de fin prévue</strong></label>
+                                    <input type="date" class="form-control" id="expected_completion_date" 
+                                           name="expected_completion_date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="assigned_manager"><strong>Manager assigné</strong></label>
+                                    <select class="form-control" id="assigned_manager" name="assigned_manager">
+                                        <option value="">Sélectionner un manager</option>
+                                        {% for manager in potential_managers %}
+                                        <option value="{{ manager.id }}" {% if employee.assigned_manager.id == manager.id %}selected{% endif %}>
+                                            {{ manager.user.get_full_name }} - {{ manager.poste|default:"Aucun poste" }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Le manager sera responsable du suivi de l'intégration</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-rocket"></i> Créer le Plan d'Intégration
+                                </button>
+                                <a href="{% url 'employee_onboarding_list' %}" class="btn btn-secondary btn-lg ml-2">
+                                    <i class="fas fa-arrow-left"></i> Retour
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default completion date to 3 months from start date
+document.getElementById('start_date').addEventListener('change', function() {
+    const startDate = new Date(this.value);
+    const completionDate = new Date(startDate);
+    completionDate.setMonth(completionDate.getMonth() + 3);
+    
+    document.getElementById('expected_completion_date').value = completionDate.toISOString().split('T')[0];
+});
+
+// Initialize with default dates
+window.addEventListener('load', function() {
+    const startDateInput = document.getElementById('start_date');
+    if (startDateInput.value) {
+        startDateInput.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

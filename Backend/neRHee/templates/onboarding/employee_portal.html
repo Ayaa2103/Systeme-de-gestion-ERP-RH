@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Intégration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0 text-gray-800">🎯 Mon Processus d'Intégration</h1>
+            <p class="text-muted mb-0">Bienvenue {{ employee.user.get_full_name }} ! Suivez votre progression d'intégration</p>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="row mb-4">
+
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Mes Tâches</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ progress.tasks.completed }}/{{ progress.tasks.total }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Formations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ progress.trainings.completed }}/{{ progress.trainings.total }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Progression</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ employee.onboarding_progress }}%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ employee.onboarding_progress }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+
+        <!-- Mes tâches -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-success">✅ Mes Tâches</h6>
+                </div>
+                <div class="card-body">
+                    {% for task in tasks %}
+                    <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                        <div class="mr-3">
+                            {% if task.is_completed %}
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            {% else %}
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">{{ task.title }}</div>
+                            <div class="text-muted small">{{ task.description }}</div>
+                            <div class="text-muted small">
+                                <i class="fas fa-calendar"></i> Échéance: {{ task.due_date|date:"d/m/Y" }}
+                            </div>
+                            {% if task.is_completed %}
+                                <div class="text-success small">
+                                    <i class="fas fa-check"></i> Terminé le {{ task.completed_at|date:"d/m/Y à H:i" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            {% if not task.is_completed %}
+                                <form method="post" action="{% url 'complete_task' task.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check"></i> Terminer
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="badge badge-success">Terminé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Aucune tâche assignée</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Formations -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-info">🎓 Mes Formations</h6>
+                </div>
+                <div class="card-body">
+                    {% for training in trainings %}
+                    <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                        <div class="mr-3">
+                            {% if training.is_completed %}
+                                <i class="fas fa-graduation-cap fa-2x text-success"></i>
+                            {% else %}
+                                <i class="fas fa-book fa-2x text-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">{{ training.title }}</div>
+                            <div class="text-muted small">{{ training.description }}</div>
+                            <div class="text-muted small">
+                                <i class="fas fa-clock"></i> Durée: {{ training.duration_hours }}h
+                                {% if training.scheduled_date %}
+                                    | Programmée: {{ training.scheduled_date|date:"d/m/Y" }}
+                                {% endif %}
+                            </div>
+                            {% if training.is_completed %}
+                                <div class="text-success small">
+                                    <i class="fas fa-check"></i> Terminée le {{ training.completion_date|date:"d/m/Y" }}
+                                    {% if training.score %}
+                                        | Score: {{ training.score }}/100
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            {% if training.is_completed %}
+                                <span class="badge badge-success">Terminée</span>
+                            {% else %}
+                                <span class="badge badge-info">Programmée</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Aucune formation programmée</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Suivis prévus -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-warning">📅 Suivis Prévus</h6>
+                </div>
+                <div class="card-body">
+                    {% for followup in followups %}
+                    <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                        <div class="mr-3">
+                            {% if followup.is_completed %}
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            {% else %}
+                                <i class="fas fa-calendar-check fa-2x text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">{{ followup.get_follow_up_type_display }}</div>
+                            <div class="text-muted small">
+                                <i class="fas fa-calendar"></i> Programmé: {{ followup.scheduled_date|date:"d/m/Y" }}
+                            </div>
+                            {% if followup.is_completed %}
+                                <div class="text-success small">
+                                    <i class="fas fa-check"></i> Effectué le {{ followup.conducted_date|date:"d/m/Y" }}
+                                    {% if followup.overall_rating %}
+                                        | Note: {{ followup.overall_rating }}/5
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            {% if followup.is_completed %}
+                                <span class="badge badge-success">Effectué</span>
+                            {% else %}
+                                <span class="badge badge-warning">Programmé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Aucun suivi programmé</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.text-xs { font-size: 0.7rem; }
+.progress-sm { height: 0.5rem; }
+.shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
+</style>
+{% endblock %}

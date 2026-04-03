@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Formations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Mes Formations</h2>
+    
+    {% if trainings %}
+        <div class="row">
+            {% for training in trainings %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ training.name }}</h5>
+                            <p class="card-text">{{ training.description|truncatewords:20 }}</p>
+                            <p class="text-muted">
+                                <i class="fas fa-calendar"></i> 
+                                Du {{ training.start_date }} au {{ training.end_date }}
+                                <br>
+                                <i class="fas fa-clock"></i> 
+                                Durée: {{ training.duration_days }} jour{{ training.duration_days|pluralize }}
+                            </p>
+                            {% if training.is_active %}
+                                <span class="badge badge-success">En cours</span>
+                            {% elif training.start_date > today %}
+                                <span class="badge badge-info">À venir</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Terminée</span>
+                            {% endif %}
+                            <br><br>
+                            <a href="{% url 'employee_training_detail' training.id %}" class="btn btn-primary btn-sm">
+                                Voir détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Aucune formation ne vous est actuellement assignée.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter un Employé à l'Onboarding{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">➕ Ajouter un Employé à l'Onboarding</h1>
+                <a href="{% url 'employee_onboarding_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">Sélectionner un Employé</h6>
+        </div>
+        <div class="card-body">
+            {% if available_employees %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th width="50">Sélection</th>
+                                    <th>Nom Complet</th>
+                                    <th>Poste</th>
+                                    <th>Département</th>
+                                    <th>Date d'Embauche</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in available_employees %}
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="radio" name="employee_id" value="{{ employee.pk }}" required>
+                                    </td>
+                                    <td>{{ employee.user.get_full_name }}</td>
+                                    <td>{{ employee.poste }}</td>
+                                    <td>{{ employee.service }}</td>
+                                    <td>{{ employee.date_embauche|date:"d/m/Y" }}</td>
+                                    <td>{{ employee.user.email }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-play"></i> Démarrer l'Onboarding
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucun employé disponible</h5>
+                    <p class="text-muted">Tous les employés sont déjà dans le processus d'onboarding ou il n'y a pas d'employés dans le système.</p>
+                    <a href="{% url 'create_employee' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Créer un nouvel employé
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

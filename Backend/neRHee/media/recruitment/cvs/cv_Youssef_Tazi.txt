@@ -1,0 +1,16 @@
+CV DE TEST
+    
+Nom: [Nom du candidat]
+Email: [Email du candidat]
+Telephone: [Telephone du candidat]
+
+EXPERIENCE:
+- 3 ans d'experience dans le domaine
+- Competences techniques variees
+- Motivation et serieux
+
+FORMATION:
+- Diplome universitaire
+- Formations complementaires
+
+Ce CV est genere automatiquement pour les tests.

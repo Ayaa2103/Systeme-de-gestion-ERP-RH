@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails Formation - {{ training.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>📚 {{ training.name }}</h4>
+                    {% if training.status == 'pending' %}
+                        <span class="badge bg-warning">🕐 {{ training.get_status_display }}</span>
+                    {% elif training.status == 'approved' %}
+                        <span class="badge bg-success">✅ {{ training.get_status_display }}</span>
+                    {% elif training.status == 'rejected' %}
+                        <span class="badge bg-danger">❌ {{ training.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Description:</strong></div>
+                        <div class="col-sm-9">{{ training.description }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de début:</strong></div>
+                        <div class="col-sm-9">{{ training.start_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de fin:</strong></div>
+                        <div class="col-sm-9">{{ training.end_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Durée:</strong></div>
+                        <div class="col-sm-9">{{ training.duration_days }} jour{{ training.duration_days|pluralize }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé par:</strong></div>
+                        <div class="col-sm-9">{{ training.created_by.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé le:</strong></div>
+                        <div class="col-sm-9">{{ training.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% if training.approved_by %}
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Traité par:</strong></div>
+                        <div class="col-sm-9">{{ training.approved_by.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Traité le:</strong></div>
+                        <div class="col-sm-9">{{ training.approved_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% endif %}
+                    {% if training.is_active %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-play-circle"></i> Cette formation est actuellement en cours
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>👥 Participants ({{ training.employees.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if training.employees.exists %}
+                        <div class="list-group list-group-flush">
+                            {% for employee in training.employees.all %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ employee.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ employee.matricule }} - {{ employee.poste }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Aucun participant assigné</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.role == 'hr_director' and training.status == 'pending' %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>⚡ Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'approve_training' training.id %}" 
+                           class="btn btn-success"
+                           onclick="return confirm('Approuver cette formation ?')">
+                            <i class="fas fa-check"></i> Approuver
+                        </a>
+                        <a href="{% url 'reject_training' training.id %}" 
+                           class="btn btn-danger"
+                           onclick="return confirm('Rejeter cette formation ?')">
+                            <i class="fas fa-times"></i> Rejeter
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'manage_training' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux Formations
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Demande d'Attestation{% endblock %}
+
+{% block content %}
+<h1>Demande d'Attestation</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="purpose">Objet de la demande:</label>
+        <input type="text" id="purpose" name="purpose" required>
+    </div>
+    <div class="form-group">
+        <label for="attestation_type">Type d'attestation:</label>
+        <select id="attestation_type" name="attestation_type" required>
+            <option value="employment">Attestation de travail</option>
+            <option value="salary">Attestation de salaire</option>
+            <option value="experience">Attestation d'expérience</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="comment">Commentaire:</label>
+        <textarea id="comment" name="comment" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn">Soumettre la demande</button>
+    <a href="{% url 'my_requests' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

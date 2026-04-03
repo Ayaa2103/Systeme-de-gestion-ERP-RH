@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Recrutement{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0 text-gray-800">🎯 Dashboard Recrutement</h1>
+            <p class="text-muted mb-0">Gestion des offres d'emploi et candidatures</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Offres d'emploi</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_job_offers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Offres Publiées</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.published_offers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Candidatures</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_applications }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Entretiens</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.scheduled_interviews }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                    <h5>Créer une Offre</h5>
+                    <p class="text-muted">Publier une nouvelle offre d'emploi</p>
+                    <a href="{% url 'recruitment:job_offer_create' %}" class="btn btn-primary">Créer</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-list fa-3x text-success mb-3"></i>
+                    <h5>Gérer les Offres</h5>
+                    <p class="text-muted">Voir toutes les offres d'emploi</p>
+                    <a href="{% url 'recruitment:job_offer_list' %}" class="btn btn-success">Voir</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-warning mb-3"></i>
+                    <h5>Candidatures</h5>
+                    <p class="text-muted">Examiner les candidatures</p>
+                    <a href="{% url 'recruitment:application_list' %}" class="btn btn-warning">Examiner</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-friends fa-3x text-info mb-3"></i>
+                    <h5>Recommandations</h5>
+                    <p class="text-muted">Profils recommandés par les employés</p>
+                    <a href="{% url 'recruitment:profile_recommendations' %}" class="btn btn-info">Voir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Candidatures Récentes</h6>
+                </div>
+                <div class="card-body">
+                    {% for application in recent_applications %}
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle fa-2x text-gray-400"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold">{{ application.full_name }}</div>
+                            <div class="text-muted small">{{ application.job_offer.title }}</div>
+                        </div>
+                        <div class="ml-auto">
+                            <span class="badge badge-{{ application.status|yesno:'success,warning,danger' }}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Aucune candidature récente</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Entretiens Programmés</h6>
+                </div>
+                <div class="card-body">
+                    {% for interview in upcoming_interviews %}
+                    <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                        <div class="mr-3">
+                            <i class="fas fa-calendar fa-2x text-gray-400"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">
+                                <a href="{% url 'recruitment:interview_detail' interview.pk %}">{{ interview.application.full_name }}</a>
+                            </div>
+                            <div class="text-muted small">{{ interview.scheduled_date|date:"d/m/Y H:i" }}</div>
+                            <div class="text-muted small">{{ interview.location|default:"Lieu non spécifié" }}</div>
+                        </div>
+                        <div>
+                            <span class="badge badge-warning">{{ interview.get_status_display }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Aucun entretien programmé</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.text-xs { font-size: 0.7rem; }
+.shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
+</style>
+{% endblock %}

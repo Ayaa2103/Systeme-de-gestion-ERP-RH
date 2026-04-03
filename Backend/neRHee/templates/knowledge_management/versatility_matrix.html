@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Matrice de Polyvalence{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h3>Matrice de Polyvalence</h3>
+                    <a href="{% url 'knowledge_management:dashboard' %}" class="btn btn-secondary">Retour</a>
+                </div>
+                <div class="card-body">
+                    <!-- Sélecteur de département -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <form method="get">
+                                <div class="input-group">
+                                    <select name="department" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Sélectionner un département</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:'s' %}selected{% endif %}>
+                                            {{ dept.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        {% if selected_department_obj %}
+                        <div class="col-md-8">
+                            <div class="alert alert-info mb-0">
+                                <strong>{{ selected_department_obj.name }}</strong> - 
+                                {{ employees_count }} employé(s), {{ positions_count }} poste(s)
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if selected_department_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Employé</th>
+                                    {% for position in positions %}
+                                    <th class="text-center" style="min-width: 120px;">
+                                        {{ position.name }}
+                                        {% if position.department %}
+                                        <br><small>({{ position.department }})</small>
+                                        {% endif %}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in matrix_data %}
+                                <tr>
+                                    <td>
+                                        {{ data.employee.user.get_full_name }}
+                                        <br><small>{{ data.employee.poste }}</small>
+                                    </td>
+                                    {% for pos_data in data.positions_data %}
+                                    <td class="text-center">
+                                        {% if pos_data.employee_position %}
+                                            <span class="badge 
+                                                {% if pos_data.employee_position.autonomy_level == 4 %}bg-success
+                                                {% elif pos_data.employee_position.autonomy_level == 3 %}bg-info
+                                                {% elif pos_data.employee_position.autonomy_level == 2 %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ pos_data.employee_position.get_autonomy_level_display }}
+                                            </span>
+                                            {% if user.role != 'employee' %}
+                                            <br><a href="{% url 'knowledge_management:quick_position_update' data.employee.id pos_data.position.id %}" class="btn btn-xs btn-outline-primary mt-1">Modifier</a>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if user.role != 'employee' %}
+                                            <a href="{% url 'knowledge_management:quick_position_update' data.employee.id pos_data.position.id %}" class="btn btn-xs btn-outline-success">Ajouter</a>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning text-center">
+                        <h5>Veuillez sélectionner un département pour afficher la matrice de polyvalence</h5>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

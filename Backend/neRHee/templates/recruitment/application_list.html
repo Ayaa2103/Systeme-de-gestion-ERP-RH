@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidatures{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">👥 Candidatures</h1>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Candidat</th>
+                            <th>Poste</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Source</th>
+                            <th>Statut</th>
+                            <th>Date de Candidature</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for application in applications %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'recruitment:application_detail' application.pk %}" class="text-decoration-none">
+                                    {{ application.full_name }}
+                                </a>
+                            </td>
+                            <td>{{ application.job_offer.title }}</td>
+                            <td>{{ application.email }}</td>
+                            <td>{{ application.phone }}</td>
+                            <td>
+                                <span class="badge badge-{% if application.source == 'email' %}primary{% else %}secondary{% endif %}">
+                                    {% if application.source == 'email' %}
+                                        <i class="fas fa-envelope"></i> Email
+                                    {% else %}
+                                        <i class="fas fa-globe"></i> Web
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if application.status == 'pending' %}warning{% elif application.status == 'accepted' %}success{% elif application.status == 'rejected' %}danger{% else %}info{% endif %}">
+                                    {{ application.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ application.applied_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'recruitment:application_detail' application.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'recruitment:application_update_status' application.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if application.status != 'interview' %}
+                                    <a href="{% url 'recruitment:interview_create' application.pk %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">Aucune candidature trouvée</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

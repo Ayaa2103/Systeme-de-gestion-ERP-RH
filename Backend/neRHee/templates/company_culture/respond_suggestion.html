@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Respond to Suggestion{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">💬 Respond to Suggestion</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Original Suggestion</h6>
+                </div>
+                <div class="card-body">
+                    <h5>{{ suggestion.title }}</h5>
+                    <p>{{ suggestion.suggestion_text|linebreaks }}</p>
+                    <small class="text-muted">
+                        By {{ suggestion.employee.get_full_name }} on {{ suggestion.date|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Response</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="{{ form.response.id_for_label }}">Response</label>
+                            {{ form.response }}
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Send Response
+                            </button>
+                            <a href="{% url 'manage_suggestions' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

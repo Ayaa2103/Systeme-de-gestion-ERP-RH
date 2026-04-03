@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Compétences - {{ employee.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h3>Compétences - {{ employee.user.get_full_name }}</h3>
+                    <div>
+                        {% if can_edit %}
+                        <a href="{% url 'knowledge_management:add_employee_skill' employee.id %}" class="btn btn-primary btn-sm">Ajouter Compétence</a>
+                        {% endif %}
+                        <a href="{% url 'knowledge_management:skills_matrix' %}" class="btn btn-secondary btn-sm">Retour</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Poste:</strong> {{ employee.poste }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Service:</strong> {{ employee.service }}
+                        </div>
+                    </div>
+                    
+                    {% if skills %}
+                    <h5>Compétences Actuelles</h5>
+                    <div class="row">
+                        {% for skill in skills %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6>{{ skill.skill.name }}</h6>
+                                            <span class="badge 
+                                                {% if skill.level == 4 %}bg-success
+                                                {% elif skill.level == 3 %}bg-info
+                                                {% elif skill.level == 2 %}bg-warning
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ skill.get_level_display }}
+                                            </span>
+                                            <br><small class="text-muted">Mis à jour: {{ skill.last_updated|date:"d/m/Y" }}</small>
+                                        </div>
+                                        {% if can_edit %}
+                                        <a href="{% url 'knowledge_management:update_employee_skill' employee.id skill.skill.id %}" class="btn btn-outline-primary btn-sm">Modifier</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">Aucune compétence enregistrée.</div>
+                    {% endif %}
+                    
+                    {% if recommendations %}
+                    <h5 class="mt-4">Recommandations de Formation</h5>
+                    <div class="row">
+                        {% for rec in recommendations %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6>{{ rec.skill.name }}</h6>
+                                    <p>Niveau cible: <span class="badge bg-primary">{{ rec.get_target_level_display }}</span></p>
+                                    <p class="text-muted small">{{ rec.reason }}</p>
+                                    <small>Recommandé le {{ rec.created_at|date:"d/m/Y" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

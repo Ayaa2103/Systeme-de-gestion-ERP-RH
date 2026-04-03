@@ -1,0 +1,6 @@
+@echo off
+echo Installation des dépendances...
+npm install
+
+echo Démarrage de l'application React...
+npm start

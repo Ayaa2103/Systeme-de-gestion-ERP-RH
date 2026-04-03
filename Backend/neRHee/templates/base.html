@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HRM System{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .navbar { background: #333; color: white; padding: 10px; margin-bottom: 20px; }
+        .navbar a { color: white; text-decoration: none; margin-right: 15px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .btn { padding: 8px 16px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .messages { margin: 20px 0; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <a href="{% url 'profile' %}">Profile</a>
+        <a href="{% url 'culture_dashboard' %}">Culture</a>
+        <a href="{% url 'knowledge_management:dashboard' %}">Formation & Connaissances</a>
+        {% if user.role == 'employee' %}
+            <a href="{% url 'my_requests' %}">My Requests</a>
+            <a href="{% url 'employee_onboarding_portal' %}">Mon Intégration</a>
+
+        {% elif user.role in 'hr_manager,hr_director' %}
+            <a href="{% url 'employee_list' %}">Employees</a>
+            <a href="{% url 'manage_requests' %}">Manage Requests</a>
+            <a href="{% url 'onboarding_dashboard' %}">Intégration</a>
+        {% endif %}
+        {% if user.role == 'hr_director' %}
+            <a href="{% url 'hr_policies' %}">HR Policies</a>
+            <a href="{% url 'kpi_dashboard' %}">KPIs</a>
+        {% endif %}
+        {% if user.role == 'administrator' %}
+            <a href="{% url 'system_management' %}">System</a>
+        {% endif %}
+        <a href="{% url 'hr_policies' %}">Politiques RH</a>
+        <a href="{% url 'manage_events' %}">Événements</a>
+        <a href="{% url 'logout' %}" style="float: right;">Logout</a>
+        <span style="float: right; margin-right: 15px;">{{ user.get_full_name }} ({{ user.get_role_display }})</span>
+    </nav>
+    {% endif %}
+
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

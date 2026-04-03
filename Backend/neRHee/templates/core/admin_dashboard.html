@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+<h1>Dashboard Administrateur</h1>
+<p>Bienvenue, {{ user.get_full_name }}!</p>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Gestion des Employés</h3>
+        <p>Ajouter, modifier, supprimer des employés</p>
+        <a href="{% url 'employee_list' %}" class="btn">Gérer Employés</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Gestion des Utilisateurs</h3>
+        <p>Gérer les comptes utilisateurs</p>
+        <a href="/admin/" class="btn">Admin Django</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Gestion Système</h3>
+        <p>Configuration et sauvegarde</p>
+        <a href="{% url 'system_management' %}" class="btn">Système</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Droits d'Accès</h3>
+        <p>Gérer les permissions</p>
+        <a href="/admin/auth/group/" class="btn">Groupes</a>
+    </div>
+</div>
+{% endblock %}

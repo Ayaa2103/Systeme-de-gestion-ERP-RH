@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer un Contrat{% endblock %}
+
+{% block content %}
+<h1>Créer un Nouveau Contrat</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="matricule">Matricule de l'employé:</label>
+        <select id="matricule" name="matricule" required>
+            <option value="">Sélectionner un employé</option>
+            {% for employee in employees %}
+                <option value="{{ employee.matricule }}">{{ employee.matricule }} - {{ employee.user.get_full_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="type">Type de contrat:</label>
+        <select id="type" name="type" required>
+            <option value="">Sélectionner un type</option>
+            <option value="CDI">CDI</option>
+            <option value="CDD">CDD</option>
+            <option value="Stage">Stage</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="date_debut">Date de début:</label>
+        <input type="date" id="date_debut" name="date_debut" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="date_fin">Date de fin:</label>
+        <input type="date" id="date_fin" name="date_fin">
+        <small>Laisser vide pour un contrat indéterminé (CDI)</small>
+    </div>
+    
+    <div class="form-group">
+        <label for="salaire">Salaire (€):</label>
+        <input type="number" step="0.01" id="salaire" name="salaire" placeholder="0.00">
+    </div>
+    
+    <button type="submit" class="btn btn-success">Créer le Contrat</button>
+    <a href="{% url 'manage_contracts' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

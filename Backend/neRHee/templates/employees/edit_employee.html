@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier Employé{% endblock %}
+
+{% block content %}
+<h1>Modifier l'Employé</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <h3>Informations Personnelles</h3>
+    <div class="form-group">
+        <label for="first_name">Prénom:</label>
+        <input type="text" id="first_name" name="first_name" value="{{ employee.user.first_name }}" required>
+    </div>
+    <div class="form-group">
+        <label for="last_name">Nom:</label>
+        <input type="text" id="last_name" name="last_name" value="{{ employee.user.last_name }}" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="{{ employee.user.email }}" required>
+    </div>
+    <div class="form-group">
+        <label for="phone">Téléphone:</label>
+        <input type="text" id="phone" name="phone" value="{{ employee.user.phone }}">
+    </div>
+    
+    <h3>Informations Professionnelles</h3>
+    <div class="form-group">
+        <label for="poste">Poste:</label>
+        <select id="poste" name="poste" class="form-control">
+            <option value="">Sélectionner un poste</option>
+            {% for position in positions %}
+            <option value="{{ position.name }}" {% if employee.poste == position.name %}selected{% endif %}>{{ position.name }}</option>
+            {% endfor %}
+        </select>
+        <small class="form-text text-muted">Ou saisir un nouveau poste ci-dessous</small>
+        <input type="text" id="poste_custom" name="poste_custom" class="form-control mt-2" placeholder="Nouveau poste (optionnel)">
+    </div>
+    <div class="form-group">
+        <label for="service">Service:</label>
+        <input type="text" id="service" name="service" value="{{ employee.service }}">
+    </div>
+    <div class="form-group">
+        <label for="department">Département:</label>
+        <select id="department" name="department" class="form-control">
+            <option value="">Sélectionner un département</option>
+            {% for dept in departments %}
+            <option value="{{ dept.id }}" {% if employee.department.id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="date_embauche">Date d'embauche:</label>
+        <input type="date" id="date_embauche" name="date_embauche" value="{% if employee.date_embauche %}{{ employee.date_embauche|date:'Y-m-d' }}{% endif %}">
+    </div>
+    <div class="form-group">
+        <label for="statut">Statut:</label>
+        <select id="statut" name="statut">
+            <option value="actif" {% if employee.statut == 'actif' %}selected{% endif %}>Actif</option>
+            <option value="inactif" {% if employee.statut == 'inactif' %}selected{% endif %}>Inactif</option>
+            <option value="suspendu" {% if employee.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
+        </select>
+    </div>
+    
+    <button type="submit" class="btn">Sauvegarder</button>
+    <a href="{% url 'employee_detail' employee.id %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

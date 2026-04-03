@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Contrats Expirant Bientôt{% endblock %}
+
+{% block content %}
+<h1>Contrats Expirant dans les 30 Prochains Jours</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Employé</th>
+            <th>Type</th>
+            <th>Date Fin</th>
+            <th>Jours Restants</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for contract in contracts %}
+        <tr style="{% if contract.is_expired %}background-color: #f8d7da;{% elif contract.is_expiring_soon %}background-color: #fff3cd;{% endif %}">
+            <td>{{ contract.employee.user.get_full_name }}</td>
+            <td>{{ contract.get_type_display }}</td>
+            <td>{{ contract.date_fin|date:"d/m/Y" }}</td>
+            <td>{{ contract.date_fin|timeuntil }}</td>
+            <td>
+                <a href="{% url 'renew_contract' contract.id %}" class="btn btn-success">Renouveler</a>
+                <a href="{% url 'edit_contract' contract.id %}" class="btn">Modifier</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Aucun contrat n'expire bientôt</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin: 20px 0;">
+    <a href="{% url 'manage_contracts' %}" class="btn">Retour aux Contrats</a>
+</div>
+{% endblock %}

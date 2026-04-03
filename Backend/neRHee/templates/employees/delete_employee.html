@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer Employé{% endblock %}
+
+{% block content %}
+<h1>Supprimer l'Employé</h1>
+
+<div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; margin: 20px 0; border-radius: 5px;">
+    <h3>⚠️ Attention - Suppression Définitive</h3>
+    <p>Vous êtes sur le point de supprimer définitivement l'employé suivant :</p>
+    
+    <div style="background: white; padding: 15px; margin: 15px 0; border-radius: 5px;">
+        <p><strong>Nom:</strong> {{ employee.user.get_full_name }}</p>
+        <p><strong>Email:</strong> {{ employee.user.email }}</p>
+        <p><strong>Matricule:</strong> {{ employee.matricule }}</p>
+        <p><strong>Poste:</strong> {{ employee.poste }}</p>
+        <p><strong>Service:</strong> {{ employee.service }}</p>
+    </div>
+    
+    <p><strong>Cette action est irréversible et supprimera :</strong></p>
+    <ul>
+        <li>Le compte utilisateur</li>
+        <li>Le profil employé</li>
+        <li>Tous les contrats associés</li>
+        <li>Toutes les demandes associées</li>
+    </ul>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Confirmer la Suppression</button>
+    <a href="{% url 'employee_detail' employee.id %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

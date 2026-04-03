@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<h1>Employee Dashboard</h1>
+<p>Welcome, {{ user.get_full_name }}!</p>
+
+{% if new_employees_today %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 15px 0; display: flex; align-items: center;"><i class="fas fa-star" style="margin-right: 10px;"></i>🎉 Nouveau(x) Employé(s) du Jour</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        {% for employee in new_employees_today %}
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center; min-width: 200px;">
+            {% if employee.photo %}
+                <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid white;">
+            {% else %}
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px;">👤</div>
+            {% endif %}
+            <div style="font-weight: bold; margin-bottom: 5px;">{{ employee.user.get_full_name }}</div>
+            <div style="font-size: 14px; opacity: 0.9;">{{ employee.poste|default:"Poste non défini" }}</div>
+            <div style="font-size: 12px; opacity: 0.8;">{{ employee.service|default:"Service non défini" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if active_job_offers %}
+<div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 15px 0; display: flex; align-items: center;"><i class="fas fa-briefcase" style="margin-right: 10px;"></i>💼 Nouvelles Offres d'Emploi</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        {% for job_offer in active_job_offers %}
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; min-width: 280px; flex: 1;">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">{{ job_offer.title }}</div>
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">📍 {{ job_offer.department }}</div>
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">🎯 {{ job_offer.get_experience_level_display }}</div>
+            <div style="font-size: 12px; opacity: 0.8; margin-bottom: 15px;">{{ job_offer.description|truncatewords:15 }}</div>
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'recruitment:public_job_detail' job_offer.id %}" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; font-size: 12px;">Voir Détails</a>
+                <a href="{% url 'recruitment:recommend_profile' job_offer.id %}" style="background: rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 5px; text-decoration: none; font-size: 12px;">Recommander</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>My Profile</h3>
+        <p>View and manage your profile information</p>
+        <a href="{% url 'profile' %}" class="btn">View Profile</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>My Requests</h3>
+        <p>View status of your requests</p>
+        <a href="{% url 'my_requests' %}" class="btn">View Requests</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>New Leave Request</h3>
+        <p>Request time off</p>
+        <a href="{% url 'create_leave_request' %}" class="btn">Request Leave</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Request Certificate</h3>
+        <p>Request work certificate</p>
+        <a href="{% url 'create_attestation_request' %}" class="btn">Request Certificate</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Politiques RH</h3>
+        <p>Consulter les politiques de l'entreprise</p>
+        <a href="{% url 'hr_policies' %}" class="btn">Voir Politiques</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Événements</h3>
+        <p>Consulter les événements de l'entreprise</p>
+        <a href="{% url 'manage_events' %}" class="btn">Voir Événements</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Mes Formations</h3>
+        <p>Consulter vos formations assignées</p>
+        <a href="{% url 'my_trainings' %}" class="btn">Voir Formations</a>
+    </div>
+</div>
+{% endblock %}

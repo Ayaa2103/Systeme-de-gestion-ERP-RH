@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Feedback Entretien - {{ interview.application.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="m-0">Feedback d'Entretien</h5>
+                    <small class="text-muted">{{ interview.application.full_name }} - {{ interview.scheduled_date|date:"d/m/Y H:i" }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="score" class="form-label">Score (sur 10)</label>
+                            <select name="score" id="score" class="form-control">
+                                <option value="">-- Sélectionner un score --</option>
+                                {% for i in "0123456789" %}
+                                <option value="{{ forloop.counter0 }}" {% if interview.score == forloop.counter0 %}selected{% endif %}>
+                                    {{ forloop.counter0 }}/10
+                                </option>
+                                {% endfor %}
+                                <option value="10" {% if interview.score == 10 %}selected{% endif %}>10/10</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="feedback" class="form-label">Commentaires et Feedback</label>
+                            <textarea name="feedback" id="feedback" class="form-control" rows="6" placeholder="Décrivez le déroulement de l'entretien, les points forts et faibles du candidat, vos recommandations...">{{ interview.feedback }}</textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong>Conseils pour le feedback :</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Évaluez les compétences techniques</li>
+                                <li>Notez la motivation et l'attitude</li>
+                                <li>Commentez l'adéquation avec le poste</li>
+                                <li>Donnez une recommandation finale</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'interview_detail' interview.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

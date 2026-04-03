@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Formations{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">🎓 Gestion des Formations</h1>
+                    <p class="text-muted mb-0">Créer et gérer les programmes de formation</p>
+                </div>
+                {% if user.role == 'hr_manager' %}
+                <div>
+                    <a href="{% url 'create_training' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Créer une Formation
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Formations Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Liste des Formations</h6>
+                </div>
+                <div class="card-body">
+                    {% if trainings %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nom de la Formation</th>
+                                    <th>Description</th>
+                                    <th>Période</th>
+                                    <th>Durée</th>
+                                    <th>Participants</th>
+                                    <th>Créé par</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for training in trainings %}
+                                <tr class="{% if training.status == 'pending' %}table-warning{% elif training.status == 'approved' %}table-success{% elif training.status == 'rejected' %}table-danger{% endif %}">
+                                    <td><strong>{{ training.name }}</strong></td>
+                                    <td>{{ training.description|truncatewords:8 }}</td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ training.start_date|date:"d/m/Y" }} - {{ training.end_date|date:"d/m/Y" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ training.duration_days }} jour{{ training.duration_days|pluralize }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ training.employees.count }} participant{{ training.employees.count|pluralize }}</span>
+                                    </td>
+                                    <td>{{ training.created_by.get_full_name }}</td>
+                                    <td>
+                                        {% if training.status == 'pending' %}
+                                            <span class="badge bg-warning">🕰️ {{ training.get_status_display }}</span>
+                                        {% elif training.status == 'approved' %}
+                                            <span class="badge bg-success">✅ {{ training.get_status_display }}</span>
+                                            {% if training.is_active %}
+                                                <br><small class="text-success">En cours</small>
+                                            {% endif %}
+                                        {% elif training.status == 'rejected' %}
+                                            <span class="badge bg-danger">❌ {{ training.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.role == 'hr_director' and training.status == 'pending' %}
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'approve_training' training.id %}" 
+                                                   class="btn btn-success btn-sm"
+                                                   onclick="return confirm('Approuver cette formation ?')">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                                <a href="{% url 'reject_training' training.id %}" 
+                                                   class="btn btn-danger btn-sm"
+                                                   onclick="return confirm('Rejeter cette formation ?')">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-graduation-cap fa-3x text-gray-300 mb-3"></i>
+                        <h5 class="text-gray-500">Aucune formation trouvée</h5>
+                        {% if user.role == 'hr_manager' %}
+                        <p class="text-muted">Commencez par créer votre première formation.</p>
+                        <a href="{% url 'create_training' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Créer une Formation
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg mx-2">
+                <i class="fas fa-arrow-left"></i> Retour Dashboard
+            </a>
+            <a href="{% url 'employee_list' %}" class="btn btn-info btn-lg mx-2">
+                <i class="fas fa-users"></i> Liste Employés
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

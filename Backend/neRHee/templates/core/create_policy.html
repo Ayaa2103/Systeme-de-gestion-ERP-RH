@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer une Politique RH{% endblock %}
+
+{% block content %}
+<h1>Créer une Nouvelle Politique RH</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="name">Nom de la politique:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" rows="6" required></textarea>
+    </div>
+    
+    <button type="submit" class="btn">Créer la Politique</button>
+    <a href="{% url 'hr_policies' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

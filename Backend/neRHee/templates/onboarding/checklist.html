@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Checklist - {{ employee.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">📋 Checklist d'Intégration</h1>
+                    <p class="text-muted mb-0">{{ employee.user.get_full_name }} - {{ employee.poste }}</p>
+                </div>
+                <div class="text-center">
+                    <div class="mb-2">
+                        <span class="h4 font-weight-bold" id="progress-percentage">{{ employee.onboarding_progress }}%</span>
+                    </div>
+                    <div class="progress" style="width: 150px;">
+                        <div class="progress-bar {% if employee.onboarding_progress == 100 %}bg-success{% elif employee.onboarding_progress > 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             role="progressbar" style="width: {{ employee.onboarding_progress }}%" id="progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Étapes d'Intégration</h6>
+                </div>
+                <div class="card-body">
+                    {% for item in checklist_items %}
+                    <div class="checklist-item mb-3 p-3 border rounded {% if item.is_completed %}bg-light{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <input type="checkbox" class="form-check-input checklist-checkbox" 
+                                       data-item-id="{{ item.id }}" 
+                                       {% if item.is_completed %}checked{% endif %}>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="font-weight-bold {% if item.is_completed %}text-muted{% endif %}">
+                                    {{ item.item_name }}
+                                </div>
+                                {% if item.is_completed %}
+                                <div class="text-success small">
+                                    <i class="fas fa-check-circle"></i>
+                                    Terminé le {{ item.completion_date|date:"d/m/Y à H:i" }}
+                                    {% if item.completed_by %}
+                                        par {{ item.completed_by.get_full_name }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                {% if item.is_completed %}
+                                    <span class="badge badge-success">Terminé</span>
+                                {% else %}
+                                    <span class="badge badge-warning">En attente</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations Employé</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Nom:</strong> {{ employee.user.get_full_name }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Poste:</strong> {{ employee.poste }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Service:</strong> {{ employee.service }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Email:</strong> {{ employee.user.email }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Date d'embauche:</strong> {{ employee.date_embauche|date:"d/m/Y" }}
+                    </div>
+                    {% if employee.assigned_manager %}
+                    <div class="mb-2">
+                        <strong>Manager:</strong> {{ employee.assigned_manager.user.get_full_name }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'employee_onboarding_detail' employee.pk %}" class="btn btn-info">
+                            <i class="fas fa-user"></i> Voir Profil
+                        </a>
+                        <a href="{% url 'employee_onboarding_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour Liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.checklist-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const itemId = this.dataset.itemId;
+            const isChecked = this.checked;
+            
+            // Disable checkbox during request
+            this.disabled = true;
+            
+            fetch(`/onboarding/checklist-item/${itemId}/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update progress
+                    document.getElementById('progress-percentage').textContent = data.progress + '%';
+                    const progressBar = document.getElementById('progress-bar');
+                    progressBar.style.width = data.progress + '%';
+                    
+                    // Update progress bar color
+                    progressBar.className = 'progress-bar ' + 
+                        (data.progress === 100 ? 'bg-success' : 
+                         data.progress > 50 ? 'bg-warning' : 'bg-danger');
+                    
+                    // Reload page to update UI
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour');
+                    this.checked = !isChecked; // Revert checkbox
+                }
+                this.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erreur lors de la mise à jour');
+                this.checked = !isChecked; // Revert checkbox
+                this.disabled = false;
+            });
+        });
+    });
+});
+</script>
+
+{% csrf_token %}
+{% endblock %}

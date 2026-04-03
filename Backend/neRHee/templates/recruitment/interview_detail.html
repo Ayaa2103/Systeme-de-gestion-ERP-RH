@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Entretien - {{ interview.application.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Entretien - {{ interview.application.full_name }}</h1>
+                <span class="badge badge-{% if interview.status == 'scheduled' %}warning{% elif interview.status == 'completed' %}success{% else %}secondary{% endif %}">
+                    {{ interview.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Détails de l'Entretien</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Candidat:</strong></div>
+                        <div class="col-sm-9">
+                            <a href="{% url 'application_detail' interview.application.pk %}">
+                                {{ interview.application.full_name }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Poste:</strong></div>
+                        <div class="col-sm-9">{{ interview.application.job_offer.title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date et Heure:</strong></div>
+                        <div class="col-sm-9">{{ interview.scheduled_date|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Lieu:</strong></div>
+                        <div class="col-sm-9">{{ interview.location|default:"Non spécifié" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Interviewer:</strong></div>
+                        <div class="col-sm-9">{{ interview.interviewer.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Statut:</strong></div>
+                        <div class="col-sm-9">
+                            <span class="badge badge-{% if interview.status == 'scheduled' %}warning{% elif interview.status == 'completed' %}success{% else %}secondary{% endif %}">
+                                {{ interview.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if interview.score %}
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Score:</strong></div>
+                        <div class="col-sm-9">
+                            <span class="badge badge-{% if interview.score >= 7 %}success{% elif interview.score >= 5 %}warning{% else %}danger{% endif %}">
+                                {{ interview.score }}/10
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if interview.feedback %}
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Feedback de l'Entretien</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ interview.feedback|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if interview.status == 'scheduled' %}
+                        <a href="{% url 'interview_feedback' interview.pk %}" class="btn btn-success">
+                            <i class="fas fa-comment"></i> Ajouter Feedback
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'application_detail' interview.application.pk %}" class="btn btn-info">
+                            <i class="fas fa-user"></i> Voir Candidature
+                        </a>
+                        <a href="{% url 'application_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour aux Candidatures
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mt-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations Candidat</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Email:</strong><br>
+                        <a href="mailto:{{ interview.application.email }}">{{ interview.application.email }}</a>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Téléphone:</strong><br>
+                        <a href="tel:{{ interview.application.phone }}">{{ interview.application.phone }}</a>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Statut Candidature:</strong><br>
+                        <span class="badge badge-{% if interview.application.status == 'pending' %}warning{% elif interview.application.status == 'accepted' %}success{% elif interview.application.status == 'rejected' %}danger{% else %}info{% endif %}">
+                            {{ interview.application.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

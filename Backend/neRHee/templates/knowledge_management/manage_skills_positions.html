@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Gérer Compétences & Postes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ajouter une Compétence</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ skill_form.name.label_tag }}
+                            {{ skill_form.name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ skill_form.category.label_tag }}
+                            {{ skill_form.category }}
+                        </div>
+                        <div class="mb-3">
+                            {{ skill_form.description.label_tag }}
+                            {{ skill_form.description }}
+                        </div>
+                        <button type="submit" name="add_skill" class="btn btn-primary">Ajouter Compétence</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>Compétences Existantes</h6>
+                </div>
+                <div class="card-body">
+                    {% for skill in skills %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ skill.name }}</strong>
+                            {% if skill.category %}
+                            <span class="badge bg-info">{{ skill.category }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ajouter un Poste</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ position_form.name.label_tag }}
+                            {{ position_form.name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ position_form.department.label_tag }}
+                            {{ position_form.department }}
+                        </div>
+                        <div class="mb-3">
+                            {{ position_form.description.label_tag }}
+                            {{ position_form.description }}
+                        </div>
+                        <button type="submit" name="add_position" class="btn btn-success">Ajouter Poste</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>Postes Existants</h6>
+                </div>
+                <div class="card-body">
+                    {% for position in positions %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ position.name }}</strong>
+                            {% if position.department %}
+                            <span class="badge bg-success">{{ position.department }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-12">
+            <a href="{% url 'knowledge_management:dashboard' %}" class="btn btn-secondary">Retour au Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

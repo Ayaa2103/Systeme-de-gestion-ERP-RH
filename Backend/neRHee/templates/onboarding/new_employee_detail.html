@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ new_employee.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">{{ new_employee.full_name }}</h1>
+                <div>
+                    <span class="badge badge-{% if new_employee.onboarding_progress == 100 %}success{% elif new_employee.onboarding_progress > 50 %}warning{% else %}danger{% endif %} mr-2">
+                        {{ new_employee.onboarding_progress }}% Terminé
+                    </span>
+                    <a href="{% url 'new_employee_edit' new_employee.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations Personnelles</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Nom complet:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Poste:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.position }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Département:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.department }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Email:</strong></div>
+                        <div class="col-sm-9">
+                            <a href="mailto:{{ new_employee.email }}">{{ new_employee.email }}</a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de début:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.start_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Manager assigné:</strong></div>
+                        <div class="col-sm-9">
+                            {% if new_employee.assigned_manager %}
+                                {{ new_employee.assigned_manager.user.get_full_name }}
+                            {% else %}
+                                <span class="text-muted">Aucun manager assigné</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé par:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.created_by.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de création:</strong></div>
+                        <div class="col-sm-9">{{ new_employee.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Progression de l'Intégration</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="font-weight-bold">Progression Globale</span>
+                            <span class="font-weight-bold">{{ new_employee.onboarding_progress }}%</span>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar {% if new_employee.onboarding_progress == 100 %}bg-success{% elif new_employee.onboarding_progress > 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" style="width: {{ new_employee.onboarding_progress }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        {% for item in checklist_items %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                {% if item.is_completed %}
+                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                {% else %}
+                                    <i class="fas fa-circle text-muted mr-2"></i>
+                                {% endif %}
+                                <span class="{% if item.is_completed %}text-muted{% endif %}">{{ item.item_name }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions Rapides</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'checklist_view' new_employee.pk %}" class="btn btn-success">
+                            <i class="fas fa-tasks"></i> Gérer Checklist
+                        </a>
+                        <a href="{% url 'new_employee_edit' new_employee.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Modifier Informations
+                        </a>
+                        <a href="{% url 'new_employee_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour à la Liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Statistiques</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <div class="h2 font-weight-bold text-primary">{{ checklist_items|length }}</div>
+                            <div class="text-muted">Étapes Total</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="h4 font-weight-bold text-success">
+                                    {% widthratio checklist_items|length new_employee.onboarding_progress 100 %}
+                                </div>
+                                <div class="text-muted small">Terminées</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="h4 font-weight-bold text-warning">
+                                    {% widthratio checklist_items|length new_employee.onboarding_progress 100 as completed %}
+                                    {{ checklist_items|length|add:completed|add:"-"|add:completed }}
+                                </div>
+                                <div class="text-muted small">Restantes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

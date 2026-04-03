@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ training.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>{{ training.name }}</h3>
+                    {% if training.is_active %}
+                        <span class="badge badge-success">En cours</span>
+                    {% elif training.start_date > today %}
+                        <span class="badge badge-info">À venir</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Terminée</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5>Description</h5>
+                    <p>{{ training.description }}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-calendar-start"></i> Date de début</h6>
+                            <p>{{ training.start_date }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-calendar-end"></i> Date de fin</h6>
+                            <p>{{ training.end_date }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-clock"></i> Durée</h6>
+                            <p>{{ training.duration_days }} jour{{ training.duration_days|pluralize }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-check-circle"></i> Statut</h6>
+                            <p>{{ training.get_status_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Participants</h5>
+                </div>
+                <div class="card-body">
+                    {% if training.employees.all %}
+                        <ul class="list-unstyled">
+                            {% for employee in training.employees.all %}
+                                <li class="mb-2">
+                                    <i class="fas fa-user"></i>
+                                    {{ employee.user.get_full_name }}
+                                    <small class="text-muted">({{ employee.matricule }})</small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Aucun participant assigné</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'my_trainings' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à mes formations
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Événements{% endblock %}
+
+{% block content %}
+<h1>Gestion des Événements</h1>
+
+{% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+<div style="margin: 20px 0;">
+    <a href="{% url 'create_event' %}" class="btn">Créer un Événement</a>
+</div>
+{% endif %}
+
+{% if user.role == 'employee' %}
+<div style="background: #d1ecf1; padding: 15px; margin: 20px 0; border-radius: 5px;">
+    <p><strong>Événements de l'entreprise</strong> - Consultez les événements approuvés</p>
+</div>
+{% endif %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Lieu</th>
+            <th>Créé par</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+        <tr style="{% if event.status == 'pending' %}background-color: #fff3cd;{% elif event.status == 'approved' %}background-color: #d4edda;{% elif event.status == 'rejected' %}background-color: #f8d7da;{% endif %}">
+            <td>{{ event.name }}</td>
+            <td>{{ event.description|truncatewords:10 }}</td>
+            <td>{{ event.date|date:"d/m/Y" }}</td>
+            <td>{{ event.location }}</td>
+            <td>{{ event.created_by.get_full_name }}</td>
+            <td>{{ event.get_status_display }}</td>
+            <td>
+                {% if user.role == 'hr_director' and event.status == 'pending' %}
+                    <div style="display: flex; gap: 5px;">
+                        <a href="{% url 'approve_event' event.id %}" class="btn btn-success">Approuver</a>
+                        <a href="{% url 'reject_event' event.id %}" class="btn btn-danger">Rejeter</a>
+                    </div>
+                {% elif user.role == 'employee' %}
+                    <span style="color: #6c757d;">Consultation</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">Aucun événement trouvé</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin: 20px 0;">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Retour au Dashboard</a>
+</div>
+{% endblock %}

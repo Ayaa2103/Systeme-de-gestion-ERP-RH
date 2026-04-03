@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion Système{% endblock %}
+
+{% block content %}
+<h1>Gestion Système</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Configuration</h3>
+        <p>Paramètres système et configuration</p>
+        <a href="/admin/core/" class="btn">Configuration Core</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Utilisateurs</h3>
+        <p>Gestion des comptes utilisateurs</p>
+        <a href="/admin/core/user/" class="btn">Gérer Utilisateurs</a>
+    </div>
+    
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h3>Groupes & Permissions</h3>
+        <p>Gestion des droits d'accès</p>
+        <a href="/admin/auth/group/" class="btn">Gérer Groupes</a>
+    </div>
+</div>
+
+
+
+<div style="margin: 20px 0;">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Retour au Dashboard</a>
+</div>
+{% endblock %}

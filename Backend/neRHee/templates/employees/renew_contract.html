@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Renouveler Contrat{% endblock %}
+
+{% block content %}
+<h1>Renouveler le Contrat de {{ contract.employee.user.get_full_name }}</h1>
+
+<div style="background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px;">
+    <h3>Contrat Actuel</h3>
+    <p><strong>Type:</strong> {{ contract.get_type_display }}</p>
+    <p><strong>Date fin:</strong> {{ contract.date_fin|date:"d/m/Y" }}</p>
+    <p><strong>Salaire:</strong> {{ contract.salaire }} €</p>
+</div>
+
+{% if auto_renew_suggested %}
+<div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; margin: 20px 0; border-radius: 5px;">
+    <h3>✨ Renouvellement Automatique Disponible</h3>
+    <p>Ce contrat CDI peut être renouvelé automatiquement pour 3 mois (règle des 6 premiers mois).</p>
+    <form method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" name="auto_renew" class="btn btn-success">Renouvellement Automatique (3 mois)</button>
+    </form>
+</div>
+
+<div style="margin: 20px 0; text-align: center;">
+    <strong>OU</strong>
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <h3>Renouvellement Manuel</h3>
+    <div class="form-group">
+        <label for="type">Type de contrat:</label>
+        <select id="type" name="type" required>
+            <option value="CDI" {% if contract.type == 'CDI' %}selected{% endif %}>CDI</option>
+            <option value="CDD" {% if contract.type == 'CDD' %}selected{% endif %}>CDD</option>
+            <option value="Stage" {% if contract.type == 'Stage' %}selected{% endif %}>Stage</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="date_debut">Date de début:</label>
+        <input type="date" id="date_debut" name="date_debut" value="{{ contract.date_fin|date:'Y-m-d' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="date_fin">Date de fin:</label>
+        <input type="date" id="date_fin" name="date_fin">
+    </div>
+    <div class="form-group">
+        <label for="salaire">Salaire:</label>
+        <input type="number" step="0.01" id="salaire" name="salaire" value="{{ contract.salaire }}">
+    </div>
+    
+    <button type="submit" class="btn btn-success">Renouveler le Contrat</button>
+    <a href="{% url 'contract_detail' contract.id %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

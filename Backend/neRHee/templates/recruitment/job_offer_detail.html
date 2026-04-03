@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job_offer.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">{{ job_offer.title }}</h1>
+                <div>
+                    <span class="badge badge-{% if job_offer.status == 'published' %}success{% elif job_offer.status == 'draft' %}warning{% else %}secondary{% endif %} mr-2">
+                        {{ job_offer.get_status_display }}
+                    </span>
+                    <a href="{% url 'recruitment:job_offer_edit' job_offer.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Détails de l'Offre</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Département:</strong></div>
+                        <div class="col-sm-9">{{ job_offer.department }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Niveau d'Expérience:</strong></div>
+                        <div class="col-sm-9">{{ job_offer.get_experience_level_display }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé par:</strong></div>
+                        <div class="col-sm-9">{{ job_offer.created_by.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de Création:</strong></div>
+                        <div class="col-sm-9">{{ job_offer.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% if job_offer.published_at %}
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Publié le:</strong></div>
+                        <div class="col-sm-9">{{ job_offer.published_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Description du Poste</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ job_offer.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Compétences Requises</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ job_offer.required_skills|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Candidatures ({{ applications.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% for application in applications %}
+                    <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle fa-2x text-gray-400"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="font-weight-bold">
+                                <a href="{% url 'recruitment:application_detail' application.pk %}">{{ application.full_name }}</a>
+                            </div>
+                            <div class="text-muted small">{{ application.applied_at|date:"d/m/Y" }}</div>
+                        </div>
+                        <div>
+                            <span class="badge badge-{% if application.status == 'pending' %}warning{% elif application.status == 'accepted' %}success{% elif application.status == 'rejected' %}danger{% else %}info{% endif %}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Aucune candidature pour le moment</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Politiques RH{% endblock %}
+
+{% block content %}
+<h1>Politiques RH</h1>
+
+{% if user.role == 'hr_director' %}
+<div style="margin: 20px 0;">
+    <a href="{% url 'create_policy' %}" class="btn">Créer une Politique</a>
+</div>
+{% endif %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Nom de la Politique</th>
+            <th>Description</th>
+            <th>Créé par</th>
+            <th>Date de Création</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for policy in policies %}
+        <tr>
+            <td>{{ policy.name }}</td>
+            <td>{{ policy.description|truncatewords:15 }}</td>
+            <td>{{ policy.created_by.get_full_name }}</td>
+            <td>{{ policy.created_at|date:"d/m/Y" }}</td>
+            <td>
+                {% if policy.is_active %}
+                    <span style="color: green;">Active</span>
+                {% else %}
+                    <span style="color: red;">Inactive</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if user.role == 'hr_director' %}
+                    <a href="{% url 'edit_policy' policy.id %}" class="btn">Modifier</a>
+                {% else %}
+                    <span style="color: #6c757d;">Lecture seule</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Aucune politique RH trouvée</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin: 20px 0;">
+    <a href="{% url 'dashboard' %}" class="btn">Retour au Dashboard</a>
+</div>
+{% endblock %}

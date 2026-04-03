@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Suggestion{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">💡 Submit a Suggestion</h1>
+            <p class="text-muted">Share your ideas to improve our company</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="{{ form.title.id_for_label }}">Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="{{ form.suggestion_text.id_for_label }}">Your Suggestion</label>
+                            {{ form.suggestion_text }}
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Submit Suggestion
+                            </button>
+                            <a href="{% url 'culture_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Tips</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Be specific and clear</li>
+                        <li><i class="fas fa-check text-success"></i> Explain the benefit</li>
+                        <li><i class="fas fa-check text-success"></i> Suggest implementation steps</li>
+                        <li><i class="fas fa-check text-success"></i> Be constructive</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

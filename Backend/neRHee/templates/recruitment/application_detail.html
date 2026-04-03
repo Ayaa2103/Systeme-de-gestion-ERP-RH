@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidature - {{ application.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">{{ application.full_name }}</h1>
+                <div>
+                    <span class="badge badge-{% if application.status == 'pending' %}warning{% elif application.status == 'accepted' %}success{% elif application.status == 'rejected' %}danger{% else %}info{% endif %} mr-2">
+                        {{ application.get_status_display }}
+                    </span>
+                    <a href="{% url 'recruitment:application_update_status' application.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> Modifier Statut
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations du Candidat</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Nom:</strong></div>
+                        <div class="col-sm-9">{{ application.full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Email:</strong></div>
+                        <div class="col-sm-9">{{ application.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Téléphone:</strong></div>
+                        <div class="col-sm-9">{{ application.phone }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Poste:</strong></div>
+                        <div class="col-sm-9">{{ application.job_offer.title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date de candidature:</strong></div>
+                        <div class="col-sm-9">{{ application.applied_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>CV:</strong></div>
+                        <div class="col-sm-9">
+                            {% if application.cv %}
+                                <a href="{{ application.cv.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Télécharger CV
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Aucun CV téléchargé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if application.cover_letter %}
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Lettre de Motivation</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ application.cover_letter|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if application.notes %}
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Notes RH</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ application.notes|linebreaks }}</p>
+                    {% if application.reviewed_by %}
+                    <small class="text-muted">
+                        Examiné par {{ application.reviewed_by.get_full_name }} le {{ application.reviewed_at|date:"d/m/Y H:i" }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'recruitment:application_update_status' application.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Modifier Statut
+                        </a>
+                        {% if application.status != 'interview' %}
+                        <a href="{% url 'recruitment:interview_create' application.pk %}" class="btn btn-success">
+                            <i class="fas fa-calendar-plus"></i> Programmer Entretien
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Entretiens ({{ interviews.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% for interview in interviews %}
+                    <div class="border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="font-weight-bold">{{ interview.scheduled_date|date:"d/m/Y H:i" }}</div>
+                                <div class="text-muted small">{{ interview.interviewer.get_full_name }}</div>
+                            </div>
+                            <span class="badge badge-{% if interview.status == 'scheduled' %}warning{% elif interview.status == 'completed' %}success{% else %}secondary{% endif %}">
+                                {{ interview.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{% url 'recruitment:interview_detail' interview.pk %}" class="btn btn-sm btn-outline-info">Voir</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Aucun entretien programmé</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Demande de Bulletin de Paie{% endblock %}
+
+{% block content %}
+<h1>Demande de Bulletin de Paie</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="periode_mois">Période (mois/année):</label>
+        <input type="month" id="periode_mois" name="periode_mois" required>
+    </div>
+    <div class="form-group">
+        <label for="comment">Commentaire:</label>
+        <textarea id="comment" name="comment" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn">Soumettre la demande</button>
+    <a href="{% url 'my_requests' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

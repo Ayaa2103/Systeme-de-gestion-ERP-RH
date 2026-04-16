@@ -54,6 +54,7 @@ import EventDetail from './pages/Events/EventDetail';
 import EditEvent from './pages/Events/EditEvent';
 import EditContract from './pages/Contracts/EditContract';
 import RenewContract from './pages/Contracts/RenewContract';
+import CreateContract from './pages/Contracts/CreateContract';
 import EmployeeProfile from './pages/EmployeeProfile';
 import CultureDashboard from './pages/CompanyCulture/CultureDashboard';
 import RespondSuggestion from './pages/CompanyCulture/RespondSuggestion';
@@ -161,6 +162,18 @@ function App() {
               }
             />
             
+            {/* Créer contrat pour un employé */}
+            <Route
+              path="/employees/:id/create-contract"
+              element={
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
+                  <MainLayout>
+                    <CreateContract />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Modifier contrat */}
             <Route
               path="/contracts/:contractId/edit"

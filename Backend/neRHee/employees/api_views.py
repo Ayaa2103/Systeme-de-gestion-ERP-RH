@@ -170,24 +170,27 @@ def create_employee(request):
     
     try:
         user = User.objects.create_user(**user_data)
-        
-        employee_data = {
-            'user': user.id,
-            'matricule': request.data.get('matricule'),
-            'poste': request.data.get('poste', ''),
-            'service': request.data.get('service', ''),
-            'department': request.data.get('department'),
-            'date_embauche': request.data.get('date_embauche')
-        }
-        
-        serializer = EmployeeSerializer(data=employee_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            user.delete()  # Supprimer l'utilisateur si l'employé n'est pas créé
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        # Le signal post_save crée automatiquement un Employee — on le récupère et on le met à jour
+        try:
+            employee = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            employee = Employee(user=user)
+
+        employee.matricule = request.data.get('matricule', employee.matricule)
+        employee.poste = request.data.get('poste', '')
+        employee.service = request.data.get('service', '')
+        employee.date_embauche = request.data.get('date_embauche') or None
+
+        department_id = request.data.get('department')
+        if department_id:
+            employee.department_id = department_id
+
+        employee.save()
+
+        serializer = EmployeeSerializer(employee)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -238,7 +241,7 @@ def delete_employee(request, employee_id):
 @permission_classes([IsAuthenticated])
 def contracts_list(request):
     """Liste des contrats"""
-    if request.user.role not in ['hr_manager', 'hr_director']:
+    if request.user.role not in ['hr_manager', 'hr_director', 'administrator']:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
     
     contracts = Contract.objects.select_related('employee__user').all()
@@ -278,7 +281,7 @@ def create_contract(request):
 @permission_classes([IsAuthenticated])
 def contract_detail(request, contract_id):
     """Détail d'un contrat"""
-    if request.user.role not in ['hr_manager', 'hr_director']:
+    if request.user.role not in ['hr_manager', 'hr_director', 'administrator']:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
     
     contract = get_object_or_404(Contract, id=contract_id)
@@ -358,7 +361,7 @@ def renew_contract(request, contract_id):
 @permission_classes([IsAuthenticated])
 def expiring_contracts(request):
     """Contrats expirant bientôt"""
-    if request.user.role not in ['hr_manager', 'hr_director']:
+    if request.user.role not in ['hr_manager', 'hr_director', 'administrator']:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
     
     contracts = Contract.objects.filter(

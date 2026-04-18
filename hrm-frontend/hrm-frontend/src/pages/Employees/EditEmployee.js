@@ -1,52 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  Alert,
-  CircularProgress,
-  Breadcrumbs,
-  Link
+  Box, Card, CardContent, Typography, TextField, Button,
+  Grid, MenuItem, Alert, CircularProgress, Avatar, Divider,
+  IconButton, Chip,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { getEmployeeDetail, updateEmployee, getDepartments, getPositions } from '../../services/hrService';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Person as PersonIcon } from '@mui/icons-material';
+import { getEmployeeDetail, updateEmployee, getDepartments } from '../../services/hrService';
+
+const COLORS = ['#1976d2', '#9c27b0', '#2e7d32', '#e65100', '#0097a7', '#c62828'];
+const avatarColor = (name = '') => COLORS[name.charCodeAt(0) % COLORS.length];
+
+/* ─── Section label ──────────────────────────────────────────────── */
+const SectionTitle = ({ children }) => (
+  <Box sx={{ mb: 2.5 }}>
+    <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.8, fontSize: '0.7rem' }}>
+      {children}
+    </Typography>
+    <Divider sx={{ mt: 0.75 }} />
+  </Box>
+);
 
 const EditEmployee = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState([]);
-  const [positions, setPositions] = useState([]);
   const [employee, setEmployee] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm();
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+  const firstName = watch('first_name', '');
+  const lastName = watch('last_name', '');
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  useEffect(() => { fetchData(); }, [id]);
 
   const fetchData = async () => {
     try {
-      const [employeeRes, departmentsRes, positionsRes] = await Promise.all([
+      const [empRes, deptRes] = await Promise.all([
         getEmployeeDetail(id),
         getDepartments(),
-        getPositions()
       ]);
-      
-      const emp = employeeRes.data;
+      const emp = empRes.data;
       setEmployee(emp);
-      setDepartments(departmentsRes.data);
-      setPositions(positionsRes.data);
-      
-      // Pré-remplir le formulaire
+      setDepartments(deptRes.data.results || deptRes.data);
+
       setValue('first_name', emp.user?.first_name || '');
       setValue('last_name', emp.user?.last_name || '');
       setValue('email', emp.user?.email || '');
@@ -57,232 +60,201 @@ const EditEmployee = () => {
       setValue('department', emp.department || '');
       setValue('date_embauche', emp.date_embauche || '');
       setValue('statut', emp.statut || 'actif');
-      
-    } catch (error) {
-      setError('Erreur lors du chargement des données');
+    } catch (_) {
+      setError('Erreur lors du chargement des données.');
     } finally {
       setLoading(false);
     }
   };
 
   const onSubmit = async (data) => {
-    setLoading(true);
+    setSaving(true);
     setError('');
     setSuccess('');
-
     try {
       await updateEmployee(id, data);
-      setSuccess('Employé modifié avec succès!');
-      setTimeout(() => {
-        navigate(`/employees/${id}`);
-      }, 2000);
-    } catch (error) {
-      setError(error.response?.data?.error || 'Erreur lors de la modification');
+      setSuccess('Modifications enregistrées avec succès.');
+      setTimeout(() => navigate(`/employees/${id}`), 1500);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la modification.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  if (loading && !employee) {
+  if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
         <CircularProgress />
       </Box>
     );
   }
 
-  return (
-    <Box>
-      <Breadcrumbs sx={{ mb: 3 }}>
-        <Link color="inherit" href="/dashboard">Tableau de bord</Link>
-        <Link color="inherit" href="/employees">Employés</Link>
-        <Link color="inherit" href={`/employees/${id}`}>
-          {employee?.user?.first_name} {employee?.user?.last_name}
-        </Link>
-        <Typography color="text.primary">Modifier</Typography>
-      </Breadcrumbs>
+  const initials = `${employee?.user?.first_name?.[0] || ''}${employee?.user?.last_name?.[0] || ''}`.toUpperCase();
 
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Modifier l'Employé
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Modifiez les informations de {employee?.user?.first_name} {employee?.user?.last_name}
-        </Typography>
+  return (
+    <Box sx={{ width: '100%' }}>
+
+      {/* En-tête */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1.5 }}>
+        <IconButton size="small" onClick={() => navigate(`/employees/${id}`)} sx={{ border: '1px solid #e8ecf0' }}>
+          <ArrowBackIcon fontSize="small" />
+        </IconButton>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h5" fontWeight={700}>Modifier l'employé</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {employee?.user?.first_name} {employee?.user?.last_name} · {employee?.matricule}
+          </Typography>
+        </Box>
+        <Avatar
+          src={employee?.photo}
+          sx={{ width: 42, height: 42, bgcolor: avatarColor(fullName || initials), fontWeight: 700 }}
+        >
+          {!employee?.photo && initials}
+        </Avatar>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{success}</Alert>}
 
-      <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-        <CardContent sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Informations Personnelles
-                </Typography>
-              </Grid>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Grid container spacing={3}>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Prénom"
-                  {...register('first_name', { required: 'Le prénom est requis' })}
-                  error={!!errors.first_name}
-                  helperText={errors.first_name?.message}
-                />
-              </Grid>
+          {/* ── Informations personnelles ── */}
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, height: '100%' }}>
+              <CardContent sx={{ p: 3 }}>
+                <SectionTitle>Informations personnelles</SectionTitle>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Prénom"
+                      {...register('first_name', { required: 'Champ requis' })}
+                      error={!!errors.first_name} helperText={errors.first_name?.message}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Nom"
+                      {...register('last_name', { required: 'Champ requis' })}
+                      error={!!errors.last_name} helperText={errors.last_name?.message}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth size="small" label="Email" type="email"
+                      {...register('email', {
+                        required: 'Champ requis',
+                        pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Email invalide' }
+                      })}
+                      error={!!errors.email} helperText={errors.email?.message}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth size="small" label="Téléphone"
+                      {...register('phone')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Nom"
-                  {...register('last_name', { required: 'Le nom est requis' })}
-                  error={!!errors.last_name}
-                  helperText={errors.last_name?.message}
-                />
-              </Grid>
+          {/* ── Informations professionnelles ── */}
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, height: '100%' }}>
+              <CardContent sx={{ p: 3 }}>
+                <SectionTitle>Informations professionnelles</SectionTitle>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Matricule"
+                      {...register('matricule', { required: 'Champ requis' })}
+                      error={!!errors.matricule} helperText={errors.matricule?.message}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Poste"
+                      {...register('poste')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Service"
+                      {...register('service')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" select label="Département"
+                      {...register('department')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    >
+                      <MenuItem value=""><em>Aucun</em></MenuItem>
+                      {departments.map((d) => (
+                        <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" label="Date d'embauche" type="date"
+                      InputLabelProps={{ shrink: true }}
+                      {...register('date_embauche')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth size="small" select label="Statut"
+                      {...register('statut')}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    >
+                      <MenuItem value="actif">Actif</MenuItem>
+                      <MenuItem value="inactif">Inactif</MenuItem>
+                      <MenuItem value="suspendu">Suspendu</MenuItem>
+                      <MenuItem value="congé">Congé</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  {...register('email', { 
-                    required: 'L\'email est requis',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Email invalide'
-                    }
-                  })}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                />
-              </Grid>
+          {/* ── Actions ── */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate(`/employees/${id}`)}
+                disabled={saving}
+                sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                sx={{ borderRadius: 2, textTransform: 'none', px: 3, fontWeight: 600 }}
+              >
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </Box>
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Téléphone"
-                  {...register('phone')}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="h6" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
-                  Informations Professionnelles
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Matricule"
-                  {...register('matricule', { required: 'Le matricule est requis' })}
-                  error={!!errors.matricule}
-                  helperText={errors.matricule?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Poste"
-                  {...register('poste')}
-                >
-                  <MenuItem value="">Sélectionner un poste</MenuItem>
-                  {positions.map((position) => (
-                    <MenuItem key={position.id} value={position.name}>
-                      {position.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                  Ou saisir un nouveau poste ci-dessous
-                </Typography>
-                <TextField
-                  fullWidth
-                  label="Nouveau poste (optionnel)"
-                  {...register('poste_custom')}
-                  placeholder="Nouveau poste (optionnel)"
-                  sx={{ mt: 2 }}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Service"
-                  {...register('service')}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Département"
-                  {...register('department')}
-                >
-                  <MenuItem value="">
-                    <em>Aucun département</em>
-                  </MenuItem>
-                  {departments.map((dept) => (
-                    <MenuItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Date d'embauche"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  {...register('date_embauche')}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Statut"
-                  {...register('statut')}
-                >
-                  <MenuItem value="actif">Actif</MenuItem>
-                  <MenuItem value="inactif">Inactif</MenuItem>
-                  <MenuItem value="suspendu">Suspendu</MenuItem>
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate(`/employees/${id}`)}
-                    disabled={loading}
-                  >
-                    Annuler
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    startIcon={loading && <CircularProgress size={20} />}
-                  >
-                    {loading ? 'Modification...' : 'Modifier'}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
+        </Grid>
+      </form>
     </Box>
   );
 };

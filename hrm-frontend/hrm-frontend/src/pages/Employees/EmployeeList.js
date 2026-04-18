@@ -13,7 +13,11 @@ import {
   Menu,
   MenuItem,
   Grid,
-  Fab
+  Select,
+  FormControl,
+  InputLabel,
+  Tooltip,
+  Skeleton,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -23,351 +27,346 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Work as WorkIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon
+  People as PeopleIcon,
+  CheckCircle as ActiveIcon,
+  BeachAccess as LeaveIcon,
+  HourglassEmpty as OnboardingIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { getEmployees, getDepartments, deleteEmployee } from '../../services/hrService';
 import { useAuth } from '../../contexts/AuthContext';
 
+/* ─── Stat card ─────────────────────────────────────────────────── */
+const StatCard = ({ label, value, icon, color, loading }) => (
+  <Card elevation={0} sx={{ border: '1px solid', borderColor: `${color}20`, borderRadius: 2 }}>
+    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Avatar sx={{ bgcolor: `${color}15`, width: 40, height: 40 }}>
+          {React.cloneElement(icon, { sx: { color, fontSize: 20 } })}
+        </Avatar>
+        <Box>
+          {loading ? <Skeleton width={32} height={28} /> : (
+            <Typography variant="h5" fontWeight={700} sx={{ color, lineHeight: 1 }}>
+              {value}
+            </Typography>
+          )}
+          <Typography variant="caption" color="text.secondary">{label}</Typography>
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
+/* ─── Avatar coloré par initiale ────────────────────────────────── */
+const COLORS = ['#1976d2', '#9c27b0', '#2e7d32', '#e65100', '#0097a7', '#c62828'];
+const avatarColor = (name = '') => COLORS[name.charCodeAt(0) % COLORS.length];
+
+/* ─── Main ───────────────────────────────────────────────────────── */
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDept, setFilterDept] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchEmployees();
-    fetchDepartments();
+    Promise.allSettled([fetchEmployees(), fetchDepartments()]);
   }, []);
 
   const fetchEmployees = async () => {
     try {
-      const response = await getEmployees();
-      setEmployees(response.data.results || response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des employés:', error);
-    } finally {
-      setLoading(false);
-    }
+      const res = await getEmployees();
+      setEmployees(res.data.results || res.data);
+    } catch (_) {}
+    finally { setLoading(false); }
   };
 
   const fetchDepartments = async () => {
     try {
-      const response = await getDepartments();
-      setDepartments(response.data.results || response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des départements:', error);
+      const res = await getDepartments();
+      setDepartments(res.data.results || res.data);
+    } catch (_) {}
+  };
+
+  const handleMenuOpen = (e, emp) => { setAnchorEl(e.currentTarget); setSelectedEmployee(emp); };
+  const handleMenuClose = () => { setAnchorEl(null); setSelectedEmployee(null); };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Supprimer ${selectedEmployee?.user?.first_name} ${selectedEmployee?.user?.last_name} ?`)) return;
+    try {
+      await deleteEmployee(selectedEmployee.id);
+      setEmployees(prev => prev.filter(e => e.id !== selectedEmployee.id));
+    } catch (_) {
+      alert("Erreur lors de la suppression.");
+    } finally {
+      handleMenuClose();
     }
   };
 
-  const handleMenuClick = (event, employee) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedEmployee(employee);
+  const getStatusChip = (status) => {
+    const map = {
+      actif:   { label: 'Actif',   color: '#2e7d32', bg: '#e8f5e9' },
+      inactif: { label: 'Inactif', color: '#c62828', bg: '#ffebee' },
+      congé:   { label: 'Congé',   color: '#e65100', bg: '#fff3e0' },
+    };
+    const s = map[status] || { label: status, color: '#757575', bg: '#f5f5f5' };
+    return (
+      <Chip
+        label={s.label}
+        size="small"
+        sx={{ bgcolor: s.bg, color: s.color, fontWeight: 600, fontSize: '0.7rem', border: `1px solid ${s.color}30` }}
+      />
+    );
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedEmployee(null);
-  };
-
-  const handleDeleteEmployee = async () => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedEmployee?.user?.first_name} ${selectedEmployee?.user?.last_name} ?`)) {
-      try {
-        await deleteEmployee(selectedEmployee.id);
-        await fetchEmployees(); // Recharger la liste
-        handleMenuClose();
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression de l\'employé');
-      }
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'actif': return 'success';
-      case 'inactif': return 'error';
-      case 'congé': return 'warning';
-      default: return 'default';
-    }
-  };
+  const filtered = employees.filter(emp => {
+    const q = searchTerm.toLowerCase();
+    const matchSearch =
+      emp.user?.first_name?.toLowerCase().includes(q) ||
+      emp.user?.last_name?.toLowerCase().includes(q) ||
+      emp.matricule?.toLowerCase().includes(q) ||
+      emp.poste?.toLowerCase().includes(q);
+    const matchDept = !filterDept || emp.department_name === filterDept;
+    const matchStatus = !filterStatus || emp.statut === filterStatus;
+    return matchSearch && matchDept && matchStatus;
+  });
 
   const columns = [
     {
-      field: 'avatar',
-      headerName: '',
-      width: 60,
-      renderCell: (params) => (
-        <Avatar
-          sx={{
-            width: 40,
-            height: 40,
-            backgroundColor: '#1976d2',
-          }}
-          src={params.row.photo ? `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${params.row.photo}` : undefined}
-        >
-          {!params.row.photo && (params.row.user?.first_name?.[0] || 'U')}
-        </Avatar>
-      ),
-    },
-    {
-      field: 'full_name',
-      headerName: 'Nom complet',
-      width: 200,
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2" fontWeight="600">
-            {params.row.user?.first_name} {params.row.user?.last_name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {params.row.matricule}
-          </Typography>
-        </Box>
-      ),
+      field: 'employee',
+      headerName: 'Employé',
+      flex: 1.4,
+      minWidth: 200,
+      renderCell: ({ row }) => {
+        const name = `${row.user?.first_name || ''} ${row.user?.last_name || ''}`.trim();
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 0.5 }}>
+            <Avatar
+              src={row.photo ? `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${row.photo}` : undefined}
+              sx={{ width: 36, height: 36, bgcolor: avatarColor(name), fontSize: '0.85rem', fontWeight: 700 }}
+            >
+              {!row.photo && (row.user?.first_name?.[0] || 'U')}
+            </Avatar>
+            <Box>
+              <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.3 }}>{name}</Typography>
+              <Typography variant="caption" color="text.secondary">{row.matricule}</Typography>
+            </Box>
+          </Box>
+        );
+      },
     },
     {
       field: 'poste',
       headerName: 'Poste',
-      width: 180,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <WorkIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-          <Typography variant="body2">{params.row.poste}</Typography>
-        </Box>
+      flex: 1.2,
+      minWidth: 150,
+      renderCell: ({ row }) => (
+        <Typography variant="body2" color="text.secondary" noWrap>{row.poste || '—'}</Typography>
       ),
     },
     {
       field: 'department_name',
       headerName: 'Département',
-      width: 150,
+      flex: 1,
+      minWidth: 130,
+      renderCell: ({ row }) => (
+        <Typography variant="body2" noWrap>{row.department_name || '—'}</Typography>
+      ),
     },
     {
       field: 'email',
       headerName: 'Email',
-      width: 200,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <EmailIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-          <Typography variant="body2">{params.row.user?.email}</Typography>
-        </Box>
+      flex: 1.3,
+      minWidth: 180,
+      renderCell: ({ row }) => (
+        <Typography variant="body2" color="text.secondary" noWrap>{row.user?.email || '—'}</Typography>
       ),
     },
     {
       field: 'statut',
       headerName: 'Statut',
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.statut}
-          color={getStatusColor(params.row.statut)}
-          size="small"
-          variant="outlined"
-        />
-      ),
+      width: 110,
+      renderCell: ({ row }) => getStatusChip(row.statut),
     },
     {
       field: 'actions',
-      headerName: 'Actions',
-      width: 100,
-      renderCell: (params) => (
-        <IconButton
-          onClick={(e) => handleMenuClick(e, params.row)}
-          size="small"
-        >
-          <MoreVertIcon />
+      headerName: '',
+      width: 56,
+      sortable: false,
+      renderCell: ({ row }) => (
+        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMenuOpen(e, row); }}>
+          <MoreVertIcon fontSize="small" />
         </IconButton>
       ),
     },
   ];
 
-  const filteredEmployees = employees.filter(employee =>
-    employee.user?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.user?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.matricule?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.poste?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <Box>
+    <Box sx={{ maxWidth: 1200 }}>
+
       {/* En-tête */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography variant="h5" fontWeight={700} gutterBottom>
             Gestion des Employés
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {employees.length} employés au total
+          <Typography variant="body2" color="text.secondary">
+            {employees.length} employé{employees.length > 1 ? 's' : ''} enregistré{employees.length > 1 ? 's' : ''}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/employees/create')}
-          sx={{
-            borderRadius: 2,
-            px: 3,
-            py: 1.5,
-          }}
-        >
-          Nouvel Employé
-        </Button>
+        {(user?.role === 'hr_manager' || user?.role === 'administrator') && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/employees/create')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 2.5 }}
+          >
+            Nouvel Employé
+          </Button>
+        )}
       </Box>
 
-      {/* Barre de recherche */}
-      <Card elevation={0} sx={{ mb: 3, border: '1px solid #e0e0e0' }}>
-        <CardContent>
-          <TextField
-            fullWidth
-            placeholder="Rechercher un employé..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Statistiques rapides */}
+      {/* Stats */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={3}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                {employees.filter(e => e.statut === 'actif').length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Employés Actifs
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={3}>
+          <StatCard label="Total" value={employees.length} icon={<PeopleIcon />} color="#1976d2" loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="success.main" fontWeight="bold">
-                {departments.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Départements
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={3}>
+          <StatCard label="Actifs" value={employees.filter(e => e.statut === 'actif').length} icon={<ActiveIcon />} color="#2e7d32" loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="warning.main" fontWeight="bold">
-                {employees.filter(e => e.is_absent_today).length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                En Congé
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={3}>
+          <StatCard label="En congé" value={employees.filter(e => e.is_absent_today).length} icon={<LeaveIcon />} color="#e65100" loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="info.main" fontWeight="bold">
-                {employees.filter(e => e.onboarding_status === 'in_progress').length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                En Intégration
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={3}>
+          <StatCard label="En intégration" value={employees.filter(e => e.onboarding_status === 'in_progress').length} icon={<OnboardingIcon />} color="#9c27b0" loading={loading} />
         </Grid>
       </Grid>
 
-      {/* Table des employés */}
-      <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+      {/* Barre de recherche + filtres */}
+      <Card elevation={0} sx={{ mb: 2, border: '1px solid #e8ecf0', borderRadius: 2 }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={5}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Rechercher par nom, matricule, poste…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment>,
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Département</InputLabel>
+                <Select
+                  value={filterDept}
+                  label="Département"
+                  onChange={(e) => setFilterDept(e.target.value)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="">Tous</MenuItem>
+                  {departments.map((d) => (
+                    <MenuItem key={d.id} value={d.name}>{d.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Statut</InputLabel>
+                <Select
+                  value={filterStatus}
+                  label="Statut"
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="">Tous</MenuItem>
+                  <MenuItem value="actif">Actif</MenuItem>
+                  <MenuItem value="inactif">Inactif</MenuItem>
+                  <MenuItem value="congé">Congé</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <Typography variant="caption" color="text.secondary">
+                {filtered.length} résultat{filtered.length > 1 ? 's' : ''}
+              </Typography>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 2 }}>
         <DataGrid
-          rows={filteredEmployees}
+          rows={filtered}
           columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
+          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+          pageSizeOptions={[10, 25, 50]}
           loading={loading}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           autoHeight
+          onRowClick={({ row }) => navigate(`/employees/${row.id}`)}
           sx={{
             border: 'none',
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #f0f0f0',
-            },
+            cursor: 'pointer',
             '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f8fafc',
-              borderBottom: '1px solid #e0e0e0',
+              bgcolor: '#f8fafc',
+              borderBottom: '1px solid #e8ecf0',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
             },
+            '& .MuiDataGrid-row': {
+              '&:hover': { bgcolor: '#f8fafc' },
+            },
+            '& .MuiDataGrid-cell': {
+              borderBottom: '1px solid #f1f5f9',
+              outline: 'none !important',
+            },
+            '& .MuiDataGrid-cell:focus': { outline: 'none' },
           }}
         />
       </Card>
 
       {/* Menu contextuel */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
+        PaperProps={{ elevation: 2, sx: { borderRadius: 2, minWidth: 170 } }}
       >
-        <MenuItem onClick={() => {
-          navigate(`/employees/${selectedEmployee?.id}`);
-          handleMenuClose();
-        }}>
-          <PersonIcon sx={{ mr: 1 }} />
-          Voir Détails
+        <MenuItem onClick={() => { navigate(`/employees/${selectedEmployee?.id}`); handleMenuClose(); }}>
+          <ViewIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
+          <Typography variant="body2">Voir le profil</Typography>
         </MenuItem>
-        <MenuItem onClick={() => {
-          navigate(`/employees/edit/${selectedEmployee?.id}`);
-          handleMenuClose();
-        }}>
-          <EditIcon sx={{ mr: 1 }} />
-          Modifier
+        <MenuItem onClick={() => { navigate(`/employees/edit/${selectedEmployee?.id}`); handleMenuClose(); }}>
+          <EditIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
+          <Typography variant="body2">Modifier</Typography>
         </MenuItem>
         {(user?.role === 'hr_manager' || user?.role === 'hr_director') && (
-          <MenuItem onClick={() => {
-            navigate(`/contracts?employee=${selectedEmployee?.id}`);
-            handleMenuClose();
-          }}>
-            <WorkIcon sx={{ mr: 1 }} />
-            Contrats
+          <MenuItem onClick={() => { navigate(`/contracts?employee=${selectedEmployee?.id}`); handleMenuClose(); }}>
+            <WorkIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
+            <Typography variant="body2">Contrats</Typography>
           </MenuItem>
         )}
         {user?.role === 'administrator' && (
-          <MenuItem onClick={handleDeleteEmployee} sx={{ color: 'error.main' }}>
-            <DeleteIcon sx={{ mr: 1 }} />
-            Supprimer
+          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+            <DeleteIcon sx={{ mr: 1.5, fontSize: 18 }} />
+            <Typography variant="body2">Supprimer</Typography>
           </MenuItem>
         )}
       </Menu>
-
-      {/* FAB pour mobile */}
-      <Fab
-        color="primary"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          display: { xs: 'flex', md: 'none' }
-        }}
-        onClick={() => navigate('/employees/create')}
-      >
-        <AddIcon />
-      </Fab>
     </Box>
   );
 };

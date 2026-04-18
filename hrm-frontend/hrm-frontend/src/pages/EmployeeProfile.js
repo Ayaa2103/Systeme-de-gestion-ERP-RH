@@ -1,365 +1,264 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Chip,
-  Divider,
-  Alert,
-  Button,
-  Avatar,
-  CircularProgress,
-  Paper,
-  LinearProgress
+  Box, Card, CardContent, Typography, Grid, Chip, Divider,
+  Alert, Button, Avatar, CircularProgress, LinearProgress,
 } from '@mui/material';
 import {
-  Star as StarIcon,
-  StarBorder as StarBorderIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Person as PersonIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  Badge as BadgeIcon,
-  Work as WorkIcon,
-  Business as BusinessIcon,
-  CalendarToday as CalendarIcon,
-  Assignment as AssignmentIcon,
-  School as SchoolIcon
+  Email as EmailIcon, Phone as PhoneIcon, Badge as BadgeIcon,
+  Work as WorkIcon, Business as BusinessIcon, CalendarToday as CalendarIcon,
+  Assignment as ContractIcon, School as SkillIcon,
+  CheckCircle as CheckIcon, Cancel as CancelIcon, Person as PersonIcon,
+  Star as StarIcon, StarBorder as StarBorderIcon,
 } from '@mui/icons-material';
 import { hrService } from '../services/hrService';
-import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
+/* ─── Helpers ────────────────────────────────────────────────────── */
+const COLORS = ['#1976d2', '#9c27b0', '#2e7d32', '#e65100', '#0097a7', '#c62828'];
+const avatarColor = (name = '') => COLORS[name.charCodeAt(0) % COLORS.length];
+
+const formatDate = (d) =>
+  d ? format(new Date(d), 'dd MMMM yyyy', { locale: fr }) : '—';
+
+const statusStyle = {
+  actif:    { label: 'Actif',    color: '#2e7d32', bg: '#e8f5e9' },
+  inactif:  { label: 'Inactif',  color: '#c62828', bg: '#ffebee' },
+  suspendu: { label: 'Suspendu', color: '#e65100', bg: '#fff3e0' },
+  congé:    { label: 'Congé',    color: '#e65100', bg: '#fff3e0' },
+};
+const contractColor = { CDI: '#2e7d32', CDD: '#e65100', Stage: '#1976d2' };
+
+const getRoleLabel = (role) => ({
+  administrator: 'Administrateur', hr_director: 'Directeur RH',
+  hr_manager: 'Responsable RH',   employee: 'Employé',
+}[role] || role);
+
+/* ─── Info row ───────────────────────────────────────────────────── */
+const InfoRow = ({ icon, label, value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
+    <Box sx={{ mt: 0.2, color: 'text.disabled', flexShrink: 0 }}>
+      {React.cloneElement(icon, { sx: { fontSize: 17 } })}
+    </Box>
+    <Box>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2, mb: 0.2 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={500}>{value || '—'}</Typography>
+    </Box>
+  </Box>
+);
+
+/* ─── Section label ──────────────────────────────────────────────── */
+const SectionTitle = ({ icon, children }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+    {React.cloneElement(icon, { sx: { fontSize: 18, color: 'text.secondary' } })}
+    <Typography variant="subtitle1" fontWeight={700}>{children}</Typography>
+  </Box>
+);
+
+/* ─── Main ───────────────────────────────────────────────────────── */
 const EmployeeProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllSkills, setShowAllSkills] = useState(false);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
-  const fetchProfileData = async () => {
+  const fetchProfile = async () => {
     try {
-      setLoading(true);
-      const response = await hrService.getMyProfile();
-      setProfileData(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement du profil:', error);
-      setError('Erreur lors du chargement du profil');
+      const res = await hrService.getMyProfile();
+      setProfileData(res.data);
+    } catch (_) {
+      setError('Impossible de charger le profil.');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Non renseigné';
-    return new Date(dateString).toLocaleDateString('fr-FR');
-  };
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+      <CircularProgress />
+    </Box>
+  );
 
-  const renderStars = (level) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      i < level ? 
-        <StarIcon key={i} sx={{ color: '#ffc107', fontSize: 14 }} /> : 
-        <StarBorderIcon key={i} sx={{ color: '#e0e0e0', fontSize: 14 }} />
-    ));
-  };
+  if (error) return <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>;
 
-  if (loading) {
+  const { user, employee, is_absent_today, contracts = [], skills = [] } = profileData || {};
+  const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+  const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase();
+  const ss = statusStyle[employee?.statut] || { label: employee?.statut, color: '#757575', bg: '#f5f5f5' };
+  const activeContract = contracts.find(c => c.active);
+
+  /* ── Cas : utilisateur sans profil employé (admin, etc.) ── */
+  if (!employee) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
-    );
-  }
-
-  const { user, employee, is_absent_today, contracts, skills } = profileData || {};
-
-  return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-      {employee ? (
-        <>
-          {/* Header avec photo et statut */}
-          <Paper elevation={3} sx={{ p: 4, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-            <Grid container spacing={3} alignItems="center">
-              <Grid item>
-                <Avatar
-                  src={employee.photo ? `http://127.0.0.1:8000${employee.photo}` : undefined}
-                  sx={{ 
-                    width: 120, 
-                    height: 120, 
-                    border: '4px solid white',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  {!employee.photo && <PersonIcon sx={{ fontSize: 60 }} />}
-                </Avatar>
-              </Grid>
-              <Grid item xs>
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  {user?.first_name} {user?.last_name}
-                </Typography>
-                <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
-                  {employee?.poste || 'Employé'} • {employee?.department_name}
-                </Typography>
-                <Chip
-                  icon={is_absent_today ? <CancelIcon /> : <CheckCircleIcon />}
-                  label={is_absent_today ? "Absent aujourd'hui" : "Présent au bureau"}
-                  color={is_absent_today ? "error" : "success"}
-                  sx={{ 
-                    fontSize: '0.9rem', 
-                    fontWeight: 'bold',
-                    '& .MuiChip-icon': { fontSize: '1.2rem' }
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-
-          <Grid container spacing={4}>
-            {/* Informations Personnelles */}
-            <Grid item xs={12} lg={4}>
-              <Card elevation={2} sx={{ height: 'fit-content' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6" fontWeight="bold">
-                      Informations Personnelles
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ '& > *': { mb: 2.5 } }}>
-                    <Box display="flex" alignItems="center">
-                      <EmailIcon sx={{ mr: 2, color: 'text.secondary', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Email</Typography>
-                        <Typography variant="body2" fontWeight="500">{user?.email}</Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <PhoneIcon sx={{ mr: 2, color: 'text.secondary', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Téléphone</Typography>
-                        <Typography variant="body2" fontWeight="500">{user?.phone || 'Non renseigné'}</Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <BadgeIcon sx={{ mr: 2, color: 'text.secondary', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Matricule</Typography>
-                        <Typography variant="body2" fontWeight="500">{employee?.matricule}</Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <BusinessIcon sx={{ mr: 2, color: 'text.secondary', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Service</Typography>
-                        <Typography variant="body2" fontWeight="500">{employee?.service || 'Non renseigné'}</Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <CalendarIcon sx={{ mr: 2, color: 'text.secondary', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Date d'embauche</Typography>
-                        <Typography variant="body2" fontWeight="500">{formatDate(employee?.date_embauche)}</Typography>
-                      </Box>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <CheckCircleIcon sx={{ mr: 2, color: 'success.main', fontSize: 20 }} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">Statut</Typography>
-                        <Chip label={employee?.statut} color="success" size="small" />
-                      </Box>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Contrats et Compétences */}
-            <Grid item xs={12} lg={8}>
-              <Grid container spacing={3}>
-                {/* Contrats */}
-                <Grid item xs={12}>
-                  <Card elevation={2}>
-                    <CardContent sx={{ p: 3 }}>
-                      <Box display="flex" alignItems="center" mb={3}>
-                        <AssignmentIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography variant="h6" fontWeight="bold">
-                          Contrats
-                        </Typography>
-                      </Box>
-                      
-                      {contracts && contracts.length > 0 ? (
-                        <Grid container spacing={2}>
-                          {contracts.map((contract) => (
-                            <Grid item xs={12} md={6} key={contract.id}>
-                              <Paper 
-                                elevation={1} 
-                                sx={{ 
-                                  p: 2.5, 
-                                  border: contract.active ? '2px solid' : '1px solid',
-                                  borderColor: contract.active ? 'success.main' : 'divider',
-                                  position: 'relative'
-                                }}
-                              >
-                                {contract.active && (
-                                  <Chip 
-                                    label="Actuel" 
-                                    color="success" 
-                                    size="small" 
-                                    sx={{ position: 'absolute', top: 8, right: 8 }}
-                                  />
-                                )}
-                                <Typography variant="h6" color="primary" gutterBottom>
-                                  {contract.type}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                  Du {formatDate(contract.date_debut)} 
-                                  {contract.date_fin && ` au ${formatDate(contract.date_fin)}`}
-                                </Typography>
-                                {contract.salaire && (
-                                  <Typography variant="h6" color="success.main" sx={{ mt: 1 }}>
-                                    {contract.salaire.toLocaleString()} €
-                                  </Typography>
-                                )}
-                              </Paper>
-                            </Grid>
-                          ))}
-                        </Grid>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Aucun contrat trouvé
-                        </Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                {/* Compétences */}
-                {skills && skills.length > 0 && (
-                  <Grid item xs={12}>
-                    <Card elevation={2}>
-                      <CardContent sx={{ p: 3 }}>
-                        <Box display="flex" alignItems="center" mb={3}>
-                          <SchoolIcon sx={{ mr: 1, color: 'primary.main' }} />
-                          <Typography variant="h6" fontWeight="bold">
-                            Mes Compétences
-                          </Typography>
-                        </Box>
-                        
-                        <Grid container spacing={2}>
-                          {(showAllSkills ? skills : skills.slice(0, 6)).map((skill) => (
-                            <Grid item xs={12} sm={6} md={4} key={skill.id}>
-                              <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
-                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                  {skill.skill_name}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                  {skill.skill_category}
-                                </Typography>
-                                <Box sx={{ mt: 1 }}>
-                                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                                    <Box display="flex">
-                                      {renderStars(skill.level)}
-                                    </Box>
-                                    <Typography variant="caption" fontWeight="bold" color="primary">
-                                      {skill.level}/5
-                                    </Typography>
-                                  </Box>
-                                  <LinearProgress 
-                                    variant="determinate" 
-                                    value={(skill.level / 5) * 100} 
-                                    sx={{ height: 6, borderRadius: 3 }}
-                                  />
-                                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                                    {skill.level_display}
-                                  </Typography>
-                                </Box>
-                              </Paper>
-                            </Grid>
-                          ))}
-                        </Grid>
-                        
-                        {skills.length > 6 && (
-                          <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Button 
-                              variant="outlined" 
-                              onClick={() => setShowAllSkills(!showAllSkills)}
-                            >
-                              {showAllSkills ? 'Voir moins' : `Voir toutes (${skills.length})`}
-                            </Button>
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                )}
-              </Grid>
-            </Grid>
-          </Grid>
-        </>
-      ) : (
-        /* Utilisateur sans profil employé */
-        <Card elevation={2}>
-          <CardContent sx={{ p: 4 }}>
-            <Box display="flex" alignItems="center" mb={3}>
-              <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-              <Typography variant="h5" fontWeight="bold">
-                Informations Utilisateur
-              </Typography>
+      <Box sx={{ width: '100%' }}>
+        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+          <Box sx={{ height: 90, background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)' }} />
+          <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 2, mt: '-44px', mb: 2 }}>
+              <Avatar sx={{ width: 88, height: 88, bgcolor: '#1976d2', fontSize: '1.8rem', fontWeight: 700, border: '4px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+                {initials || <PersonIcon />}
+              </Avatar>
+              <Box sx={{ pb: 0.5 }}>
+                <Typography variant="h5" fontWeight={700}>{fullName}</Typography>
+                <Chip label={getRoleLabel(user?.role)} size="small" sx={{ bgcolor: '#e3f2fd', color: '#1976d2', fontWeight: 600, mt: 0.5 }} />
+              </Box>
             </Box>
-            
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Box sx={{ '& > *': { mb: 2 } }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Nom d'utilisateur</Typography>
-                    <Typography variant="h6">{user?.username}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Nom complet</Typography>
-                    <Typography variant="h6">{user?.first_name} {user?.last_name}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Email</Typography>
-                    <Typography variant="body1">{user?.email}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Rôle</Typography>
-                    <Chip label={user?.role} color="primary" />
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Téléphone</Typography>
-                    <Typography variant="body1">{user?.phone || 'Non renseigné'}</Typography>
-                  </Box>
-                </Box>
-              </Grid>
+            <Divider sx={{ mb: 2.5 }} />
+            <Grid container spacing={0}>
+              <Grid item xs={12} sm={6} md={4}><InfoRow icon={<EmailIcon />} label="Email" value={user?.email} /></Grid>
+              <Grid item xs={12} sm={6} md={4}><InfoRow icon={<PhoneIcon />} label="Téléphone" value={user?.phone} /></Grid>
+              <Grid item xs={12} sm={6} md={4}><InfoRow icon={<BadgeIcon />} label="Nom d'utilisateur" value={user?.username} /></Grid>
             </Grid>
           </CardContent>
         </Card>
-      )}
-    </Container>
+      </Box>
+    );
+  }
+
+  const visibleSkills = showAllSkills ? skills : skills.slice(0, 6);
+
+  return (
+    <Box sx={{ width: '100%' }}>
+
+      {/* Bannière profil */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'hidden' }}>
+        <Box sx={{ height: 100, background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)' }} />
+        <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mt: '-48px', mb: 2 }}>
+            <Avatar
+              src={employee.photo ? `http://localhost:8000${employee.photo}` : undefined}
+              sx={{
+                width: 96, height: 96, bgcolor: avatarColor(fullName),
+                fontSize: '2rem', fontWeight: 700,
+                border: '4px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', flexShrink: 0,
+              }}
+            >
+              {!employee.photo && initials}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0, pt: '52px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{fullName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {employee.poste || '—'}{employee.department_name ? ` · ${employee.department_name}` : ''}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Chip label={ss.label} size="small" sx={{ bgcolor: ss.bg, color: ss.color, fontWeight: 600, border: `1px solid ${ss.color}30` }} />
+                    <Chip
+                      label={is_absent_today ? 'Absent' : 'Présent'}
+                      size="small"
+                      sx={{ bgcolor: is_absent_today ? '#ffebee' : '#e8f5e9', color: is_absent_today ? '#c62828' : '#2e7d32', fontWeight: 600 }}
+                    />
+                    {activeContract && (
+                      <Chip label={activeContract.type} size="small"
+                        sx={{ bgcolor: `${contractColor[activeContract.type] || '#1976d2'}15`, color: contractColor[activeContract.type] || '#1976d2', fontWeight: 600 }} />
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 2.5 }} />
+          <Grid container spacing={0}>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<BadgeIcon />}    label="Matricule"       value={employee.matricule} /></Grid>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<EmailIcon />}    label="Email"           value={user?.email} /></Grid>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<PhoneIcon />}    label="Téléphone"       value={user?.phone} /></Grid>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<BusinessIcon />} label="Département"     value={employee.department_name} /></Grid>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<WorkIcon />}     label="Service"         value={employee.service} /></Grid>
+            <Grid item xs={12} sm={6} md={4}><InfoRow icon={<CalendarIcon />} label="Date d'embauche" value={formatDate(employee.date_embauche)} /></Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Grid container spacing={3}>
+
+        {/* Contrats */}
+        <Grid item xs={12} md={contracts.length > 1 ? 12 : 6}>
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <SectionTitle icon={<ContractIcon />}>Mes contrats ({contracts.length})</SectionTitle>
+              {contracts.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                  <ContractIcon sx={{ fontSize: 40, mb: 1, opacity: 0.3 }} />
+                  <Typography variant="body2">Aucun contrat enregistré</Typography>
+                </Box>
+              ) : (
+                <Grid container spacing={2}>
+                  {contracts.map((c) => {
+                    const cc = contractColor[c.type] || '#1976d2';
+                    return (
+                      <Grid item xs={12} sm={6} key={c.id}>
+                        <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${c.active ? cc + '40' : '#e8ecf0'}`, bgcolor: c.active ? `${cc}08` : '#fafafa' }}>
+                          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                            <Chip label={c.type} size="small" sx={{ bgcolor: `${cc}15`, color: cc, fontWeight: 700, fontSize: '0.7rem' }} />
+                            <Chip
+                              label={c.active ? 'Actif' : 'Inactif'} size="small"
+                              sx={{ bgcolor: c.active ? '#e8f5e9' : '#f5f5f5', color: c.active ? '#2e7d32' : '#757575', fontWeight: 600, fontSize: '0.7rem' }}
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Du <strong>{c.date_debut ? format(new Date(c.date_debut), 'dd/MM/yyyy') : '—'}</strong>
+                            {c.date_fin && c.date_fin !== 'null' && <> au <strong>{format(new Date(c.date_fin), 'dd/MM/yyyy')}</strong></>}
+                          </Typography>
+                          {c.salaire && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              Salaire : <strong>{Number(c.salaire).toLocaleString('fr-FR')} MAD</strong>
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Compétences */}
+        {skills.length > 0 && (
+          <Grid item xs={12} md={contracts.length > 1 ? 12 : 6}>
+            <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
+              <CardContent sx={{ p: 3 }}>
+                <SectionTitle icon={<SkillIcon />}>Mes compétences ({skills.length})</SectionTitle>
+                <Grid container spacing={2}>
+                  {visibleSkills.map((skill) => (
+                    <Grid item xs={12} sm={6} md={4} key={skill.id}>
+                      <Box sx={{ p: 2, borderRadius: 2, border: '1px solid #e8ecf0', bgcolor: '#fafafa' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight={600} noWrap>{skill.skill_name}</Typography>
+                            <Chip label={skill.skill_category} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18, mt: 0.3 }} />
+                          </Box>
+                          <Typography variant="caption" fontWeight={700} color="primary" sx={{ ml: 1, flexShrink: 0 }}>
+                            {skill.level_display || `Niv. ${skill.level}`}
+                          </Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={(skill.level / 4) * 100} sx={{ height: 5, borderRadius: 3 }} />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+                {skills.length > 6 && (
+                  <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Button variant="outlined" size="small" sx={{ borderRadius: 2, textTransform: 'none' }}
+                      onClick={() => setShowAllSkills(v => !v)}>
+                      {showAllSkills ? 'Voir moins' : `Voir toutes (${skills.length})`}
+                    </Button>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
+
+      </Grid>
+    </Box>
   );
 };
 

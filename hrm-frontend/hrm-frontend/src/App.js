@@ -153,7 +153,7 @@ function App() {
             <Route
               path="/contracts"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <ContractManagement />
                   </MainLayout>
@@ -249,7 +249,7 @@ function App() {
             <Route
               path="/job-offers"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <JobOffersList />
                   </MainLayout>

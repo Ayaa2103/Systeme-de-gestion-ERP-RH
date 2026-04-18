@@ -1,427 +1,368 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Grid,
-  Chip,
-  Button,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  LinearProgress,
-  IconButton
+  Box, Card, CardContent, Typography, Avatar, Grid, Chip, Button,
+  Tabs, Tab, List, ListItem, ListItemText, ListItemIcon, Divider,
+  LinearProgress, IconButton, Skeleton, Tooltip,
 } from '@mui/material';
 import {
-  Person as PersonIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
   Work as WorkIcon,
   CalendarToday as CalendarIcon,
   Assignment as ContractIcon,
-  School as TrainingIcon,
   Edit as EditIcon,
   ArrowBack as ArrowBackIcon,
   Badge as BadgeIcon,
-  Business as BusinessIcon
+  Business as BusinessIcon,
+  CheckCircle as CheckIcon,
+  Warning as WarningIcon,
+  School as SkillIcon,
+  LocationOn as LocationIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { getEmployeeDetail, getEmployeeContracts, getEmployeeTrainings } from '../../services/hrService';
+import { getEmployeeDetail, getEmployeeContracts } from '../../services/hrService';
+import { useAuth } from '../../contexts/AuthContext';
 
+/* ─── couleurs avatar ────────────────────────────────────────────── */
+const COLORS = ['#1976d2', '#9c27b0', '#2e7d32', '#e65100', '#0097a7', '#c62828'];
+const avatarColor = (name = '') => COLORS[name.charCodeAt(0) % COLORS.length];
+
+/* ─── Info row ───────────────────────────────────────────────────── */
+const InfoRow = ({ icon, label, value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
+    <Box sx={{ mt: 0.2, color: 'text.disabled', flexShrink: 0 }}>
+      {React.cloneElement(icon, { sx: { fontSize: 18 } })}
+    </Box>
+    <Box>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2, mb: 0.2 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={500}>
+        {value || '—'}
+      </Typography>
+    </Box>
+  </Box>
+);
+
+/* ─── Status helpers ─────────────────────────────────────────────── */
+const statusStyle = { actif: { label: 'Actif', color: '#2e7d32', bg: '#e8f5e9' }, inactif: { label: 'Inactif', color: '#c62828', bg: '#ffebee' }, 'congé': { label: 'Congé', color: '#e65100', bg: '#fff3e0' } };
+const contractStyle = { CDI: '#2e7d32', CDD: '#e65100', Stage: '#1976d2' };
+
+/* ─── Main ───────────────────────────────────────────────────────── */
 const EmployeeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [employee, setEmployee] = useState(null);
   const [contracts, setContracts] = useState([]);
-
-  const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tabValue, setTabValue] = useState(0);
+  const [tab, setTab] = useState(0);
 
-  useEffect(() => {
-    fetchEmployeeData();
-  }, [id]);
+  useEffect(() => { fetchData(); }, [id]);
 
-  const fetchEmployeeData = async () => {
+  const fetchData = async () => {
     try {
       const [empRes, contractsRes] = await Promise.all([
         getEmployeeDetail(id),
-        getEmployeeContracts(id)
+        getEmployeeContracts(id),
       ]);
-      
       setEmployee(empRes.data);
       setContracts(contractsRes.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'actif': return 'success';
-      case 'inactif': return 'error';
-      case 'congé': return 'warning';
-      default: return 'default';
-    }
-  };
-
-  const getContractTypeColor = (type) => {
-    switch (type) {
-      case 'CDI': return 'success';
-      case 'CDD': return 'warning';
-      case 'Stage': return 'info';
-      default: return 'default';
-    }
+    } catch (_) {}
+    finally { setLoading(false); }
   };
 
   if (loading) {
     return (
-      <Box sx={{ p: 3 }}>
-        <LinearProgress />
-        <Typography sx={{ mt: 2 }}>Chargement...</Typography>
+      <Box sx={{ width: '100%' }}>
+        <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 3, mb: 2 }} />
+        <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 3 }} />
       </Box>
     );
   }
 
   if (!employee) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography>Employé non trouvé</Typography>
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="text.secondary">Employé introuvable.</Typography>
+        <Button sx={{ mt: 2 }} onClick={() => navigate('/employees')}>Retour à la liste</Button>
       </Box>
     );
   }
 
+  const fullName = `${employee.user?.first_name || ''} ${employee.user?.last_name || ''}`.trim();
+  const initials = `${employee.user?.first_name?.[0] || ''}${employee.user?.last_name?.[0] || ''}`.toUpperCase();
+  const ss = statusStyle[employee.statut] || { label: employee.statut, color: '#757575', bg: '#f5f5f5' };
+  const activeContract = contracts.find(c => c.active);
+
   return (
-    <Box>
-      {/* En-tête */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => navigate('/employees')} sx={{ mr: 2 }}>
-          <ArrowBackIcon />
+    <Box sx={{ width: '100%' }}>
+
+      {/* Bouton retour */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+        <IconButton size="small" onClick={() => navigate('/employees')} sx={{ border: '1px solid #e8ecf0' }}>
+          <ArrowBackIcon fontSize="small" />
         </IconButton>
-        <Typography variant="h4" fontWeight="bold">
-          Profil Employé
-        </Typography>
+        <Typography variant="body2" color="text.secondary">Retour à la liste</Typography>
       </Box>
 
-      {/* Carte profil principal */}
-      <Card elevation={0} sx={{ mb: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-        <CardContent>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <Avatar
-                  sx={{
-                    width: 120,
-                    height: 120,
-                    mb: 2,
-                    backgroundColor: '#1976d2',
-                    fontSize: '2rem'
-                  }}
-                  src={employee.photo}
-                >
-                  {employee.user?.first_name?.[0]}{employee.user?.last_name?.[0]}
-                </Avatar>
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  {employee.user?.first_name} {employee.user?.last_name}
-                </Typography>
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                  {employee.poste}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-                  <Chip
-                    label={employee.statut}
-                    color={getStatusColor(employee.statut)}
-                  />
-                  <Chip 
-                    label={employee.is_absent_today ? 'Absent aujourd\'hui' : 'Présent'}
-                    color={employee.is_absent_today ? 'error' : 'success'}
-                    size="small"
-                  />
+      {/* Bannière profil */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'visible' }}>
+        {/* Bandeau couleur */}
+        <Box
+          sx={{
+            height: 100,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
+            borderRadius: '12px 12px 0 0',
+          }}
+        />
+        <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
+          {/* Avatar + nom + bouton Modifier */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mt: '-48px', mb: 2 }}>
+            <Avatar
+              src={employee.photo}
+              sx={{
+                width: 96, height: 96,
+                bgcolor: avatarColor(fullName),
+                fontSize: '2rem', fontWeight: 700,
+                border: '4px solid white',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                flexShrink: 0,
+              }}
+            >
+              {!employee.photo && initials}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0, pt: '52px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                <Box>
+                  <Typography variant="h5" fontWeight={700}>{fullName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{employee.poste || '—'}</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Chip
+                      label={ss.label}
+                      size="small"
+                      sx={{ bgcolor: ss.bg, color: ss.color, fontWeight: 600, border: `1px solid ${ss.color}30` }}
+                    />
+                    <Chip
+                      label={employee.is_absent_today ? 'Absent' : 'Présent'}
+                      size="small"
+                      sx={{
+                        bgcolor: employee.is_absent_today ? '#ffebee' : '#e8f5e9',
+                        color: employee.is_absent_today ? '#c62828' : '#2e7d32',
+                        fontWeight: 600,
+                      }}
+                    />
+                    {activeContract && (
+                      <Chip
+                        label={activeContract.type}
+                        size="small"
+                        sx={{ bgcolor: `${contractStyle[activeContract.type] || '#1976d2'}15`, color: contractStyle[activeContract.type] || '#1976d2', fontWeight: 600 }}
+                      />
+                    )}
+                  </Box>
                 </Box>
                 <Button
                   variant="outlined"
+                  size="small"
                   startIcon={<EditIcon />}
                   onClick={() => navigate(`/employees/edit/${id}`)}
+                  sx={{ borderRadius: 2, textTransform: 'none', flexShrink: 0, mt: 0.5 }}
                 >
                   Modifier
                 </Button>
               </Box>
+            </Box>
+          </Box>
+
+          {/* Infos en grille */}
+          <Divider sx={{ mb: 2.5 }} />
+          <Grid container spacing={0}>
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow icon={<BadgeIcon />} label="Matricule" value={employee.matricule} />
             </Grid>
-
-            <Grid item xs={12} md={8}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <BadgeIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Matricule
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.matricule}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <EmailIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Email
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.user?.email}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Téléphone
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.user?.phone || 'Non renseigné'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <BusinessIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Département
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.department_name || 'Non assigné'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <CalendarIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Date d'embauche
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.date_embauche && employee.date_embauche !== 'null' ? 
-                          format(new Date(employee.date_embauche), 'dd MMMM yyyy', { locale: fr }) :
-                          'Non renseignée'
-                        }
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <WorkIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Poste
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.poste || 'Non renseigné'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <WorkIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Service
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {employee.service || 'Non renseigné'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-
-              {/* Progression onboarding */}
-              {employee.onboarding_status !== 'completed' && (
-                <Box sx={{ mt: 3, p: 2, backgroundColor: '#f8fafc', borderRadius: 2 }}>
-                  <Typography variant="body2" fontWeight="600" gutterBottom>
-                    Progression Intégration
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={employee.onboarding_progress || 0}
-                    sx={{ mb: 1, height: 8, borderRadius: 4 }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    {employee.onboarding_progress || 0}% complété
-                  </Typography>
-                </Box>
-              )}
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow icon={<EmailIcon />} label="Email" value={employee.user?.email} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow icon={<PhoneIcon />} label="Téléphone" value={employee.user?.phone} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow icon={<BusinessIcon />} label="Département" value={employee.department_name} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow icon={<WorkIcon />} label="Service" value={employee.service} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <InfoRow
+                icon={<CalendarIcon />}
+                label="Date d'embauche"
+                value={
+                  employee.date_embauche && employee.date_embauche !== 'null'
+                    ? format(new Date(employee.date_embauche), 'dd MMMM yyyy', { locale: fr })
+                    : null
+                }
+              />
             </Grid>
           </Grid>
+
+          {/* Barre d'intégration */}
+          {employee.onboarding_status !== 'completed' && (
+            <Box sx={{ mt: 1, p: 2, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e8ecf0' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  Progression d'intégration
+                </Typography>
+                <Typography variant="caption" fontWeight={700} color="primary">
+                  {employee.onboarding_progress || 0}%
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={employee.onboarding_progress || 0}
+                sx={{ height: 6, borderRadius: 3 }}
+              />
+            </Box>
+          )}
         </CardContent>
       </Card>
 
-      {/* Onglets détails */}
-      <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+      {/* Onglets */}
+      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
         <Tabs
-          value={tabValue}
-          onChange={(e, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: '1px solid #e0e0e0' }}
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          sx={{
+            px: 2,
+            borderBottom: '1px solid #e8ecf0',
+            '& .MuiTab-root': { textTransform: 'none', fontWeight: 500, fontSize: '0.85rem', minHeight: 48 },
+            '& .Mui-selected': { fontWeight: 700 },
+          }}
         >
-          <Tab label="Contrats" />
-          <Tab label="Compétences" />
+          <Tab label={`Contrats (${contracts.length})`} />
+          <Tab label={`Compétences (${employee.skills?.length || 0})`} />
         </Tabs>
 
-        <CardContent>
-          {/* Onglet Contrats */}
-          {tabValue === 0 && (
+        <CardContent sx={{ p: 3 }}>
+
+          {/* ── Contrats ── */}
+          {tab === 0 && (
             <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" fontWeight="600">
-                  Contrats ({contracts.length})
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => navigate(`/employees/${id}/create-contract`)}
-                >
-                  Nouveau Contrat
-                </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                <Typography variant="subtitle1" fontWeight={700}>Historique des contrats</Typography>
+                {user?.role === 'administrator' ? (
+                  <Button variant="outlined" size="small" sx={{ textTransform: 'none', borderRadius: 2 }} onClick={() => navigate('/contracts')}>
+                    Voir tous les contrats
+                  </Button>
+                ) : (
+                  <Button variant="contained" size="small" sx={{ textTransform: 'none', borderRadius: 2 }} onClick={() => navigate(`/employees/${id}/create-contract`)}>
+                    + Nouveau contrat
+                  </Button>
+                )}
               </Box>
-              
+
               {contracts.length === 0 ? (
-                <Typography color="text.secondary">Aucun contrat trouvé</Typography>
+                <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
+                  <ContractIcon sx={{ fontSize: 48, mb: 1, opacity: 0.3 }} />
+                  <Typography variant="body2">Aucun contrat enregistré</Typography>
+                </Box>
               ) : (
-                <List>
-                  {contracts.map((contract, index) => (
-                    <React.Fragment key={contract.id}>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemIcon>
-                          <ContractIcon color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body1" fontWeight="500">
-                                {contract.type}
-                              </Typography>
+                <Grid container spacing={2}>
+                  {contracts.map((contract) => {
+                    const cc = contractStyle[contract.type] || '#1976d2';
+                    return (
+                      <Grid item xs={12} sm={6} key={contract.id}>
+                        <Box sx={{
+                          p: 2.5, borderRadius: 2,
+                          border: `1px solid ${contract.active ? cc + '40' : '#e8ecf0'}`,
+                          bgcolor: contract.active ? `${cc}08` : '#fafafa',
+                          position: 'relative',
+                        }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              <Chip
+                                label={contract.type}
+                                size="small"
+                                sx={{ bgcolor: `${cc}15`, color: cc, fontWeight: 700, fontSize: '0.7rem' }}
+                              />
                               <Chip
                                 label={contract.active ? 'Actif' : 'Inactif'}
-                                color={contract.active ? 'success' : 'default'}
                                 size="small"
+                                sx={{
+                                  bgcolor: contract.active ? '#e8f5e9' : '#f5f5f5',
+                                  color: contract.active ? '#2e7d32' : '#757575',
+                                  fontWeight: 600, fontSize: '0.7rem',
+                                }}
                               />
                               {contract.is_expiring_soon && (
-                                <Chip label="Expire bientôt" color="warning" size="small" />
+                                <Chip label="Expire bientôt" size="small" color="warning" sx={{ fontSize: '0.7rem' }} />
                               )}
                             </Box>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                Du {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : 'Date inconnue'}
-                                {contract.date_fin && contract.date_fin !== 'null' && ` au ${format(new Date(contract.date_fin), 'dd/MM/yyyy')}`}
-                              </Typography>
-                              {contract.salaire && (
-                                <Typography variant="body2" color="text.secondary">
-                                  Salaire: {contract.salaire}€
-                                </Typography>
-                              )}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < contracts.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Du <strong>{contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : '—'}</strong>
+                            {contract.date_fin && contract.date_fin !== 'null' && (
+                              <> au <strong>{format(new Date(contract.date_fin), 'dd/MM/yyyy')}</strong></>
+                            )}
+                          </Typography>
+                          {contract.salaire && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              Salaire : <strong>{contract.salaire} MAD</strong>
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
               )}
             </Box>
           )}
 
-
-
-          {/* Onglet Compétences */}
-          {tabValue === 1 && (
+          {/* ── Compétences ── */}
+          {tab === 1 && (
             <Box>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Compétences ({employee.skills?.length || 0})
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2.5 }}>
+                Compétences évaluées
               </Typography>
-              
-              {employee.skills && employee.skills.length > 0 ? (
-                <List>
-                  {employee.skills.map((skill, index) => (
-                    <React.Fragment key={skill.id}>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body1" fontWeight="500">
-                                {skill.skill_name}
-                              </Typography>
-                              <Chip
-                                label={skill.skill_category}
-                                size="small"
-                                variant="outlined"
-                              />
-                            </Box>
-                          }
-                          secondary={
-                            <Box sx={{ mt: 1 }}>
-                              <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Niveau: {skill.level_display || skill.level}/4
-                              </Typography>
-                              <LinearProgress
-                                variant="determinate"
-                                value={(skill.level / 4) * 100}
-                                sx={{ height: 6, borderRadius: 3, mb: 1 }}
-                              />
-                              {skill.certified && (
-                                <Chip 
-                                  label="Certifié" 
-                                  size="small" 
-                                  color="success" 
-                                  sx={{ mt: 0.5 }}
-                                />
-                              )}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < employee.skills.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
+              {!employee.skills || employee.skills.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
+                  <SkillIcon sx={{ fontSize: 48, mb: 1, opacity: 0.3 }} />
+                  <Typography variant="body2">Aucune compétence évaluée</Typography>
+                </Box>
               ) : (
-                <Typography color="text.secondary">
-                  Aucune compétence évaluée
-                </Typography>
+                <Grid container spacing={2}>
+                  {employee.skills.map((skill) => (
+                    <Grid item xs={12} sm={6} key={skill.id}>
+                      <Box sx={{ p: 2, borderRadius: 2, border: '1px solid #e8ecf0', bgcolor: '#fafafa' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>{skill.skill_name}</Typography>
+                            <Chip label={skill.skill_category} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18, mt: 0.3 }} />
+                          </Box>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="caption" fontWeight={700} color="primary">
+                              {skill.level_display || `Niv. ${skill.level}`}
+                            </Typography>
+                            {skill.certified && (
+                              <Box><Chip label="Certifié" size="small" color="success" sx={{ fontSize: '0.65rem', height: 18 }} /></Box>
+                            )}
+                          </Box>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(skill.level / 4) * 100}
+                          sx={{ height: 5, borderRadius: 3 }}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
               )}
-              
-
             </Box>
           )}
+
         </CardContent>
       </Card>
     </Box>

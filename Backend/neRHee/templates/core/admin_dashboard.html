@@ -1,34 +1,252 @@
 {% extends 'base.html' %}
-
-{% block title %}Dashboard Administrateur{% endblock %}
+{% block title %}Dashboard Administrateur — neRHee{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
 
 {% block content %}
-<h1>Dashboard Administrateur</h1>
-<p>Bienvenue, {{ user.get_full_name }}!</p>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Gestion des Employés</h3>
-        <p>Ajouter, modifier, supprimer des employés</p>
-        <a href="{% url 'employee_list' %}" class="btn">Gérer Employés</a>
-    </div>
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Gestion des Utilisateurs</h3>
-        <p>Gérer les comptes utilisateurs</p>
-        <a href="/admin/" class="btn">Admin Django</a>
-    </div>
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Gestion Système</h3>
-        <p>Configuration et sauvegarde</p>
-        <a href="{% url 'system_management' %}" class="btn">Système</a>
-    </div>
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Droits d'Accès</h3>
-        <p>Gérer les permissions</p>
-        <a href="/admin/auth/group/" class="btn">Groupes</a>
+<!-- ── Banner ── -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%); padding: 1.75rem 2rem; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
+        <div style="position:absolute;bottom:-50px;right:120px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.03);"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:52px;height:52px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-shield-fill-check" style="font-size:1.4rem;color:white;"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color:white;">Bonjour, {{ user.first_name }} 👋</h4>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.65);font-size:0.85rem;">Tableau de bord Administrateur</p>
+                </div>
+            </div>
+            <span style="background:rgba(76,175,80,0.25);color:#86efac;border:1px solid rgba(76,175,80,0.4);padding:0.35rem 0.85rem;border-radius:50px;font-size:0.78rem;font-weight:600;">
+                <i class="bi bi-check-circle-fill me-1"></i>Système opérationnel
+            </span>
+        </div>
     </div>
 </div>
+
+<!-- ── Stat cards ── -->
+<div class="row g-3 mb-4">
+    {% with cards=1 %}
+    <!-- Employés -->
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:38px;height:38px;background:#1976d215;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-people-fill" style="color:#1976d2;font-size:1.1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.75rem;color:#1976d2;line-height:1;">{{ total_employees|default:"0" }}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Employés actifs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Utilisateurs -->
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:38px;height:38px;background:#7b1fa215;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-badge-fill" style="color:#7b1fa2;font-size:1.1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.75rem;color:#7b1fa2;line-height:1;">{{ total_users|default:"0" }}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Utilisateurs total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demandes -->
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:38px;height:38px;background:#e6510015;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-clipboard2-pulse-fill" style="color:#e65100;font-size:1.1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.75rem;color:#e65100;line-height:1;">{{ pending_requests|default:"0" }}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Demandes en attente</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contrats -->
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:38px;height:38px;background:#c6282815;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-file-earmark-x-fill" style="color:#c62828;font-size:1.1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.75rem;color:#c62828;line-height:1;">{{ expiring_contracts|default:"0" }}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Contrats expirant (30j)</div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+</div>
+
+<div class="row g-3 mb-4">
+
+    <!-- Nouveaux employés du jour -->
+    <div class="col-12 col-lg-6">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-star-fill"></i></div>
+                <span class="card-header-title">Nouveaux employé(s) du jour</span>
+                {% if new_employees_today %}
+                <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.75rem;">{{ new_employees_today|length }}</span>
+                {% endif %}
+            </div>
+            <div class="p-3">
+                {% if new_employees_today %}
+                <div class="d-flex flex-column gap-2">
+                    {% for emp in new_employees_today %}
+                    <a href="/employees/{{ emp.id }}/" style="text-decoration:none;" class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#f8fafc;border:1px solid #e8ecf0;">
+                        <div style="width:38px;height:38px;border-radius:50%;background:#1976d2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0;">
+                            {{ emp.user_data.first_name|first|upper|default:"?" }}
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="fw-semibold text-dark" style="font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ emp.user_data.first_name }} {{ emp.user_data.last_name }}
+                            </div>
+                            <div style="font-size:0.75rem;color:#64748b;">{{ emp.poste|default:"Poste non défini" }}</div>
+                        </div>
+                        <i class="bi bi-star-fill ms-auto" style="color:#ffc107;font-size:0.8rem;flex-shrink:0;"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-person-plus" style="font-size:2.5rem;color:#cbd5e1;"></i>
+                    <p class="mt-2 mb-0" style="font-size:0.85rem;color:#94a3b8;">Aucun nouvel employé aujourd'hui</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Offres actives -->
+    <div class="col-12 col-lg-6">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-briefcase-fill"></i></div>
+                <span class="card-header-title">Offres d'emploi actives</span>
+                <a href="http://localhost:3000/job-offers" target="_blank" class="ms-auto" style="color:rgba(255,255,255,0.65);font-size:0.78rem;text-decoration:none;">
+                    Voir tout <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="p-3">
+                {% if active_job_offers %}
+                <div class="d-flex flex-column gap-2">
+                    {% for offer in active_job_offers %}
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#f8fafc;border:1px solid #e8ecf0;">
+                        <div style="width:38px;height:38px;border-radius:10px;background:#1976d215;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="bi bi-briefcase" style="color:#1976d2;font-size:0.9rem;"></i>
+                        </div>
+                        <div class="overflow-hidden flex-grow-1">
+                            <div class="fw-semibold text-dark" style="font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ offer.title }}
+                            </div>
+                            <div style="font-size:0.75rem;color:#64748b;">{{ offer.department|default:"—" }}</div>
+                        </div>
+                        <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:2px 8px;border-radius:50px;font-size:0.68rem;font-weight:700;flex-shrink:0;">
+                            Publiée
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-briefcase" style="font-size:2.5rem;color:#cbd5e1;"></i>
+                    <p class="mt-2 mb-0" style="font-size:0.85rem;color:#94a3b8;">Aucune offre active</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Accès rapide ── -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-grid-fill"></i></div>
+        <span class="card-header-title">Accès rapide</span>
+    </div>
+    <div class="p-3">
+        <div class="row g-2">
+            {% for action in actions %}{% endfor %}
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/core/user/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#1976d215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-badge-fill" style="color:#1976d2;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Utilisateurs</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/employees/employee/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#2e7d3215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-people-fill" style="color:#2e7d32;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Employés</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/employees/contract/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#7b1fa215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-file-earmark-text-fill" style="color:#7b1fa2;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Contrats</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/recruitment/joboffer/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fed7aa'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#e6510015;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-briefcase-fill" style="color:#e65100;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Offres</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/core/event/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#9c27b015;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-calendar-event-fill" style="color:#9c27b0;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Événements</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="/admin/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fff1f2';this.style.borderColor='#fecdd3'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#c6282815;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-shield-lock-fill" style="color:#c62828;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Admin Django</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{% url 'system_management' %}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0f9ff';this.style.borderColor='#bae6fd'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#0288d115;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-gear-wide-connected" style="color:#0288d1;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Système</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="http://localhost:3000" target="_blank" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#05966915;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-box-arrow-up-right" style="color:#059669;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Frontend</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

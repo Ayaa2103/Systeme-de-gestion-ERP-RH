@@ -1,52 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert
+  Box, Card, CardContent, Typography, Button, Grid, Chip,
+  Avatar, Divider, IconButton, Menu, MenuItem,
+  Dialog, DialogContent, DialogActions, TextField, CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Work as WorkIcon,
   People as PeopleIcon,
-  Edit as EditIcon,
   Publish as PublishIcon,
   Close as CloseIcon,
   MoreVert as MoreVertIcon,
   Schedule as ScheduleIcon,
+  Business as BusinessIcon,
+  CalendarToday as CalendarIcon,
   CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Person as PersonIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
-import { 
-  getJobOfferDetail, 
-  publishJobOffer, 
-  closeJobOffer,
-  updateApplicationStatus,
-  createInterview 
+import {
+  getJobOfferDetail, publishJobOffer, closeJobOffer,
+  updateApplicationStatus, createInterview,
 } from '../../services/hrService';
+import { useAuth } from '../../contexts/AuthContext';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
+const offerStatusConfig = {
+  draft:     { label: 'Brouillon', color: '#e65100', bg: '#fff3e0' },
+  published: { label: 'Publiée',   color: '#2e7d32', bg: '#e8f5e9' },
+  closed:    { label: 'Fermée',    color: '#c62828', bg: '#ffebee' },
+};
+
+const appStatusConfig = {
+  pending:   { label: 'En attente', color: '#e65100', bg: '#fff3e0' },
+  reviewed:  { label: 'Examiné',    color: '#0288d1', bg: '#e1f5fe' },
+  interview: { label: 'Entretien',  color: '#7b1fa2', bg: '#f3e5f5' },
+  accepted:  { label: 'Accepté',    color: '#2e7d32', bg: '#e8f5e9' },
+  rejected:  { label: 'Rejeté',     color: '#c62828', bg: '#ffebee' },
+};
+
+const expLabel = {
+  junior:       'Junior (0-2 ans)',
+  intermediate: 'Intermédiaire (2-5 ans)',
+  senior:       'Senior (5+ ans)',
+  expert:       'Expert (10+ ans)',
+};
+
+const AVATAR_COLORS = ['#1976d2','#388e3c','#d32f2f','#7b1fa2','#f57c00','#0097a7','#c2185b','#5d4037'];
+const avatarColor = (name = '') => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+
+/* ── Reusable section header ── */
+const SectionHeader = ({ title, count }) => (
+  <Box sx={{
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
+    px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  }}>
+    <Typography variant="subtitle1" fontWeight={700} color="white">{title}</Typography>
+    {count !== undefined && (
+      <Chip label={count} size="small"
+        sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', height: 22, '& .MuiChip-label': { px: 1 } }} />
+    )}
+  </Box>
+);
+
+/* ── Main ── */
 const JobOfferDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'administrator';
+
   const [jobOffer, setJobOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -55,56 +82,33 @@ const JobOfferDetail = () => {
   const [interviewDialog, setInterviewDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [notes, setNotes] = useState('');
-  const [interviewData, setInterviewData] = useState({
-    scheduled_date: '',
-    location: ''
-  });
+  const [interviewData, setInterviewData] = useState({ scheduled_date: '', location: '' });
 
-  useEffect(() => {
-    fetchJobOfferDetail();
-  }, [id]);
+  useEffect(() => { fetchJobOfferDetail(); }, [id]);
 
   const fetchJobOfferDetail = async () => {
     try {
-      const response = await getJobOfferDetail(id);
-      setJobOffer(response.data);
-    } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
-    }
+      const res = await getJobOfferDetail(id);
+      setJobOffer(res.data);
+    } catch (_) {}
+    finally { setLoading(false); }
   };
 
   const handlePublish = async () => {
-    try {
-      await publishJobOffer(id);
-      await fetchJobOfferDetail();
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
+    try { await publishJobOffer(id); await fetchJobOfferDetail(); } catch (_) {}
   };
 
-  const handleClose = async () => {
-    try {
-      await closeJobOffer(id);
-      await fetchJobOfferDetail();
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
+  const handleCloseOffer = async () => {
+    try { await closeJobOffer(id); await fetchJobOfferDetail(); } catch (_) {}
   };
 
   const handleUpdateStatus = async () => {
     try {
-      await updateApplicationStatus(selectedApplication.id, {
-        status: newStatus,
-        notes: notes
-      });
+      await updateApplicationStatus(selectedApplication.id, { status: newStatus, notes });
       await fetchJobOfferDetail();
       setStatusDialog(false);
       setNotes('');
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
+    } catch (_) {}
   };
 
   const handleCreateInterview = async () => {
@@ -113,284 +117,387 @@ const JobOfferDetail = () => {
       await fetchJobOfferDetail();
       setInterviewDialog(false);
       setInterviewData({ scheduled_date: '', location: '' });
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
+    } catch (_) {}
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      'pending': 'warning',
-      'reviewed': 'info',
-      'interview': 'primary',
-      'accepted': 'success',
-      'rejected': 'error'
-    };
-    return colors[status] || 'default';
-  };
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+      <CircularProgress />
+    </Box>
+  );
+  if (!jobOffer) return (
+    <Box sx={{ textAlign: 'center', py: 8 }}>
+      <WorkIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1.5 }} />
+      <Typography variant="h6" color="text.secondary">Offre non trouvée</Typography>
+    </Box>
+  );
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      'pending': 'En attente',
-      'reviewed': 'Examiné',
-      'interview': 'Entretien',
-      'accepted': 'Accepté',
-      'rejected': 'Rejeté'
-    };
-    return labels[status] || status;
-  };
-
-  if (loading) return <Typography>Chargement...</Typography>;
-  if (!jobOffer) return <Typography>Offre non trouvée</Typography>;
+  const osc = offerStatusConfig[jobOffer.status] || { label: jobOffer.status, color: '#757575', bg: '#f5f5f5' };
+  const skills = jobOffer.required_skills
+    ? jobOffer.required_skills.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  const apps = jobOffer.applications || [];
 
   return (
-    <Box>
-      {/* En-tête */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => navigate('/recruitment')} sx={{ mr: 2 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" fontWeight="bold">
-            {jobOffer.title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {jobOffer.department} • {jobOffer.experience_level}
-          </Typography>
+    <Box sx={{ width: '100%' }}>
+
+      {/* ── Banner ── */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'hidden' }}>
+        <Box sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)', px: 3, py: 3 }}>
+
+          {/* Back row */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
+            <IconButton
+              size="small" onClick={() => navigate('/job-offers')}
+              sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', color: 'white' } }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+              Retour aux offres
+            </Typography>
+          </Box>
+
+          {/* Title + actions */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.12)', flexShrink: 0 }}>
+                <WorkIcon sx={{ fontSize: 28, color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography variant="h5" fontWeight={700} color="white" sx={{ lineHeight: 1.2 }}>
+                  {jobOffer.title}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.75, flexWrap: 'wrap' }}>
+                  {jobOffer.department && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <BusinessIcon sx={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }} />
+                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.75)' }}>
+                        {jobOffer.department}
+                      </Typography>
+                    </Box>
+                  )}
+                  {jobOffer.experience_level && (
+                    <Chip
+                      label={expLabel[jobOffer.experience_level] || jobOffer.experience_level}
+                      size="small"
+                      sx={{
+                        bgcolor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)',
+                        border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.7rem', height: 22,
+                        '& .MuiChip-label': { px: 1 },
+                      }}
+                    />
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+              <Chip
+                label={osc.label} size="small"
+                sx={{
+                  bgcolor: `${osc.color}28`, color: 'white', fontWeight: 700, fontSize: '0.75rem',
+                  border: `1px solid ${osc.color}50`, '& .MuiChip-label': { px: 1.25 },
+                }}
+              />
+              {!isAdmin && jobOffer.status === 'draft' && (
+                <Button
+                  variant="contained" size="small" startIcon={<PublishIcon sx={{ fontSize: 16 }} />}
+                  onClick={handlePublish}
+                  sx={{ bgcolor: '#2e7d32', color: 'white', borderRadius: 2, textTransform: 'none',
+                        fontWeight: 600, height: 32, '&:hover': { bgcolor: '#1b5e20' } }}
+                >
+                  Publier
+                </Button>
+              )}
+              {!isAdmin && jobOffer.status === 'published' && (
+                <Button
+                  variant="outlined" size="small" startIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                  onClick={handleCloseOffer}
+                  sx={{
+                    borderColor: 'rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.85)',
+                    borderRadius: 2, textTransform: 'none', fontWeight: 600, height: 32,
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.5)' },
+                  }}
+                >
+                  Fermer l'offre
+                </Button>
+              )}
+            </Box>
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Chip
-            label={jobOffer.status === 'published' ? 'Publiée' : jobOffer.status === 'draft' ? 'Brouillon' : 'Fermée'}
-            color={jobOffer.status === 'published' ? 'success' : jobOffer.status === 'draft' ? 'warning' : 'error'}
-          />
-          {jobOffer.status === 'draft' && (
-            <Button variant="contained" startIcon={<PublishIcon />} onClick={handlePublish}>
-              Publier
-            </Button>
-          )}
-          {jobOffer.status === 'published' && (
-            <Button variant="outlined" startIcon={<CloseIcon />} onClick={handleClose}>
-              Fermer
-            </Button>
-          )}
-        </Box>
-      </Box>
+      </Card>
 
       <Grid container spacing={3}>
-        {/* Détails de l'offre */}
+
+        {/* ── Left column ── */}
         <Grid item xs={12} md={8}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2, mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Description du Poste
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 3, whiteSpace: 'pre-line' }}>
-                {jobOffer.description}
-              </Typography>
-              
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Compétences Requises
-              </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-                {jobOffer.required_skills}
+
+          {/* Description + Skills */}
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, mb: 3, overflow: 'hidden' }}>
+            <SectionHeader title="Description du poste" />
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-line', lineHeight: 1.9, color: 'text.secondary' }}>
+                {jobOffer.description || 'Aucune description disponible.'}
               </Typography>
             </CardContent>
+
+            {skills.length > 0 && (
+              <>
+                <Divider />
+                <CardContent sx={{ p: 3, pt: 2.5 }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                    Compétences requises
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {skills.map((s, i) => (
+                      <Chip key={i} label={s} size="small"
+                        sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 500 }}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </>
+            )}
           </Card>
 
-          {/* Candidatures */}
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Candidatures ({jobOffer.applications?.length || 0})
-              </Typography>
-              
-              {jobOffer.applications?.length === 0 ? (
-                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                  Aucune candidature pour le moment
-                </Typography>
+          {/* Applications */}
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, overflow: 'hidden' }}>
+            <SectionHeader title="Candidatures" count={apps.length} />
+            <CardContent sx={{ p: apps.length === 0 ? 3 : 2 }}>
+              {apps.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#f8fafc', display: 'inline-flex', mb: 1.5 }}>
+                    <PeopleIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
+                  </Box>
+                  <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                    Aucune candidature pour le moment
+                  </Typography>
+                </Box>
               ) : (
-                <List>
-                  {jobOffer.applications?.map((application, index) => (
-                    <React.Fragment key={application.id}>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ backgroundColor: '#1976d2' }}>
-                            <PeopleIcon />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={`${application.first_name} ${application.last_name}`}
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                {application.email} • {application.phone}
-                              </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                <Chip
-                                  label={getStatusLabel(application.status)}
-                                  color={getStatusColor(application.status)}
-                                  size="small"
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  {new Date(application.applied_at).toLocaleDateString()}
-                                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {apps.map((app) => {
+                    const asc = appStatusConfig[app.status] || { label: app.status, color: '#757575', bg: '#f5f5f5' };
+                    const initials = `${(app.first_name || '')[0] || ''}${(app.last_name || '')[0] || ''}`.toUpperCase();
+                    return (
+                      <Box key={app.id} sx={{
+                        p: 2, border: '1px solid #e8ecf0', borderRadius: 2.5, bgcolor: '#fafbfc',
+                        display: 'flex', alignItems: 'center', gap: 2,
+                        transition: 'all 0.15s ease',
+                        '&:hover': { bgcolor: '#f0f4ff', borderColor: '#bfdbfe' },
+                      }}>
+                        <Avatar sx={{
+                          bgcolor: avatarColor(app.first_name || ''),
+                          width: 42, height: 42, fontSize: '0.85rem', fontWeight: 700, flexShrink: 0,
+                        }}>
+                          {initials || <PersonIcon />}
+                        </Avatar>
+
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {app.first_name} {app.last_name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 2, mt: 0.3, flexWrap: 'wrap' }}>
+                            {app.email && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                                <EmailIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                <Typography variant="caption" color="text.secondary">{app.email}</Typography>
                               </Box>
-                            </Box>
-                          }
-                        />
-                        <IconButton 
-                          onClick={(e) => {
-                            setAnchorEl(e.currentTarget);
-                            setSelectedApplication(application);
-                          }}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </ListItem>
-                      {index < jobOffer.applications.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
+                            )}
+                            {app.phone && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                                <PhoneIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                <Typography variant="caption" color="text.secondary">{app.phone}</Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, flexShrink: 0 }}>
+                          <Chip
+                            label={asc.label} size="small"
+                            sx={{
+                              bgcolor: asc.bg, color: asc.color, fontWeight: 700, fontSize: '0.68rem',
+                              border: `1px solid ${asc.color}30`, height: 20,
+                              '& .MuiChip-label': { px: 0.75 },
+                            }}
+                          />
+                          {app.applied_at && (
+                            <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.68rem' }}>
+                              {format(new Date(app.applied_at), 'dd MMM yyyy', { locale: fr })}
+                            </Typography>
+                          )}
+                        </Box>
+
+                        {!isAdmin && (
+                          <IconButton
+                            size="small" sx={{ color: 'text.disabled', flexShrink: 0, '&:hover': { color: 'text.primary' } }}
+                            onClick={(e) => { setAnchorEl(e.currentTarget); setSelectedApplication(app); }}
+                          >
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
               )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Statistiques */}
+        {/* ── Right column ── */}
         <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Statistiques
-              </Typography>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Total candidatures
-                </Typography>
-                <Typography variant="h4" color="primary" fontWeight="bold">
-                  {jobOffer.applications?.length || 0}
-                </Typography>
-              </Box>
 
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  En attente
-                </Typography>
-                <Typography variant="h5" color="warning.main" fontWeight="bold">
-                  {jobOffer.applications?.filter(a => a.status === 'pending').length || 0}
-                </Typography>
-              </Box>
+          {/* Stats */}
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, mb: 2.5, overflow: 'hidden' }}>
+            <SectionHeader title="Statistiques" />
+            <CardContent sx={{ p: 0 }}>
+              {[
+                { label: 'Total candidatures', value: apps.length,                                             color: '#1976d2' },
+                { label: 'En attente',          value: apps.filter(a => a.status === 'pending').length,        color: '#e65100' },
+                { label: 'Entretiens',           value: apps.filter(a => a.status === 'interview').length,     color: '#7b1fa2' },
+                { label: 'Acceptés',             value: apps.filter(a => a.status === 'accepted').length,     color: '#2e7d32' },
+                { label: 'Rejetés',              value: apps.filter(a => a.status === 'rejected').length,     color: '#c62828' },
+              ].map((row, i, arr) => (
+                <Box key={row.label} sx={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  px: 3, py: 1.75,
+                  borderBottom: i < arr.length - 1 ? '1px solid #f0f4f8' : 'none',
+                }}>
+                  <Typography variant="body2" color="text.secondary">{row.label}</Typography>
+                  <Typography variant="h6" fontWeight={700} sx={{ color: row.color }}>{row.value}</Typography>
+                </Box>
+              ))}
+            </CardContent>
+          </Card>
 
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Entretiens
-                </Typography>
-                <Typography variant="h5" color="info.main" fontWeight="bold">
-                  {jobOffer.applications?.filter(a => a.status === 'interview').length || 0}
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Acceptés
-                </Typography>
-                <Typography variant="h5" color="success.main" fontWeight="bold">
-                  {jobOffer.applications?.filter(a => a.status === 'accepted').length || 0}
-                </Typography>
-              </Box>
+          {/* Meta info */}
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, overflow: 'hidden' }}>
+            <SectionHeader title="Informations" />
+            <CardContent sx={{ p: 0 }}>
+              {[
+                {
+                  icon: <CalendarIcon sx={{ fontSize: 16 }} />,
+                  label: 'Créée le',
+                  value: jobOffer.created_at
+                    ? format(new Date(jobOffer.created_at), 'dd MMM yyyy', { locale: fr })
+                    : '—',
+                },
+                {
+                  icon: <PersonIcon sx={{ fontSize: 16 }} />,
+                  label: 'Créée par',
+                  value: jobOffer.created_by_name || '—',
+                },
+                {
+                  icon: <StarIcon sx={{ fontSize: 16 }} />,
+                  label: 'Expérience',
+                  value: expLabel[jobOffer.experience_level] || jobOffer.experience_level || '—',
+                },
+                {
+                  icon: <WorkIcon sx={{ fontSize: 16 }} />,
+                  label: 'Département',
+                  value: jobOffer.department || '—',
+                },
+              ].map((row, i, arr) => (
+                <Box key={row.label} sx={{
+                  display: 'flex', alignItems: 'center', gap: 1.5,
+                  px: 3, py: 1.75,
+                  borderBottom: i < arr.length - 1 ? '1px solid #f0f4f8' : 'none',
+                }}>
+                  <Box sx={{ color: '#1976d2', flexShrink: 0 }}>{row.icon}</Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
+                      {row.label}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500} noWrap>{row.value}</Typography>
+                  </Box>
+                </Box>
+              ))}
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Menu contextuel */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-        <MenuItem onClick={() => navigate(`/recruitment/applications/${selectedApplication?.id}`)}>
-          Voir Détails
-        </MenuItem>
-        <MenuItem onClick={() => {
-          setStatusDialog(true);
-          setAnchorEl(null);
-        }}>
-          Changer Statut
+      {/* ── Context menu (applications) ── */}
+      <Menu
+        anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}
+        PaperProps={{ elevation: 0, sx: { border: '1px solid #e8ecf0', borderRadius: 2, minWidth: 190 } }}
+      >
+        <MenuItem onClick={() => { setStatusDialog(true); setAnchorEl(null); }} sx={{ fontSize: '0.875rem' }}>
+          <CheckCircleIcon sx={{ mr: 1.5, fontSize: 18 }} />Changer le statut
         </MenuItem>
         {selectedApplication?.status !== 'interview' && (
-          <MenuItem onClick={() => {
-            setInterviewDialog(true);
-            setAnchorEl(null);
-          }}>
-            <ScheduleIcon sx={{ mr: 1 }} />
-            Programmer Entretien
+          <MenuItem onClick={() => { setInterviewDialog(true); setAnchorEl(null); }} sx={{ fontSize: '0.875rem' }}>
+            <ScheduleIcon sx={{ mr: 1.5, fontSize: 18 }} />Programmer un entretien
           </MenuItem>
         )}
       </Menu>
 
-      {/* Dialog changement de statut */}
-      <Dialog open={statusDialog} onClose={() => setStatusDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Changer le Statut</DialogTitle>
-        <DialogContent>
+      {/* ── Status dialog ── */}
+      <Dialog open={statusDialog} onClose={() => setStatusDialog(false)} maxWidth="sm" fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+        <Box sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)', px: 3, py: 2 }}>
+          <Typography variant="subtitle1" fontWeight={700} color="white">Changer le statut</Typography>
+        </Box>
+        <DialogContent sx={{ p: 3 }}>
           <TextField
-            select
-            fullWidth
-            label="Nouveau statut"
-            value={newStatus}
+            select fullWidth label="Nouveau statut" value={newStatus}
             onChange={(e) => setNewStatus(e.target.value)}
-            SelectProps={{ native: true }}
-            sx={{ mb: 2, mt: 1 }}
+            size="small" sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
           >
-            <option value="">Sélectionner...</option>
-            <option value="pending">En attente</option>
-            <option value="reviewed">Examiné</option>
-            <option value="interview">Entretien</option>
-            <option value="accepted">Accepté</option>
-            <option value="rejected">Rejeté</option>
+            <MenuItem value="">Sélectionner…</MenuItem>
+            <MenuItem value="pending">En attente</MenuItem>
+            <MenuItem value="reviewed">Examiné</MenuItem>
+            <MenuItem value="interview">Entretien</MenuItem>
+            <MenuItem value="accepted">Accepté</MenuItem>
+            <MenuItem value="rejected">Rejeté</MenuItem>
           </TextField>
           <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label="Notes (optionnel)"
-            value={notes}
+            fullWidth multiline rows={3} label="Notes (optionnel)" value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setStatusDialog(false)}>Annuler</Button>
-          <Button onClick={handleUpdateStatus} variant="contained" disabled={!newStatus}>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => setStatusDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
+          <Button onClick={handleUpdateStatus} variant="contained" disabled={!newStatus}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
             Mettre à jour
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog programmation entretien */}
-      <Dialog open={interviewDialog} onClose={() => setInterviewDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Programmer un Entretien</DialogTitle>
-        <DialogContent>
+      {/* ── Interview dialog ── */}
+      <Dialog open={interviewDialog} onClose={() => setInterviewDialog(false)} maxWidth="sm" fullWidth
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+        <Box sx={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)', px: 3, py: 2 }}>
+          <Typography variant="subtitle1" fontWeight={700} color="white">Programmer un entretien</Typography>
+        </Box>
+        <DialogContent sx={{ p: 3 }}>
           <TextField
-            fullWidth
-            type="datetime-local"
-            label="Date et heure"
+            fullWidth type="datetime-local" label="Date et heure"
             value={interviewData.scheduled_date}
-            onChange={(e) => setInterviewData({...interviewData, scheduled_date: e.target.value})}
-            sx={{ mb: 2, mt: 1 }}
+            onChange={(e) => setInterviewData({ ...interviewData, scheduled_date: e.target.value })}
+            size="small" sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            fullWidth
-            label="Lieu"
-            value={interviewData.location}
-            onChange={(e) => setInterviewData({...interviewData, location: e.target.value})}
-            placeholder="Ex: Bureau 201, Visioconférence..."
+            fullWidth label="Lieu" value={interviewData.location}
+            onChange={(e) => setInterviewData({ ...interviewData, location: e.target.value })}
+            placeholder="Ex: Bureau 201, Visioconférence…"
+            size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInterviewDialog(false)}>Annuler</Button>
-          <Button onClick={handleCreateInterview} variant="contained">
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => setInterviewDialog(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
+          <Button onClick={handleCreateInterview} variant="contained"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
             Programmer
           </Button>
         </DialogActions>
       </Dialog>
+
     </Box>
   );
 };

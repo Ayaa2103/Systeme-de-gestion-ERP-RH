@@ -113,12 +113,12 @@ const Sidebar = ({ collapsed, onToggle }) => {
     {
       title: 'Recrutement',
       icon: <WorkIcon fontSize="small" />,
-      roles: ['hr_manager', 'hr_director'],
+      roles: ['hr_manager', 'hr_director', 'administrator'],
       children: [
-        { title: 'Tableau de bord', icon: <AnalyticsIcon fontSize="small" />, path: '/recruitment' },
+        { title: 'Tableau de bord', icon: <AnalyticsIcon fontSize="small" />, path: '/recruitment', roles: ['hr_manager', 'hr_director'] },
         { title: 'Offres', icon: <WorkIcon fontSize="small" />, path: '/job-offers' },
-        { title: 'Candidatures', icon: <PersonIcon fontSize="small" />, path: '/recruitment/applications' },
-        { title: 'Recommandations', icon: <AssessmentIcon fontSize="small" />, path: '/recruitment/recommendations' },
+        { title: 'Candidatures', icon: <PersonIcon fontSize="small" />, path: '/recruitment/applications', roles: ['hr_manager', 'hr_director'] },
+        { title: 'Recommandations', icon: <AssessmentIcon fontSize="small" />, path: '/recruitment/recommendations', roles: ['hr_manager', 'hr_director'] },
       ],
     },
     {
@@ -151,7 +151,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
       title: 'Événements',
       icon: <EventsIcon fontSize="small" />,
       path: '/events',
-      roles: ['hr_manager', 'hr_director'],
+      roles: ['hr_manager', 'hr_director', 'administrator'],
     },
     {
       title: 'Intégration',

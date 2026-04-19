@@ -27,7 +27,9 @@ import {
   ArrowForward as ArrowIcon,
   CheckCircle as CheckIcon,
   TrendingUp as TrendingIcon,
+  Celebration as CelebrationIcon,
 } from '@mui/icons-material';
+
 import {
   LineChart,
   Line,
@@ -39,12 +41,16 @@ import {
   PieChart,
   Pie,
   Cell,
+  Label,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+
+const AVATAR_COLORS = ['#1976d2','#388e3c','#d32f2f','#7b1fa2','#f57c00','#0097a7','#c2185b','#5d4037'];
+const avatarColor = (name = '') => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
 
 /* ─── Stat card ─────────────────────────────────────────────────── */
 const StatCard = ({ title, value, subtitle, icon, color, loading }) => (
@@ -234,40 +240,125 @@ const Dashboard = () => {
 
       {/* Nouveaux employés du jour */}
       {isHR && newEmployeesToday.length > 0 && (
-        <Card elevation={0} sx={{ mb: 4, borderRadius: 3, border: '1px solid #e3f2fd', bgcolor: '#e3f2fd' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar sx={{ bgcolor: '#1976d2', mr: 2, width: 36, height: 36 }}>
-                <PeopleIcon sx={{ fontSize: 20 }} />
-              </Avatar>
-              <Typography variant="subtitle1" fontWeight={700} color="#1976d2">
-                🎉 Nouveau(x) employé(s) du jour
-              </Typography>
+        <Card elevation={0} sx={{ mb: 4, borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+          {/* Navy header */}
+          <Box sx={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
+            px: 3, py: 2, display: 'flex', alignItems: 'center', gap: 1.5,
+          }}>
+            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'inline-flex' }}>
+              <CelebrationIcon sx={{ fontSize: 18, color: 'white' }} />
             </Box>
+            <Typography variant="subtitle1" fontWeight={700} color="white">
+              Nouveau(x) employé(s) du jour
+            </Typography>
+            <Chip
+              label={newEmployeesToday.length}
+              size="small"
+              sx={{ ml: 'auto', bgcolor: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.25)', fontWeight: 700, fontSize: '0.75rem', height: 22 }}
+            />
+          </Box>
+          <CardContent sx={{ p: 2.5 }}>
             <Grid container spacing={2}>
-              {newEmployeesToday.map((emp, i) => (
-                <Grid item xs={12} sm={6} md={4} key={emp.id || i}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', p: 1.5, bgcolor: 'white', borderRadius: 2, border: '1px solid #bbdefb' }}>
-                    <Avatar sx={{ bgcolor: '#1976d2', mr: 2, width: 40, height: 40 }} src={emp.photo}>
-                      {emp.user_data?.first_name?.[0]}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight={600}>
-                        {emp.user_data?.first_name} {emp.user_data?.last_name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {emp.poste || 'Poste non défini'}
-                      </Typography>
+              {newEmployeesToday.map((emp, i) => {
+                const fullName = `${emp.user_data?.first_name || ''} ${emp.user_data?.last_name || ''}`.trim();
+                const photoUrl = emp.photo ? `http://localhost:8000${emp.photo}` : null;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={emp.id || i}>
+                    <Box
+                      onClick={() => emp.id && navigate(`/employees/${emp.id}`)}
+                      sx={{
+                        display: 'flex', alignItems: 'center', p: 2,
+                        bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e8ecf0',
+                        cursor: emp.id ? 'pointer' : 'default',
+                        transition: 'all 0.2s ease',
+                        '&:hover': emp.id ? { boxShadow: '0 4px 12px rgba(25,118,210,0.1)', borderColor: '#1976d230', bgcolor: 'white' } : {},
+                      }}
+                    >
+                      <Avatar
+                        src={photoUrl}
+                        sx={{ bgcolor: avatarColor(fullName), mr: 1.5, width: 44, height: 44, fontSize: '1rem', fontWeight: 700, flexShrink: 0 }}
+                      >
+                        {!photoUrl && (emp.user_data?.first_name?.[0] || '?')}
+                      </Avatar>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant="body2" fontWeight={700} noWrap>{fullName || 'Nouvel employé'}</Typography>
+                        <Typography variant="caption" color="text.secondary" noWrap>
+                          {emp.poste || 'Poste non défini'}
+                        </Typography>
+                      </Box>
+                      <CelebrationIcon sx={{ fontSize: 16, color: '#ffc107', ml: 1, flexShrink: 0, opacity: 0.85 }} />
                     </Box>
-                  </Box>
-                </Grid>
-              ))}
+                  </Grid>
+                );
+              })}
             </Grid>
           </CardContent>
         </Card>
       )}
 
-      {/* Graphiques + offres + événements */}
+      {/* Événements à venir */}
+      <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid #e8ecf0' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
+            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#f3e5f5', display: 'inline-flex' }}>
+              <EventIcon sx={{ fontSize: 18, color: '#9c27b0' }} />
+            </Box>
+            <Typography variant="subtitle1" fontWeight={700}>Événements à venir</Typography>
+          </Box>
+          {events.length > 0 ? (
+            <Grid container spacing={2}>
+              {events.map((event) => {
+                const eventDate = event.date ? new Date(event.date) : null;
+                return (
+                  <Grid item xs={12} sm={6} md={3} key={event.id}>
+                    <Box sx={{
+                      p: 2, borderRadius: 2, border: '1px solid #e8ecf0', bgcolor: '#f8fafc',
+                      display: 'flex', flexDirection: 'column', gap: 1.5,
+                    }}>
+                      <Box sx={{
+                        width: 48, height: 48, bgcolor: '#f3e5f5', borderRadius: 2,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        border: '1px solid #ce93d830',
+                      }}>
+                        {eventDate ? (
+                          <>
+                            <Typography sx={{ fontSize: '0.6rem', color: '#9c27b0', fontWeight: 700, lineHeight: 1, textTransform: 'uppercase' }}>
+                              {format(eventDate, 'MMM', { locale: fr })}
+                            </Typography>
+                            <Typography sx={{ fontSize: '1rem', color: '#9c27b0', fontWeight: 800, lineHeight: 1.2 }}>
+                              {format(eventDate, 'd')}
+                            </Typography>
+                          </>
+                        ) : (
+                          <EventIcon sx={{ fontSize: 20, color: '#9c27b0' }} />
+                        )}
+                      </Box>
+                      <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+                        {event.title || event.name}
+                      </Typography>
+                      {eventDate && (
+                        <Chip
+                          label={format(eventDate, 'EEEE d MMM', { locale: fr })}
+                          size="small"
+                          sx={{ alignSelf: 'flex-start', fontSize: '0.7rem', height: 22, bgcolor: '#f3e5f5', color: '#9c27b0', border: '1px solid #ce93d830', '& .MuiChip-label': { px: 1 } }}
+                        />
+                      )}
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
+              <EventIcon sx={{ fontSize: 40, mb: 1, opacity: 0.3 }} />
+              <Typography variant="body2">Aucun événement à venir</Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Graphiques + offres */}
       <Grid container spacing={3}>
 
         {/* Graphique évolution mensuelle */}
@@ -297,31 +388,88 @@ const Dashboard = () => {
 
         {/* Répartition (Pie) */}
         <Grid item xs={12} md={hasAnyRole(['hr_manager', 'hr_director']) && chartData.length > 0 ? 4 : 6}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', height: '100%' }}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', height: '100%', overflow: 'hidden' }}>
+            <Box sx={{
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
+              px: 3, py: 2, display: 'flex', alignItems: 'center', gap: 1.5,
+            }}>
+              <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'inline-flex' }}>
+                <TrendingIcon sx={{ fontSize: 18, color: 'white' }} />
+              </Box>
+              <Typography variant="subtitle1" fontWeight={700} color="white">Répartition</Typography>
+            </Box>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                Répartition
-              </Typography>
-              <Box sx={{ height: 200, mt: 1 }}>
+              <Box sx={{ height: 190 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={4} dataKey="value">
+                    <Pie
+                      data={pieData}
+                      cx="50%" cy="50%"
+                      innerRadius={54} outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      cornerRadius={5}
+                      strokeWidth={0}
+                    >
                       {pieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
+                        <Cell key={i} fill={entry.color} stroke="none" />
                       ))}
+                      <Label
+                        content={({ viewBox }) => {
+                          const { cx, cy } = viewBox;
+                          const total = pieData.reduce((s, d) => s + d.value, 0);
+                          return (
+                            <g>
+                              <text x={cx} y={cy - 7} textAnchor="middle" fill="#0f172a"
+                                style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+                                {total}
+                              </text>
+                              <text x={cx} y={cy + 13} textAnchor="middle" fill="#94a3b8"
+                                style={{ fontSize: '0.62rem', letterSpacing: 1, textTransform: 'uppercase' }}>
+                                TOTAL
+                              </text>
+                            </g>
+                          );
+                        }}
+                        position="center"
+                      />
                     </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e0e0e0' }} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: '1px solid #e8ecf0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', fontSize: '0.8rem' }}
+                      formatter={(value, name) => [value, name]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </Box>
-              <Divider sx={{ my: 1.5 }} />
-              {pieData.map((item, i) => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 0.75 }}>
-                  <Box sx={{ width: 10, height: 10, bgcolor: item.color, borderRadius: '50%', mr: 1.5 }} />
-                  <Typography variant="body2" sx={{ flex: 1 }}>{item.name}</Typography>
-                  <Typography variant="body2" fontWeight={700}>{item.value}</Typography>
-                </Box>
-              ))}
+              <Divider sx={{ my: 2 }} />
+              {(() => {
+                const total = pieData.reduce((s, d) => s + d.value, 0);
+                return pieData.map((item, i) => {
+                  const pct = total ? Math.round((item.value / total) * 100) : 0;
+                  return (
+                    <Box key={i} sx={{ mb: i < pieData.length - 1 ? 2 : 0 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ width: 10, height: 10, bgcolor: item.color, borderRadius: '50%', flexShrink: 0 }} />
+                          <Typography variant="body2" color="text.secondary">{item.name}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                          <Typography variant="body2" fontWeight={700} sx={{ color: item.color }}>{item.value}</Typography>
+                          <Typography variant="caption" color="text.disabled">({pct}%)</Typography>
+                        </Box>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate" value={pct}
+                        sx={{
+                          height: 5, borderRadius: 3,
+                          bgcolor: `${item.color}15`,
+                          '& .MuiLinearProgress-bar': { bgcolor: item.color, borderRadius: 3 },
+                        }}
+                      />
+                    </Box>
+                  );
+                });
+              })()}
             </CardContent>
           </Card>
         </Grid>
@@ -346,7 +494,7 @@ const Dashboard = () => {
                         <ListItem
                           disablePadding
                           sx={{ py: 1.5, cursor: 'pointer', borderRadius: 2, px: 1, '&:hover': { bgcolor: '#f8fafc' } }}
-                          onClick={() => navigate(`/recruitment/job-offers/${offer.id}`)}
+                          onClick={() => navigate(`/job-offers/${offer.id}`)}
                         >
                           <ListItemAvatar>
                             <Avatar sx={{ bgcolor: '#e3f2fd', width: 40, height: 40 }}>
@@ -380,52 +528,6 @@ const Dashboard = () => {
           </Grid>
         )}
 
-        {/* Événements à venir */}
-        <Grid item xs={12} md={isHR ? 6 : 12}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Événements à venir
-                </Typography>
-                {isHR && (
-                  <Button size="small" endIcon={<ArrowIcon />} onClick={() => navigate('/events')} sx={{ textTransform: 'none' }}>
-                    Voir tout
-                  </Button>
-                )}
-              </Box>
-              {events.length > 0 ? (
-                <List disablePadding>
-                  {events.map((event, i) => (
-                    <React.Fragment key={event.id || i}>
-                      <ListItem disablePadding sx={{ py: 1.5 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: '#f3e5f5', width: 40, height: 40 }}>
-                            <EventIcon sx={{ color: '#9c27b0', fontSize: 20 }} />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={<Typography variant="body2" fontWeight={600}>{event.title || event.name}</Typography>}
-                          secondary={
-                            <Typography variant="caption" color="text.secondary">
-                              {event.date ? new Date(event.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                      {i < events.length - 1 && <Divider component="li" />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                  <EventIcon sx={{ fontSize: 40, mb: 1, opacity: 0.3 }} />
-                  <Typography variant="body2">Aucun événement à venir</Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
     </Box>
   );

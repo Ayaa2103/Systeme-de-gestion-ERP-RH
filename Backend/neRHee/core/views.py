@@ -79,6 +79,26 @@ def dashboard(request):
     elif request.user.role == 'hr_director':
         return render(request, 'core/hr_director_dashboard.html', context)
     elif request.user.role == 'administrator':
+        from datetime import date, timedelta
+        from employees.models import Contract, Training
+        try:
+            context.update({
+                'total_employees': Employee.objects.filter(statut='actif').count(),
+                'total_users': User.objects.count(),
+                'pending_requests': (
+                    LeaveRequest.objects.filter(status='pending').count() +
+                    AttestationRequest.objects.filter(status='pending').count() +
+                    MissionOrderRequest.objects.filter(status='pending').count() +
+                    PayslipRequest.objects.filter(status='pending').count()
+                ),
+                'expiring_contracts': Contract.objects.filter(
+                    active=True,
+                    date_fin__lte=date.today() + timedelta(days=30),
+                    date_fin__gte=date.today()
+                ).count(),
+            })
+        except Exception:
+            context.update({'total_employees': 0, 'total_users': 0, 'pending_requests': 0, 'expiring_contracts': 0})
         return render(request, 'core/admin_dashboard.html', context)
     return render(request, 'core/dashboard.html', context)
 

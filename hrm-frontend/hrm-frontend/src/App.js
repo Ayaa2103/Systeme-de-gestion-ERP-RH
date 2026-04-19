@@ -257,6 +257,18 @@ function App() {
               }
             />
             
+            {/* Détail offre d'emploi (admin + RH) */}
+            <Route
+              path="/job-offers/:id"
+              element={
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
+                  <MainLayout>
+                    <JobOfferDetail />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Créer offre d'emploi */}
             <Route
               path="/job-offers/create"
@@ -525,7 +537,7 @@ function App() {
             <Route
               path="/events"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <EventsList />
                   </MainLayout>
@@ -561,7 +573,7 @@ function App() {
             <Route
               path="/events/:id"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <EventDetail />
                   </MainLayout>

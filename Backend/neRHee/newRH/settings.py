@@ -38,13 +38,14 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver'
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',  # must be before django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
@@ -59,6 +60,138 @@ INSTALLED_APPS = [
     'company_culture',
     'knowledge_management',
 ]
+
+# ─── Jazzmin Admin Theme ──────────────────────────────────────────────────────
+JAZZMIN_SETTINGS = {
+    "site_title": "neRHee Admin",
+    "site_header": "neRHee",
+    "site_brand": "neRHee RH",
+    "site_logo": None,
+    "site_logo_classes": "img-circle",
+    "site_icon": None,
+    "welcome_sign": "Bienvenue sur l'interface d'administration neRHee",
+    "copyright": "neRHee HRM © 2025",
+    "search_model": ["core.User", "employees.Employee"],
+    "user_avatar": None,
+
+    # Top menu links
+    "topmenu_links": [
+        {"name": "Tableau de bord", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Site frontend", "url": "http://localhost:3000", "new_window": True},
+        {"model": "core.User"},
+    ],
+
+    # User menu
+    "usermenu_links": [
+        {"name": "Profil", "url": "admin:core_user_change", "icon": "fas fa-user"},
+        {"model": "core.User"},
+    ],
+
+    # Sidebar
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": [
+        "core", "employees", "recruitment", "requests_app",
+        "onboarding", "company_culture", "knowledge_management",
+    ],
+
+    # Custom links per app
+    "custom_links": {},
+
+    # Icons (Font Awesome 5)
+    "icons": {
+        # Core
+        "core": "fas fa-cog",
+        "core.User": "fas fa-user-shield",
+        "core.HRPolicy": "fas fa-file-alt",
+        "core.Event": "fas fa-calendar-alt",
+        # Employees
+        "employees": "fas fa-users",
+        "employees.Employee": "fas fa-id-card",
+        "employees.Department": "fas fa-sitemap",
+        "employees.Contract": "fas fa-file-contract",
+        "employees.Training": "fas fa-graduation-cap",
+        # Requests
+        "requests_app": "fas fa-clipboard-list",
+        "requests_app.LeaveRequest": "fas fa-calendar-minus",
+        "requests_app.AttestationRequest": "fas fa-certificate",
+        "requests_app.MissionOrderRequest": "fas fa-route",
+        "requests_app.PayslipRequest": "fas fa-money-check-alt",
+        # Recruitment
+        "recruitment": "fas fa-briefcase",
+        "recruitment.JobOffer": "fas fa-bullhorn",
+        "recruitment.Application": "fas fa-file-signature",
+        "recruitment.Interview": "fas fa-comments",
+        "recruitment.ProfileRecommendation": "fas fa-star",
+        # Onboarding
+        "onboarding": "fas fa-user-plus",
+        "onboarding.OnboardingPlan": "fas fa-tasks",
+        "onboarding.ChecklistItem": "fas fa-check-square",
+        "onboarding.OnboardingDocument": "fas fa-folder-open",
+        "onboarding.OnboardingTask": "fas fa-clipboard-check",
+        "onboarding.OnboardingTraining": "fas fa-chalkboard-teacher",
+        "onboarding.OnboardingFollowUp": "fas fa-user-clock",
+        # Culture
+        "company_culture": "fas fa-building",
+        "company_culture.CompanyPage": "fas fa-newspaper",
+        "company_culture.EmployeeSuggestion": "fas fa-lightbulb",
+        # Knowledge
+        "knowledge_management": "fas fa-brain",
+        "knowledge_management.Skill": "fas fa-tools",
+        "knowledge_management.Position": "fas fa-user-tie",
+        "knowledge_management.EmployeeSkill": "fas fa-award",
+        "knowledge_management.Document": "fas fa-file-pdf",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    # UI tweaks
+    "related_modal_active": False,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": False,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
+    "language_chooser": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-outline-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

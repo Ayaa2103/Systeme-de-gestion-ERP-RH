@@ -9,13 +9,16 @@ from .forms import JobOfferForm, ApplicationForm, InterviewForm, ProfileRecommen
 def is_hr_manager_or_director(user):
     return user.role in ['hr_manager', 'hr_director']
 
+def can_view_recruitment(user):
+    return user.role in ['hr_manager', 'hr_director', 'administrator']
+
 def is_hr_director(user):
     return user.role == 'hr_director'
 
 # Job Offers Views
-@user_passes_test(is_hr_manager_or_director)
+@user_passes_test(can_view_recruitment)
 def job_offer_list(request):
-    job_offers = JobOffer.objects.all()
+    job_offers = JobOffer.objects.all().order_by('-created_at')
     return render(request, 'recruitment/job_offer_list.html', {'job_offers': job_offers})
 
 @user_passes_test(is_hr_manager_or_director)
@@ -45,7 +48,7 @@ def job_offer_edit(request, pk):
         form = JobOfferForm(instance=job_offer)
     return render(request, 'recruitment/job_offer_form.html', {'form': form, 'title': 'Modifier l\'offre d\'emploi'})
 
-@user_passes_test(is_hr_manager_or_director)
+@user_passes_test(can_view_recruitment)
 def job_offer_detail(request, pk):
     job_offer = get_object_or_404(JobOffer, pk=pk)
     applications = job_offer.applications.all()

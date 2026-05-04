@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} — neRHee{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+    <div>
+        <h2 class="mb-1" style="font-weight:800;color:#1e293b;">{{ title }}</h2>
+        <p class="mb-0" style="color:#64748b;font-size:0.9rem;">Renseignez les informations du département dans un écran dédié.</p>
+    </div>
+    <a href="{% url 'department_structure_management' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour à la liste
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-8">
+        <div class="card-modern bg-white overflow-hidden">
+            <div class="p-3 border-bottom" style="border-color:#e8ecf0 !important;">
+                <h5 class="mb-0" style="font-weight:700;color:#1e293b;">Informations du département</h5>
+            </div>
+            <div class="p-4">
+                <form method="post" class="d-flex flex-column gap-3">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12 col-md-8">
+                            <label class="form-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">{{ form.code.label }}</label>
+                            {{ form.code }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.manager.label }}</label>
+                            {{ form.manager }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap pt-2">
+                        <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+                        <a href="{% url 'department_structure_management' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

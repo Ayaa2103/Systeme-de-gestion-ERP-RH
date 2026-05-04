@@ -37,6 +37,8 @@ import {
   CalendarToday as EventsIcon,
   ChevronLeft as CollapseIcon,
   ChevronRight as ExpandIcon,
+  ManageAccounts as UsersIcon,
+  OpenInNew as ExternalIcon,
 } from '@mui/icons-material';
 
 export const SIDEBAR_EXPANDED = 240;
@@ -173,8 +175,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
     {
       title: 'Administration',
       icon: <SettingsIcon fontSize="small" />,
-      path: '/admin',
       roles: ['administrator'],
+      children: [
+        { title: 'Tableau de bord', icon: <DashboardIcon fontSize="small" />, path: '/admin' },
+        { title: 'Utilisateurs', icon: <UsersIcon fontSize="small" />, path: '/admin/users' },
+      ],
     },
   ];
 

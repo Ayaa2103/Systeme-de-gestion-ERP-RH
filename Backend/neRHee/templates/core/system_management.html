@@ -1,35 +1,171 @@
 {% extends 'base.html' %}
 
-{% block title %}Gestion Système{% endblock %}
+{% block title %}Configuration de la plateforme — neRHee{% endblock %}
 
 {% block content %}
-<h1>Gestion Système</h1>
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Configuration</h3>
-        <p>Paramètres système et configuration</p>
-        <a href="/admin/core/" class="btn">Configuration Core</a>
-    </div>
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Utilisateurs</h3>
-        <p>Gestion des comptes utilisateurs</p>
-        <a href="/admin/core/user/" class="btn">Gérer Utilisateurs</a>
-    </div>
-    
-    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h3>Groupes & Permissions</h3>
-        <p>Gestion des droits d'accès</p>
-        <a href="/admin/auth/group/" class="btn">Gérer Groupes</a>
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#111827 0%,#1f2937 55%,#2563eb 100%);padding:1.75rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-45px;right:-35px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+        <div style="position:absolute;bottom:-65px;right:120px;width:145px;height:145px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
+        <div class="d-flex justify-content-between align-items-center gap-3 position-relative flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:52px;height:52px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-sliders2" style="font-size:1.35rem;color:white;"></i>
+                </div>
+                <div>
+                    <h4 class="mb-1 fw-bold" style="color:white;">Configuration de la plateforme</h4>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.68);font-size:0.85rem;">Administration centrale des paramètres, des utilisateurs et des autorisations système.</p>
+                </div>
+            </div>
+            <a href="{% url 'dashboard' %}"
+               style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.24);padding:0.5rem 1rem;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:0.4rem;">
+                <i class="bi bi-arrow-left"></i> Retour au dashboard
+            </a>
+        </div>
     </div>
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div style="font-size:0.76rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">Périmètre</div>
+                <div style="font-size:1.2rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">Administration globale</div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:0.35rem;">Accès aux réglages critiques et aux outils transverses.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div style="font-size:0.76rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">Zone</div>
+                <div style="font-size:1.2rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">Back-office technique</div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:0.35rem;">Opérations de maintenance et de gouvernance de la plateforme.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div style="font-size:0.76rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">Profil</div>
+                <div style="font-size:1.2rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">{{ user.get_role_display }}</div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:0.35rem;">Utilisez ces accès avec précaution sur les données sensibles.</div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-gear-fill"></i></div>
+                <span class="card-header-title">Configuration cœur</span>
+            </div>
+            <div class="p-4">
+                <div style="width:52px;height:52px;border-radius:14px;background:#eff6ff;color:#1976d2;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem;">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Paramètres système</h5>
+                <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin-bottom:1.2rem;">Accédez aux modèles principaux du noyau applicatif et aux réglages métier exposés dans l’administration Django.</p>
+                <a href="/admin/core/"
+                   style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.62rem 1rem;background:#1976d2;color:white;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+                    <i class="bi bi-box-arrow-up-right"></i> Ouvrir la configuration core
+                </a>
+            </div>
+        </div>
+    </div>
 
-<div style="margin: 20px 0;">
-    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Retour au Dashboard</a>
+    <div class="col-12 col-lg-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-people-fill"></i></div>
+                <span class="card-header-title">Comptes utilisateurs</span>
+            </div>
+            <div class="p-4">
+                <div style="width:52px;height:52px;border-radius:14px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem;">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Gestion des utilisateurs</h5>
+                <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin-bottom:1.2rem;">Visualisez, contrôlez et ajustez les comptes applicatifs depuis l’administration native pour les opérations avancées.</p>
+                <a href="/admin/core/user/"
+                   style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.62rem 1rem;background:#7c3aed;color:white;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+                    <i class="bi bi-box-arrow-up-right"></i> Gérer les utilisateurs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                <span class="card-header-title">Sécurité & droits</span>
+            </div>
+            <div class="p-4">
+                <div style="width:52px;height:52px;border-radius:14px;background:#ecfeff;color:#0891b2;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem;">
+                    <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Groupes & permissions</h5>
+                <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin-bottom:1.2rem;">Administrez les groupes d’accès, les niveaux d’autorisation et la structure des permissions globales.</p>
+                <a href="/admin/auth/group/"
+                   style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.62rem 1rem;background:#0891b2;color:white;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+                    <i class="bi bi-box-arrow-up-right"></i> Gérer les groupes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-diagram-3-fill"></i></div>
+                <span class="card-header-title">Structures organisationnelles</span>
+            </div>
+            <div class="p-4">
+                <div style="width:52px;height:52px;border-radius:14px;background:#eef2ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem;">
+                    <i class="bi bi-building-gear"></i>
+                </div>
+                <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Départements & postes</h5>
+                <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin-bottom:1.2rem;">Gérez la structure organisationnelle de la plateforme : départements, postes et organisation métier. Accès exclusif administrateur.</p>
+                <a href="{% url 'department_structure_management' %}"
+                   style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.62rem 1rem;background:#4338ca;color:white;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+                    <i class="bi bi-arrow-right-circle"></i> Ouvrir la gestion des structures
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-kanban-fill"></i></div>
+                <span class="card-header-title">Panel Django Admin</span>
+            </div>
+            <div class="p-4">
+                <div style="width:52px;height:52px;border-radius:14px;background:#fff7ed;color:#ea580c;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1rem;">
+                    <i class="bi bi-window-stack"></i>
+                </div>
+                <h5 style="font-weight:800;color:#1e293b;margin-bottom:0.5rem;">Administration native</h5>
+                <p style="font-size:0.88rem;color:#64748b;line-height:1.6;margin-bottom:1.2rem;">Accédez au panel Django `/admin/` pour les opérations techniques avancées et les besoins d’administration brute.</p>
+                <a href="/admin/"
+                   style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.62rem 1rem;background:#ea580c;color:white;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+                    <i class="bi bi-box-arrow-up-right"></i> Ouvrir le panel Django
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-modern bg-white mt-4 overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <span class="card-header-title">Recommandation</span>
+    </div>
+    <div class="p-4">
+        <p style="margin:0;color:#64748b;font-size:0.9rem;line-height:1.7;">
+            Cette zone donne accès à des fonctions sensibles de la plateforme. Réservez ces actions aux opérations d’administration nécessaires et privilégiez les écrans métiers standards pour les usages quotidiens.
+        </p>
+    </div>
 </div>
 {% endblock %}

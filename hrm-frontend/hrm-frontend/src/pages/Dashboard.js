@@ -362,7 +362,7 @@ const Dashboard = () => {
       <Grid container spacing={3}>
 
         {/* Graphique évolution mensuelle */}
-        {hasAnyRole(['hr_manager', 'hr_director']) && chartData.length > 0 && (
+        {isHR && chartData.length > 0 && (
           <Grid item xs={12} md={8}>
             <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0' }}>
               <CardContent sx={{ p: 3 }}>
@@ -387,7 +387,7 @@ const Dashboard = () => {
         )}
 
         {/* Répartition (Pie) */}
-        <Grid item xs={12} md={hasAnyRole(['hr_manager', 'hr_director']) && chartData.length > 0 ? 4 : 6}>
+        <Grid item xs={12} md={isHR && chartData.length > 0 ? 4 : 6}>
           <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', height: '100%', overflow: 'hidden' }}>
             <Box sx={{
               background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',

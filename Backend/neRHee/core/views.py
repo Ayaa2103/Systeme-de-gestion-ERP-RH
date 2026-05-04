@@ -80,17 +80,13 @@ def dashboard(request):
         return render(request, 'core/hr_director_dashboard.html', context)
     elif request.user.role == 'administrator':
         from datetime import date, timedelta
-        from employees.models import Contract, Training
+        from employees.models import Contract
+        from recruitment.models import JobOffer
         try:
             context.update({
                 'total_employees': Employee.objects.filter(statut='actif').count(),
                 'total_users': User.objects.count(),
-                'pending_requests': (
-                    LeaveRequest.objects.filter(status='pending').count() +
-                    AttestationRequest.objects.filter(status='pending').count() +
-                    MissionOrderRequest.objects.filter(status='pending').count() +
-                    PayslipRequest.objects.filter(status='pending').count()
-                ),
+                'active_offers': JobOffer.objects.filter(status='published').count(),
                 'expiring_contracts': Contract.objects.filter(
                     active=True,
                     date_fin__lte=date.today() + timedelta(days=30),
@@ -98,7 +94,7 @@ def dashboard(request):
                 ).count(),
             })
         except Exception:
-            context.update({'total_employees': 0, 'total_users': 0, 'pending_requests': 0, 'expiring_contracts': 0})
+            context.update({'total_employees': 0, 'total_users': 0, 'active_offers': 0, 'expiring_contracts': 0})
         return render(request, 'core/admin_dashboard.html', context)
     return render(request, 'core/dashboard.html', context)
 
@@ -137,8 +133,163 @@ def hr_policies(request):
     return render(request, 'core/hr_policies.html', {'policies': policies})
 
 @user_passes_test(is_administrator)
+def manage_users(request):
+    users = User.objects.all().order_by('date_joined')
+    return render(request, 'core/users.html', {'users': users})
+
+
+@user_passes_test(is_administrator)
+def admin_create_user(request):
+    if request.method == 'POST':
+        username  = request.POST.get('username', '').strip()
+        email     = request.POST.get('email', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name  = request.POST.get('last_name', '').strip()
+        phone      = request.POST.get('phone', '').strip()
+        role       = request.POST.get('role', 'employee')
+        password   = request.POST.get('password', '')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Ce nom d'utilisateur existe déjà.")
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, "Cet email est déjà utilisé.")
+        elif len(password) < 6:
+            messages.error(request, "Le mot de passe doit contenir au moins 6 caractères.")
+        else:
+            User.objects.create_user(
+                username=username, email=email, password=password,
+                first_name=first_name, last_name=last_name,
+                phone=phone, role=role,
+            )
+            messages.success(request, f"Compte « {username} » créé avec succès.")
+            return redirect('manage_users')
+    return render(request, 'core/user_form.html', {'action': 'create'})
+
+
+@user_passes_test(is_administrator)
+def admin_edit_user(request, user_id):
+    from django.shortcuts import get_object_or_404
+    target = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        target.first_name = request.POST.get('first_name', target.first_name)
+        target.last_name  = request.POST.get('last_name',  target.last_name)
+        target.email      = request.POST.get('email',      target.email)
+        target.phone      = request.POST.get('phone',      target.phone or '')
+        target.role       = request.POST.get('role',       target.role)
+        new_pwd = request.POST.get('new_password', '').strip()
+        if new_pwd:
+            if len(new_pwd) < 6:
+                messages.error(request, "Le mot de passe doit contenir au moins 6 caractères.")
+                return render(request, 'core/user_form.html', {'action': 'edit', 'target': target})
+            target.set_password(new_pwd)
+        target.save()
+        messages.success(request, "Compte mis à jour avec succès.")
+        return redirect('manage_users')
+    return render(request, 'core/user_form.html', {'action': 'edit', 'target': target})
+
+
+@user_passes_test(is_administrator)
+def admin_toggle_user(request, user_id):
+    from django.shortcuts import get_object_or_404
+    if request.method == 'POST':
+        target = get_object_or_404(User, id=user_id)
+        if target.id == request.user.id:
+            messages.error(request, "Vous ne pouvez pas désactiver votre propre compte.")
+        else:
+            target.is_active = not target.is_active
+            target.save()
+            state = "activé" if target.is_active else "désactivé"
+            messages.success(request, f"Compte « {target.username} » {state}.")
+    return redirect('manage_users')
+
+
+@user_passes_test(is_administrator)
 def system_management(request):
     return render(request, 'core/system_management.html')
+
+@user_passes_test(is_administrator)
+def department_structure_management(request):
+    from employees.models import Department
+    from knowledge_management.models import Position
+
+    context = {
+        'departments_count': Department.objects.count(),
+        'positions_count': Position.objects.count(),
+        'departments': Department.objects.select_related('manager__user').order_by('name'),
+        'positions': Position.objects.select_related('department').order_by('department__name', 'name'),
+    }
+    return render(request, 'core/department_structure_management.html', context)
+
+@user_passes_test(is_administrator)
+
+def department_create(request):
+    from employees.forms import DepartmentForm
+
+    form = DepartmentForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        department = form.save()
+        messages.success(request, f'Département "{department.name}" créé avec succès.')
+        return redirect('department_structure_management')
+
+    return render(request, 'core/department_form.html', {
+        'form': form,
+        'title': 'Nouveau département',
+        'submit_label': 'Créer le département',
+    })
+
+@user_passes_test(is_administrator)
+def department_edit(request, department_id):
+    from employees.models import Department
+    from employees.forms import DepartmentForm
+
+    department = get_object_or_404(Department, id=department_id)
+    form = DepartmentForm(request.POST or None, instance=department)
+    if request.method == 'POST' and form.is_valid():
+        department = form.save()
+        messages.success(request, f'Département "{department.name}" mis à jour avec succès.')
+        return redirect('department_structure_management')
+
+    return render(request, 'core/department_form.html', {
+        'form': form,
+        'title': f'Modifier {department.name}',
+        'submit_label': 'Enregistrer les changements',
+        'department': department,
+    })
+
+@user_passes_test(is_administrator)
+def position_create(request):
+    from knowledge_management.forms import PositionForm
+
+    form = PositionForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        position = form.save()
+        messages.success(request, f'Poste "{position.name}" créé avec succès.')
+        return redirect('department_structure_management')
+
+    return render(request, 'core/position_form.html', {
+        'form': form,
+        'title': 'Nouveau poste / structure',
+        'submit_label': 'Créer le poste',
+    })
+
+@user_passes_test(is_administrator)
+def position_edit(request, position_id):
+    from knowledge_management.models import Position
+    from knowledge_management.forms import PositionForm
+
+    position = get_object_or_404(Position, id=position_id)
+    form = PositionForm(request.POST or None, instance=position)
+    if request.method == 'POST' and form.is_valid():
+        position = form.save()
+        messages.success(request, f'Poste "{position.name}" mis à jour avec succès.')
+        return redirect('department_structure_management')
+
+    return render(request, 'core/position_form.html', {
+        'form': form,
+        'title': f'Modifier {position.name}',
+        'submit_label': 'Enregistrer les changements',
+        'position': position,
+    })
 
 @user_passes_test(is_hr_director)
 def kpi_dashboard(request):
@@ -228,13 +379,26 @@ def edit_policy(request, policy_id):
 @login_required
 def manage_events(request):
     from .models import Event
-    if request.user.role == 'hr_director':
-        events = Event.objects.all()
+    if request.user.role in ['hr_director', 'administrator']:
+        events = Event.objects.all().order_by('-created_at')
     elif request.user.role == 'hr_manager':
-        events = Event.objects.filter(created_by=request.user)
-    else:  # employee
-        events = Event.objects.filter(status='approved')
+        events = Event.objects.filter(created_by=request.user).order_by('-created_at')
+    else:
+        events = Event.objects.filter(status='approved').order_by('-created_at')
     return render(request, 'core/events.html', {'events': events})
+
+@login_required
+def event_detail(request, event_id):
+    from .models import Event
+
+    if request.user.role in ['hr_director', 'administrator']:
+        event = get_object_or_404(Event, id=event_id)
+    elif request.user.role == 'hr_manager':
+        event = get_object_or_404(Event, id=event_id, created_by=request.user)
+    else:
+        event = get_object_or_404(Event, id=event_id, status='approved')
+
+    return render(request, 'core/event_detail.html', {'event': event})
 
 @user_passes_test(is_hr_manager_or_director)
 def create_event(request):

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Détail Événement{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">{{ event.name }}</h1>
+                <div class="d-flex align-items-center gap-2">
+                    {% if event.status == 'approved' %}
+                        <span class="badge badge-success">Approuvé</span>
+                    {% elif event.status == 'pending' %}
+                        <span class="badge badge-warning">En attente</span>
+                    {% else %}
+                        <span class="badge badge-danger">Rejeté</span>
+                    {% endif %}
+                    <a href="{% url 'manage_events' %}" class="btn btn-secondary btn-sm">Retour</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Informations de l'événement</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Nom:</strong></div>
+                        <div class="col-sm-9">{{ event.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Date:</strong></div>
+                        <div class="col-sm-9">{{ event.date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Lieu:</strong></div>
+                        <div class="col-sm-9">{{ event.location|default:"—" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé par:</strong></div>
+                        <div class="col-sm-9">{{ event.created_by.get_full_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Créé le:</strong></div>
+                        <div class="col-sm-9">{{ event.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% if event.approved_by %}
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>Validé par:</strong></div>
+                        <div class="col-sm-9">{{ event.approved_by.get_full_name }}</div>
+                    </div>
+                    {% endif %}
+                    {% if event.approved_at %}
+                    <div class="row mb-0">
+                        <div class="col-sm-3"><strong>Validé le:</strong></div>
+                        <div class="col-sm-9">{{ event.approved_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Description</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ event.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            {% if user.role == 'hr_director' and event.status == 'pending' %}
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+                </div>
+                <div class="card-body d-flex gap-2 flex-wrap">
+                    <a href="{% url 'approve_event' event.id %}" class="btn btn-success btn-sm">Approuver</a>
+                    <a href="{% url 'reject_event' event.id %}" class="btn btn-danger btn-sm">Rejeter</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

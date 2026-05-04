@@ -1,5 +1,9 @@
 from django.urls import path, include
-from core.api_views import login_api, dashboard_stats, events_list, create_event, approve_event, reject_event, hr_policies_list, new_employees_today, recent_job_offers, health_check, employee_dashboard_data, kpi_data
+from core.api_views import (
+    login_api, dashboard_stats, events_list, create_event, approve_event, reject_event,
+    hr_policies_list, new_employees_today, recent_job_offers, health_check, employee_dashboard_data, kpi_data,
+    users_list, create_user, update_user, reset_user_password, toggle_user_active,
+)
 from employees.api_views import (
     employees_list, employee_detail, create_employee, update_employee, delete_employee,
     contracts_list, create_contract, contract_detail, update_contract, renew_contract, expiring_contracts,
@@ -53,13 +57,20 @@ urlpatterns = [
     
     # KPI Dashboard
     path('kpi/', kpi_data, name='kpi_data'),
+
+    # User management (admin only)
+    path('users/', users_list, name='users_list'),
+    path('users/create/', create_user, name='create_user'),
+    path('users/<int:user_id>/update/', update_user, name='update_user'),
+    path('users/<int:user_id>/reset-password/', reset_user_password, name='reset_user_password'),
+    path('users/<int:user_id>/toggle-active/', toggle_user_active, name='toggle_user_active'),
     
     # Employees
-    path('employees/', employees_list, name='employees_list'),
-    path('employees/<int:employee_id>/', employee_detail, name='employee_detail'),
-    path('employees/create/', create_employee, name='create_employee'),
-    path('employees/<int:employee_id>/update/', update_employee, name='update_employee'),
-    path('employees/<int:employee_id>/delete/', delete_employee, name='delete_employee'),
+    path('employees/', employees_list, name='api_employees_list'),
+    path('employees/<int:employee_id>/', employee_detail, name='api_employee_detail'),
+    path('employees/create/', create_employee, name='api_create_employee'),
+    path('employees/<int:employee_id>/update/', update_employee, name='api_update_employee'),
+    path('employees/<int:employee_id>/delete/', delete_employee, name='api_delete_employee'),
     
     # Departments
     path('departments/', departments_list, name='departments_list'),

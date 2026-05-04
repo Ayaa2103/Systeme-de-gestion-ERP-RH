@@ -163,15 +163,17 @@ const EmployeeDetail = () => {
                     )}
                   </Box>
                 </Box>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<EditIcon />}
-                  onClick={() => navigate(`/employees/edit/${id}`)}
-                  sx={{ borderRadius: 2, textTransform: 'none', flexShrink: 0, mt: 0.5 }}
-                >
-                  Modifier
-                </Button>
+                {user?.role !== 'administrator' && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<EditIcon />}
+                    onClick={() => navigate(`/employees/edit/${id}`)}
+                    sx={{ borderRadius: 2, textTransform: 'none', flexShrink: 0, mt: 0.5 }}
+                  >
+                    Modifier
+                  </Button>
+                )}
               </Box>
             </Box>
           </Box>

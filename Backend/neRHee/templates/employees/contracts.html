@@ -1,77 +1,183 @@
 {% extends 'base.html' %}
-
-{% block title %}Gestion des Contrats{% endblock %}
+{% block title %}Gestion des Contrats — neRHee{% endblock %}
 
 {% block content %}
-<h1>Gestion des Contrats</h1>
 
-<div style="margin: 20px 0;">
-    <a href="{% url 'expiring_contracts' %}" class="btn btn-danger">Contrats Expirant Bientôt</a>
-    {% if user.role == 'hr_manager' %}
-        <a href="{% url 'create_contract_general' %}" class="btn btn-success">Créer un Contrat</a>
-    {% endif %}
-</div>
-
-<table>
-    <thead>
-        <tr>
-            <th>Employé</th>
-            <th>Matricule</th>
-            <th>Type de Contrat</th>
-            <th>Date Début</th>
-            <th>Date Fin</th>
-            <th>Salaire</th>
-            <th>Statut</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for contract in contracts %}
-        <tr>
-            <td>{{ contract.employee.user.get_full_name }}</td>
-            <td>{{ contract.employee.matricule }}</td>
-            <td>{{ contract.get_type_display }}</td>
-            <td>{{ contract.date_debut|date:"d/m/Y" }}</td>
-            <td>
-                {% if contract.date_fin %}
-                    {{ contract.date_fin|date:"d/m/Y" }}
-                {% else %}
-                    Indéterminée
-                {% endif %}
-            </td>
-            <td>
-                {% if contract.salaire %}
-                    {{ contract.salaire }} €
-                {% else %}
-                    Non renseigné
-                {% endif %}
-            </td>
-            <td>
-                {% if contract.active %}
-                    <span style="color: green;">Actif</span>
-                {% else %}
-                    <span style="color: red;">Inactif</span>
-                {% endif %}
-            </td>
-            <td>
-                <a href="{% url 'contract_detail' contract.id %}" class="btn">Détails</a>
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-file-earmark-text-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Gestion des Contrats</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">{{ contracts|length }} contrat{{ contracts|length|pluralize }} enregistré{{ contracts|length|pluralize }}</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/employees/contracts/expiring/"
+                   style="background:rgba(198,40,40,0.25);color:#fca5a5;border:1px solid rgba(198,40,40,0.4);padding:0.45rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Expirant bientôt
+                </a>
                 {% if user.role == 'hr_manager' %}
-                    <a href="{% url 'edit_contract' contract.id %}" class="btn">Modifier</a>
-                    {% if contract.can_be_renewed %}
-                        <a href="{% url 'renew_contract' contract.id %}" class="btn btn-success">Renouveler</a>
-                    {% endif %}
-                {% elif user.role == 'hr_director' %}
-                    <span style="color: #6c757d;">Supervision</span>
+                <a href="{% url 'create_contract_general' %}"
+                   style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.45rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;transition:all 0.2s;"
+                   onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                    <i class="bi bi-plus-lg"></i> Nouveau Contrat
+                </a>
                 {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="8">Aucun contrat trouvé</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<div style="margin: 20px 0;">
-    <a href="{% url 'employee_list' %}" class="btn">Retour aux Employés</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Search -->
+<div class="card-modern bg-white mb-3"><div class="p-3">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="flex-grow-1" style="min-width:200px;position:relative;">
+            <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+            <input id="searchInput" type="text" placeholder="Rechercher par employé, matricule…"
+                style="width:100%;padding:0.45rem 0.75rem 0.45rem 2rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;outline:none;"
+                onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+        </div>
+        <select id="typeFilter" style="padding:0.45rem 0.75rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;min-width:150px;outline:none;"
+            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+            <option value="">Tous les types</option>
+            <option value="cdi">CDI</option>
+            <option value="cdd">CDD</option>
+            <option value="stage">Stage</option>
+        </select>
+        <select id="statusFilter" style="padding:0.45rem 0.75rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;min-width:130px;outline:none;"
+            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+        </select>
+        <span id="resultCount" style="font-size:0.8rem;color:#64748b;white-space:nowrap;"></span>
+    </div>
+</div></div>
+
+<!-- Table -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-table"></i></div>
+        <span class="card-header-title">Liste des Contrats</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0" id="contractTable">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Employé</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Type</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Début</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Fin</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Salaire</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Statut</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contract in contracts %}
+                <tr class="contract-row"
+                    data-name="{{ contract.employee.user.get_full_name|lower }} {{ contract.employee.matricule|lower }}"
+                    data-type="{{ contract.type|lower }}"
+                    data-status="{% if contract.active %}actif{% else %}inactif{% endif %}"
+                    style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:34px;height:34px;border-radius:50%;background:#1976d2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;flex-shrink:0;">
+                                {{ contract.employee.user.first_name|first|upper|default:"?" }}{{ contract.employee.user.last_name|first|upper|default:"" }}
+                            </div>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:600;color:#1e293b;">{{ contract.employee.user.get_full_name }}</div>
+                                <div style="font-size:0.72rem;color:#94a3b8;">{{ contract.employee.matricule }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        {% if contract.type == 'CDI' %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">CDI</span>
+                        {% elif contract.type == 'CDD' %}
+                            <span style="background:#fff3e0;color:#e65100;border:1px solid #e6510030;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">CDD</span>
+                        {% else %}
+                            <span style="background:#e3f2fd;color:#1565c0;border:1px solid #1565c030;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">{{ contract.get_type_display }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ contract.date_debut|date:"d/m/Y" }}</td>
+
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">
+                        {% if contract.date_fin %}{{ contract.date_fin|date:"d/m/Y" }}{% else %}<span style="color:#94a3b8;">Indéterminée</span>{% endif %}
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">
+                        {% if contract.salaire %}{{ contract.salaire|floatformat:0 }} MAD{% else %}<span style="color:#94a3b8;">—</span>{% endif %}
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        {% if contract.active %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Actif</span>
+                        {% else %}
+                            <span style="background:#f5f5f5;color:#757575;border:1px solid #bdbdbd;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Inactif</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="/employees/contract/{{ contract.id }}/"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                <i class="bi bi-eye"></i> Voir
+                            </a>
+                            {% if user.role == 'hr_manager' %}
+                            <a href="{% url 'edit_contract' contract.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            {% if contract.can_be_renewed %}
+                            <a href="{% url 'renew_contract' contract.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#c8e6c9'" onmouseout="this.style.background='#e8f5e9'">
+                                <i class="bi bi-arrow-clockwise"></i> Renouveler
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="padding:3rem;text-align:center;">
+                    <i class="bi bi-file-earmark-x" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:0.75rem;"></i>
+                    <p style="color:#94a3b8;margin:0;">Aucun contrat trouvé</p>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const s=document.getElementById('searchInput'),t=document.getElementById('typeFilter'),st=document.getElementById('statusFilter'),c=document.getElementById('resultCount');
+    const rows=document.querySelectorAll('.contract-row');
+    function filter(){
+        const q=s.value.toLowerCase(),tp=t.value.toLowerCase(),status=st.value.toLowerCase();
+        let n=0;
+        rows.forEach(function(row){
+            const ok=(!q||row.dataset.name.includes(q))&&(!tp||row.dataset.type===tp)&&(!status||row.dataset.status===status);
+            row.style.display=ok?'':'none';
+            if(ok)n++;
+        });
+        c.textContent=n+' résultat'+(n!==1?'s':'');
+    }
+    s.addEventListener('input',filter);t.addEventListener('change',filter);st.addEventListener('change',filter);filter();
+})();
+</script>
 {% endblock %}

@@ -12,9 +12,11 @@
                     <span class="badge badge-{% if job_offer.status == 'published' %}success{% elif job_offer.status == 'draft' %}warning{% else %}secondary{% endif %} mr-2">
                         {{ job_offer.get_status_display }}
                     </span>
+                    {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
                     <a href="{% url 'recruitment:job_offer_edit' job_offer.pk %}" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit"></i> Modifier
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

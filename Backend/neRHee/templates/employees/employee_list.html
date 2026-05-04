@@ -1,64 +1,266 @@
 {% extends 'base.html' %}
-
-{% block title %}Employee List{% endblock %}
+{% block title %}Gestion des Employés — neRHee{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1>Employee Management</h1>
-    
-    {% if user.role == 'administrator' %}
-    <div class="mb-3">
-        <a href="{% url 'create_employee' %}" class="btn btn-primary">Ajouter un Employé</a>
-    </div>
-    {% endif %}
-    
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Matricule</th>
-                    <th>Name</th>
-                    <th>Poste</th>
-                    <th>Service</th>
-                    <th>Département</th>
-                    <th>Hire Date</th>
-                    <th>Status</th>
-                    <th>Presence</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in employees_with_status %}
-                <tr>
-                    <td>{{ item.employee.matricule }}</td>
-                    <td>{{ item.employee.user.get_full_name }}</td>
-                    <td>{{ item.employee.poste|default:"-" }}</td>
-                    <td>{{ item.employee.service|default:"-" }}</td>
-                    <td>{{ item.employee.department.name|default:"-" }}</td>
-                    <td>{{ item.employee.date_embauche|date:"d/m/Y"|default:"-" }}</td>
-                    <td>{{ item.employee.statut }}</td>
-                    <td>
-                        {% if item.is_absent %}
-                            <span class="badge bg-danger">Absent</span>
-                        {% else %}
-                            <span class="badge bg-success">Présent</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'employee_detail' item.employee.id %}" class="btn btn-sm btn-outline-primary">Voir</a>
-                        {% if user.role == 'hr_manager' or user.role == 'hr_director' or user.role == 'administrator' %}
-                            <a href="{% url 'edit_employee' item.employee.id %}" class="btn btn-sm btn-outline-secondary">Modifier</a>
-                        {% endif %}
-                        {% if user.role == 'administrator' %}
-                            <a href="{% url 'delete_employee' item.employee.id %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="9" class="text-center">No employees found</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<!-- ── Banner ── -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%); padding: 1.5rem 2rem; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-people-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Gestion des Employés</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">
+                        {{ employees_with_status|length }} employé{{ employees_with_status|length|pluralize }} enregistré{{ employees_with_status|length|pluralize }}
+                    </p>
+                </div>
+            </div>
+            {% if user.role == 'hr_manager' %}
+            <a href="{% url 'create_employee' %}" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.45rem 1.1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;backdrop-filter:blur(8px);transition:all 0.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <i class="bi bi-plus-lg"></i> Nouvel Employé
+            </a>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<!-- ── Stat cards ── -->
+<div class="row g-3 mb-4">
+    {% with total=employees_with_status|length %}
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:36px;height:36px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-people-fill" style="color:#1976d2;font-size:1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#1976d2;line-height:1;">{{ total }}</div>
+                <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:36px;height:36px;background:#2e7d3215;border-radius:9px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-check-fill" style="color:#2e7d32;font-size:1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#2e7d32;line-height:1;">
+                    {% with count=0 %}
+                        {% for item in employees_with_status %}{% if item.employee.statut == 'actif' %}{% with count=count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                        {{ employees_with_status|length }}
+                    {% endwith %}
+                </div>
+                <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Actifs</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:36px;height:36px;background:#e6510015;border-radius:9px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-x-fill" style="color:#e65100;font-size:1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#e65100;line-height:1;">
+                    {% for item in employees_with_status %}{% if item.is_absent %}1{% endif %}{% endfor %}
+                </div>
+                <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Absents</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100">
+            <div class="p-3">
+                <div class="mb-2">
+                    <div style="width:36px;height:36px;background:#7b1fa215;border-radius:9px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-building" style="color:#7b1fa2;font-size:1rem;"></i>
+                    </div>
+                </div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#7b1fa2;line-height:1;">—</div>
+                <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Départements</div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+</div>
+
+<!-- ── Search bar ── -->
+<div class="card-modern bg-white mb-3">
+    <div class="p-3">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="flex-grow-1" style="min-width:220px;position:relative;">
+                <i class="bi bi-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+                <input type="text" id="searchInput" placeholder="Rechercher par nom, matricule, poste…"
+                    style="width:100%;padding:0.45rem 0.75rem 0.45rem 2.1rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;outline:none;"
+                    onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+            </div>
+            <select id="statusFilter" style="padding:0.45rem 0.75rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;min-width:140px;outline:none;"
+                onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+                <option value="">Tous les statuts</option>
+                <option value="actif">Actif</option>
+                <option value="inactif">Inactif</option>
+                <option value="suspendu">Suspendu</option>
+            </select>
+            <span id="resultCount" style="font-size:0.8rem;color:#64748b;white-space:nowrap;"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ── Table ── -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-table"></i></div>
+        <span class="card-header-title">Liste des Employés</span>
+    </div>
+    <div class="p-0">
+        <div class="table-responsive">
+            <table class="table mb-0" id="employeeTable">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:0.85rem 1.25rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Employé</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Poste</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Département</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Embauche</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Statut</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Présence</th>
+                        <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in employees_with_status %}
+                    <tr class="employee-row"
+                        data-name="{{ item.employee.user.get_full_name|lower }}"
+                        data-matricule="{{ item.employee.matricule|lower }}"
+                        data-poste="{{ item.employee.poste|lower|default:'' }}"
+                        data-statut="{{ item.employee.statut|lower }}"
+                        style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+                        onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+
+                        <!-- Employé (avatar + nom) -->
+                        <td style="padding:0.85rem 1.25rem;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:38px;height:38px;border-radius:50%;background:#1976d2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.8rem;flex-shrink:0;">
+                                    {{ item.employee.user.first_name|first|upper|default:"?" }}{{ item.employee.user.last_name|first|upper|default:"" }}
+                                </div>
+                                <div>
+                                    <div style="font-size:0.875rem;font-weight:600;color:#1e293b;">{{ item.employee.user.get_full_name }}</div>
+                                    <div style="font-size:0.72rem;color:#94a3b8;">{{ item.employee.matricule }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Poste -->
+                        <td style="padding:0.85rem 1rem;">
+                            <div style="font-size:0.85rem;color:#334155;">{{ item.employee.poste|default:"—" }}</div>
+                            {% if item.employee.service %}
+                            <div style="font-size:0.72rem;color:#94a3b8;">{{ item.employee.service }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Département -->
+                        <td style="padding:0.85rem 1rem;">
+                            <span style="font-size:0.82rem;color:#334155;">{{ item.employee.department.name|default:"—" }}</span>
+                        </td>
+
+                        <!-- Date embauche -->
+                        <td style="padding:0.85rem 1rem;">
+                            <span style="font-size:0.82rem;color:#64748b;">{{ item.employee.date_embauche|date:"d/m/Y"|default:"—" }}</span>
+                        </td>
+
+                        <!-- Statut -->
+                        <td style="padding:0.85rem 1rem;">
+                            {% if item.employee.statut == 'actif' %}
+                                <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Actif</span>
+                            {% elif item.employee.statut == 'inactif' %}
+                                <span style="background:#f5f5f5;color:#757575;border:1px solid #75757530;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Inactif</span>
+                            {% else %}
+                                <span style="background:#fff3e0;color:#e65100;border:1px solid #e6510030;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">{{ item.employee.statut|capfirst }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Présence -->
+                        <td style="padding:0.85rem 1rem;">
+                            {% if item.is_absent %}
+                                <span style="background:#ffebee;color:#c62828;border:1px solid #c6282830;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;"><i class="bi bi-x-circle-fill me-1"></i>Absent</span>
+                            {% else %}
+                                <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;"><i class="bi bi-check-circle-fill me-1"></i>Présent</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="padding:0.85rem 1rem;">
+                            <div class="d-flex gap-1 align-items-center">
+                                <a href="{% url 'employee_detail' item.employee.id %}"
+                                    style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                                    onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                    <i class="bi bi-eye"></i> Voir
+                                </a>
+                                {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+                                <a href="{% url 'edit_employee' item.employee.id %}"
+                                    style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                                    onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                                {% endif %}
+                                {% if user.role == 'administrator' %}
+                                <a href="{% url 'delete_employee' item.employee.id %}"
+                                    style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                                    onmouseover="this.style.background='#ffcdd2'" onmouseout="this.style.background='#ffebee'">
+                                    <i class="bi bi-trash3"></i> Supprimer
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="padding:3.5rem;text-align:center;">
+                            <i class="bi bi-people" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:0.75rem;"></i>
+                            <p style="color:#94a3b8;margin:0;font-size:0.9rem;">Aucun employé trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Search JS ── -->
+<script>
+(function () {
+    const search = document.getElementById('searchInput');
+    const filter = document.getElementById('statusFilter');
+    const count  = document.getElementById('resultCount');
+    const rows   = document.querySelectorAll('.employee-row');
+
+    function applyFilters() {
+        const q = search.value.toLowerCase();
+        const s = filter.value.toLowerCase();
+        let visible = 0;
+        rows.forEach(function(row) {
+            const matchQ = !q || row.dataset.name.includes(q) || row.dataset.matricule.includes(q) || row.dataset.poste.includes(q);
+            const matchS = !s || row.dataset.statut === s;
+            row.style.display = matchQ && matchS ? '' : 'none';
+            if (matchQ && matchS) visible++;
+        });
+        count.textContent = visible + ' résultat' + (visible !== 1 ? 's' : '');
+    }
+
+    search.addEventListener('input', applyFilters);
+    filter.addEventListener('change', applyFilters);
+    applyFilters();
+})();
+</script>
+
 {% endblock %}

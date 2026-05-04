@@ -59,17 +59,17 @@
         </div>
     </div>
 
-    <!-- Demandes -->
+    <!-- Offres publiées -->
     <div class="col-6 col-sm-3">
         <div class="card-modern bg-white h-100">
             <div class="p-3">
                 <div class="mb-2">
-                    <div style="width:38px;height:38px;background:#e6510015;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-clipboard2-pulse-fill" style="color:#e65100;font-size:1.1rem;"></i>
+                    <div style="width:38px;height:38px;background:#2e7d3215;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-briefcase-fill" style="color:#2e7d32;font-size:1.1rem;"></i>
                     </div>
                 </div>
-                <div class="fw-bold" style="font-size:1.75rem;color:#e65100;line-height:1;">{{ pending_requests|default:"0" }}</div>
-                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Demandes en attente</div>
+                <div class="fw-bold" style="font-size:1.75rem;color:#2e7d32;line-height:1;">{{ active_offers|default:"0" }}</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">Offres publiées</div>
             </div>
         </div>
     </div>
@@ -137,7 +137,7 @@
             <div class="card-header-navy">
                 <div class="card-header-icon"><i class="bi bi-briefcase-fill"></i></div>
                 <span class="card-header-title">Offres d'emploi actives</span>
-                <a href="http://localhost:3000/job-offers" target="_blank" class="ms-auto" style="color:rgba(255,255,255,0.65);font-size:0.78rem;text-decoration:none;">
+                <a href="{% url 'recruitment:job_offer_list' %}" class="ms-auto" style="color:rgba(255,255,255,0.65);font-size:0.78rem;text-decoration:none;">
                     Voir tout <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
@@ -180,9 +180,17 @@
     </div>
     <div class="p-3">
         <div class="row g-2">
-            {% for action in actions %}{% endfor %}
+
+            {% url 'manage_users' as url_users %}
+            {% url 'employee_list' as url_emp %}
+            {% url 'manage_contracts' as url_contracts %}
+            {% url 'department_structure_management' as url_structures %}
+            {% url 'recruitment:job_offer_list' as url_offers %}
+            {% url 'manage_events' as url_events %}
+            {% url 'system_management' as url_config %}
+
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/core/user/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                <a href="{{ url_users }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
                     <div style="width:42px;height:42px;background:#1976d215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-person-badge-fill" style="color:#1976d2;font-size:1.2rem;"></i>
                     </div>
@@ -190,7 +198,7 @@
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/employees/employee/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                <a href="{{ url_emp }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
                     <div style="width:42px;height:42px;background:#2e7d3215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-people-fill" style="color:#2e7d32;font-size:1.2rem;"></i>
                     </div>
@@ -198,7 +206,7 @@
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/employees/contract/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                <a href="{{ url_contracts }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
                     <div style="width:42px;height:42px;background:#7b1fa215;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-file-earmark-text-fill" style="color:#7b1fa2;font-size:1.2rem;"></i>
                     </div>
@@ -206,7 +214,15 @@
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/recruitment/joboffer/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fed7aa'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                <a href="{{ url_structures }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#c7d2fe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#4338ca15;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-diagram-3-fill" style="color:#4338ca;font-size:1.2rem;"></i>
+                    </div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Départements</span>
+                </a>
+            </div>
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_offers }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fed7aa'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
                     <div style="width:42px;height:42px;background:#e6510015;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-briefcase-fill" style="color:#e65100;font-size:1.2rem;"></i>
                     </div>
@@ -214,7 +230,7 @@
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/core/event/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                <a href="{{ url_events }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
                     <div style="width:42px;height:42px;background:#9c27b015;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-calendar-event-fill" style="color:#9c27b0;font-size:1.2rem;"></i>
                     </div>
@@ -222,27 +238,19 @@
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="/admin/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#fff1f2';this.style.borderColor='#fecdd3'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
-                    <div style="width:42px;height:42px;background:#c6282815;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-shield-lock-fill" style="color:#c62828;font-size:1.2rem;"></i>
+                <a href="{{ url_config }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#0f172a15;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-sliders2" style="color:#0f172a;font-size:1.2rem;"></i>
                     </div>
-                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Admin Django</span>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Configuration</span>
                 </a>
             </div>
             <div class="col-6 col-sm-4 col-md-3">
-                <a href="{% url 'system_management' %}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0f9ff';this.style.borderColor='#bae6fd'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
-                    <div style="width:42px;height:42px;background:#0288d115;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-gear-wide-connected" style="color:#0288d1;font-size:1.2rem;"></i>
+                <a href="/admin/" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fdba74'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#f9731615;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-kanban-fill" style="color:#ea580c;font-size:1.2rem;"></i>
                     </div>
-                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Système</span>
-                </a>
-            </div>
-            <div class="col-6 col-sm-4 col-md-3">
-                <a href="http://localhost:3000" target="_blank" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
-                    <div style="width:42px;height:42px;background:#05966915;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-box-arrow-up-right" style="color:#059669;font-size:1.2rem;"></i>
-                    </div>
-                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Frontend</span>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Panel Django</span>
                 </a>
             </div>
         </div>

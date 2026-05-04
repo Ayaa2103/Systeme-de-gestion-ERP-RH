@@ -251,6 +251,13 @@ export const getOnboardingStats = () => {
   return api.get('/onboarding/stats/');
 };
 
+// User management (admin only)
+export const getUsers = () => api.get('/users/');
+export const createUser = (data) => api.post('/users/create/', data);
+export const updateUser = (id, data) => api.put(`/users/${id}/update/`, data);
+export const resetUserPassword = (id, newPassword) => api.post(`/users/${id}/reset-password/`, { new_password: newPassword });
+export const toggleUserActive = (id) => api.post(`/users/${id}/toggle-active/`);
+
 // Export all functions as hrService object
 export const hrService = {
   // Employees
@@ -321,5 +328,12 @@ export const hrService = {
   getEmployeeOnboardingTasks,
   updateOnboardingTaskStatus,
   startOnboarding,
-  getOnboardingStats
+  getOnboardingStats,
+
+  // User management (admin)
+  getUsers,
+  createUser,
+  updateUser,
+  resetUserPassword,
+  toggleUserActive,
 };

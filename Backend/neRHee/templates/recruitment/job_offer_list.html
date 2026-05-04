@@ -1,79 +1,162 @@
 {% extends 'base.html' %}
-
-{% block title %}Offres d'Emploi{% endblock %}
+{% block title %}Offres d'Emploi — neRHee{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">💼 Offres d'Emploi</h1>
-                <a href="{% url 'recruitment:job_offer_create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nouvelle Offre
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Département</th>
-                            <th>Niveau d'Expérience</th>
-                            <th>Statut</th>
-                            <th>Créé le</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for job_offer in job_offers %}
-                        <tr>
-                            <td>
-                                <a href="{% url 'recruitment:job_offer_detail' job_offer.pk %}" class="text-decoration-none">
-                                    {{ job_offer.title }}
-                                </a>
-                            </td>
-                            <td>{{ job_offer.department }}</td>
-                            <td>{{ job_offer.get_experience_level_display }}</td>
-                            <td>
-                                <span class="badge badge-{% if job_offer.status == 'published' %}success{% elif job_offer.status == 'draft' %}warning{% else %}secondary{% endif %}">
-                                    {{ job_offer.get_status_display }}
-                                </span>
-                            </td>
-                            <td>{{ job_offer.created_at|date:"d/m/Y" }}</td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="{% url 'recruitment:job_offer_detail' job_offer.pk %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'recruitment:job_offer_edit' job_offer.pk %}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    {% if job_offer.status == 'draft' %}
-                                    <a href="{% url 'recruitment:job_offer_publish' job_offer.pk %}" class="btn btn-sm btn-success">
-                                        <i class="fas fa-check"></i> Publier
-                                    </a>
-                                    {% elif job_offer.status == 'published' %}
-                                    <a href="{% url 'recruitment:job_offer_close' job_offer.pk %}" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-times"></i> Fermer
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">Aucune offre d'emploi trouvée</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-briefcase-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Offres d'Emploi</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">{{ job_offers|length }} offre{{ job_offers|length|pluralize }}</p>
+                </div>
             </div>
+            {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+            <a href="{% url 'recruitment:job_offer_create' %}"
+               style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.45rem 1.1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;transition:all 0.2s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <i class="bi bi-plus-lg"></i> Nouvelle Offre
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Search -->
+<div class="card-modern bg-white mb-3"><div class="p-3">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="flex-grow-1" style="min-width:200px;position:relative;">
+            <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+            <input id="searchInput" type="text" placeholder="Rechercher par titre, département…"
+                style="width:100%;padding:0.45rem 0.75rem 0.45rem 2rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;outline:none;"
+                onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+        </div>
+        <select id="statusFilter" style="padding:0.45rem 0.75rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;min-width:150px;outline:none;"
+            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+            <option value="">Tous les statuts</option>
+            <option value="draft">Brouillon</option>
+            <option value="published">Publiée</option>
+            <option value="closed">Fermée</option>
+        </select>
+        <span id="resultCount" style="font-size:0.8rem;color:#64748b;white-space:nowrap;"></span>
+    </div>
+</div></div>
+
+<!-- Table -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-table"></i></div>
+        <span class="card-header-title">Liste des Offres</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0" id="offerTable">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Offre</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Département</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Expérience</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Statut</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Candidatures</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Créé le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offer in job_offers %}
+                <tr class="offer-row"
+                    data-name="{{ offer.title|lower }} {{ offer.department|lower }}"
+                    data-status="{{ offer.status }}"
+                    style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:36px;height:36px;border-radius:10px;background:#1976d215;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="bi bi-briefcase" style="color:#1976d2;font-size:0.9rem;"></i>
+                            </div>
+                            <div style="font-size:0.875rem;font-weight:600;color:#1e293b;">{{ offer.title }}</div>
+                        </div>
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ offer.department|default:"—" }}</td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#64748b;">{{ offer.get_experience_level_display }}</td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        {% if offer.status == 'published' %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Publiée</span>
+                        {% elif offer.status == 'draft' %}
+                            <span style="background:#fff8e1;color:#f57f17;border:1px solid #f57f1730;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Brouillon</span>
+                        {% else %}
+                            <span style="background:#f5f5f5;color:#757575;border:1px solid #bdbdbd;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Fermée</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="font-size:0.82rem;font-weight:600;color:#475569;">{{ offer.applications.count }}</span>
+                    </td>
+
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#64748b;">{{ offer.created_at|date:"d/m/Y" }}</td>
+
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{% url 'recruitment:job_offer_detail' offer.pk %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                <i class="bi bi-eye"></i> Voir
+                            </a>
+                            {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+                            <a href="{% url 'recruitment:job_offer_edit' offer.pk %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            {% if offer.status == 'draft' %}
+                            <a href="{% url 'recruitment:job_offer_publish' offer.pk %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">
+                                <i class="bi bi-send-fill"></i> Publier
+                            </a>
+                            {% elif offer.status == 'published' %}
+                            <a href="{% url 'recruitment:job_offer_close' offer.pk %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">
+                                <i class="bi bi-x-circle"></i> Fermer
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="padding:3rem;text-align:center;">
+                    <i class="bi bi-briefcase" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:0.75rem;"></i>
+                    <p style="color:#94a3b8;margin:0;">Aucune offre d'emploi trouvée</p>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const s=document.getElementById('searchInput'),st=document.getElementById('statusFilter'),c=document.getElementById('resultCount');
+    const rows=document.querySelectorAll('.offer-row');
+    function filter(){
+        const q=s.value.toLowerCase(),status=st.value;
+        let n=0;
+        rows.forEach(function(row){
+            const ok=(!q||row.dataset.name.includes(q))&&(!status||row.dataset.status===status);
+            row.style.display=ok?'':'none';
+            if(ok)n++;
+        });
+        c.textContent=n+' résultat'+(n!==1?'s':'');
+    }
+    s.addEventListener('input',filter);st.addEventListener('change',filter);filter();
+})();
+</script>
 {% endblock %}

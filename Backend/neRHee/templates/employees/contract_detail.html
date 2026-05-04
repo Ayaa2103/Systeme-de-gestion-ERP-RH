@@ -1,56 +1,202 @@
 {% extends 'base.html' %}
 
-{% block title %}Détail du Contrat{% endblock %}
+{% block title %}Détail du Contrat — neRHee{% endblock %}
 
 {% block content %}
-<h1>Détail du Contrat</h1>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
-    <div>
-        <h3>Informations Employé</h3>
-        <table>
-            <tr><th>Nom:</th><td>{{ contract.employee.user.get_full_name }}</td></tr>
-            <tr><th>Matricule:</th><td>{{ contract.employee.matricule }}</td></tr>
-            <tr><th>Poste:</th><td>{{ contract.employee.poste }}</td></tr>
-            <tr><th>Service:</th><td>{{ contract.employee.service }}</td></tr>
-        </table>
-    </div>
-    
-    <div>
-        <h3>Informations Contrat</h3>
-        <table>
-            <tr><th>Type:</th><td>{{ contract.get_type_display }}</td></tr>
-            <tr><th>Date début:</th><td>{{ contract.date_debut|date:"d/m/Y" }}</td></tr>
-            <tr><th>Date fin:</th><td>{% if contract.date_fin %}{{ contract.date_fin|date:"d/m/Y" }}{% else %}Indéterminée{% endif %}</td></tr>
-            <tr><th>Salaire:</th><td>{% if contract.salaire %}{{ contract.salaire }} €{% else %}Non renseigné{% endif %}</td></tr>
-            <tr><th>Statut:</th><td>{% if contract.active %}<span style="color: green;">Actif</span>{% else %}<span style="color: red;">Inactif</span>{% endif %}</td></tr>
-        </table>
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.6rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-55px;right:-35px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-70px;right:110px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center gap-3 position-relative flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:48px;height:48px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-file-earmark-text-fill" style="font-size:1.2rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1 fw-bold" style="color:white;">Détail du contrat</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.72);font-size:0.82rem;">Vue consolidée du collaborateur, du contrat et de son état actuel.</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                {% if contract.active %}
+                <span style="background:rgba(34,197,94,0.16);color:#bbf7d0;border:1px solid rgba(187,247,208,0.35);padding:0.42rem 0.85rem;border-radius:999px;font-size:0.76rem;font-weight:700;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Actif
+                </span>
+                {% else %}
+                <span style="background:rgba(239,68,68,0.16);color:#fecaca;border:1px solid rgba(254,202,202,0.35);padding:0.42rem 0.85rem;border-radius:999px;font-size:0.76rem;font-weight:700;">
+                    <i class="bi bi-x-circle-fill me-1"></i> Inactif
+                </span>
+                {% endif %}
+                <a href="/employees/contracts/"
+                   style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.48rem 1rem;border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;gap:0.45rem;">
+                    <i class="bi bi-arrow-left"></i> Retour aux contrats
+                </a>
+            </div>
+        </div>
     </div>
 </div>
-
-{% if contract.is_expiring_soon %}
-<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 20px 0; border-radius: 5px;">
-    <strong>⚠️ Attention:</strong> Ce contrat expire dans {{ contract.date_fin|timeuntil }}
-</div>
-{% endif %}
 
 {% if contract.is_expired %}
-<div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 20px 0; border-radius: 5px;">
-    <strong>🚨 Contrat expiré</strong> depuis le {{ contract.date_fin|date:"d/m/Y" }}
+<div class="card-modern mb-4 border-0" style="background:linear-gradient(135deg,#fff1f2 0%,#ffe4e6 100%);border:1px solid #fecdd3 !important;">
+    <div class="p-3 d-flex align-items-start gap-3">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fee2e2;color:#be123c;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+        </div>
+        <div>
+            <div style="font-size:0.92rem;font-weight:800;color:#9f1239;">Contrat expiré</div>
+            <div style="font-size:0.84rem;color:#881337;">Ce contrat est arrivé à échéance le {{ contract.date_fin|date:"d/m/Y" }}.</div>
+        </div>
+    </div>
+</div>
+{% elif contract.is_expiring_soon %}
+<div class="card-modern mb-4 border-0" style="background:linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%);border:1px solid #fed7aa !important;">
+    <div class="p-3 d-flex align-items-start gap-3">
+        <div style="width:42px;height:42px;border-radius:12px;background:#ffedd5;color:#c2410c;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-alarm-fill"></i>
+        </div>
+        <div>
+            <div style="font-size:0.92rem;font-weight:800;color:#9a3412;">Échéance proche</div>
+            <div style="font-size:0.84rem;color:#9a3412;">Ce contrat expire dans {{ contract.date_fin|timeuntil }}. Un suivi est recommandé.</div>
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<div style="margin: 30px 0;">
-    {% if user.role == 'hr_manager' %}
-        <a href="{% url 'edit_contract' contract.id %}" class="btn">Modifier</a>
-        {% if contract.can_be_renewed %}
-            <a href="{% url 'renew_contract' contract.id %}" class="btn btn-success">Renouveler</a>
-        {% else %}
-            <span style="color: #6c757d; font-style: italic;">Contrat indéterminé (non renouvelable)</span>
-        {% endif %}
-    {% elif user.role == 'hr_director' %}
-        <span style="color: #6c757d;">Mode supervision - Consultation uniquement</span>
-    {% endif %}
-    <a href="{% url 'manage_contracts' %}" class="btn btn-secondary">Retour aux Contrats</a>
+<div class="row g-4">
+    <div class="col-12 col-xl-4">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-person-badge-fill"></i></div>
+                <span class="card-header-title">Collaborateur</span>
+            </div>
+            <div class="p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div style="width:56px;height:56px;border-radius:16px;background:#1976d215;color:#1976d2;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;flex-shrink:0;">
+                        {{ contract.employee.user.first_name|first|upper|default:"?" }}{{ contract.employee.user.last_name|first|upper|default:"" }}
+                    </div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#1e293b;">{{ contract.employee.user.get_full_name }}</div>
+                        <div style="font-size:0.78rem;color:#94a3b8;">{{ contract.employee.matricule }}</div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div style="padding:0.85rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;">
+                        <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Poste</div>
+                        <div style="font-size:0.92rem;font-weight:700;color:#1e293b;margin-top:0.2rem;">{{ contract.employee.poste|default:"Non renseigné" }}</div>
+                    </div>
+                    <div style="padding:0.85rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;">
+                        <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Service</div>
+                        <div style="font-size:0.92rem;font-weight:700;color:#1e293b;margin-top:0.2rem;">{{ contract.employee.service|default:"Non renseigné" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card-modern bg-white h-100 overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-file-earmark-ruled-fill"></i></div>
+                <span class="card-header-title">Informations contrat</span>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div style="padding:0.95rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;height:100%;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Type</div>
+                            <div style="margin-top:0.35rem;">
+                                {% if contract.type == 'CDI' %}
+                                <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:4px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">CDI</span>
+                                {% elif contract.type == 'CDD' %}
+                                <span style="background:#fff3e0;color:#e65100;border:1px solid #e6510030;padding:4px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">CDD</span>
+                                {% else %}
+                                <span style="background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;padding:4px 10px;border-radius:999px;font-size:0.74rem;font-weight:800;">{{ contract.get_type_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div style="padding:0.95rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;height:100%;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Statut</div>
+                            <div style="font-size:1rem;font-weight:800;color:{% if contract.active %}#15803d{% else %}#b91c1c{% endif %};margin-top:0.35rem;">
+                                {% if contract.active %}Actif{% else %}Inactif{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div style="padding:0.95rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;height:100%;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Date de début</div>
+                            <div style="font-size:0.96rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">{{ contract.date_debut|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div style="padding:0.95rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;height:100%;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Date de fin</div>
+                            <div style="font-size:0.96rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">{% if contract.date_fin %}{{ contract.date_fin|date:"d/m/Y" }}{% else %}Indéterminée{% endif %}</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div style="padding:0.95rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Salaire</div>
+                            <div style="font-size:1.1rem;font-weight:800;color:#1e293b;margin-top:0.35rem;">{% if contract.salaire %}{{ contract.salaire }} €{% else %}Non renseigné{% endif %}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-3">
+        <div class="card-modern bg-white overflow-hidden mb-4">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <span class="card-header-title">Actions</span>
+            </div>
+            <div class="p-4">
+                <div class="d-grid gap-2">
+                    {% if user.role == 'hr_manager' %}
+                    <a href="/employees/contract/{{ contract.id }}/edit/"
+                       style="display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem 0.9rem;background:#f8fafc;color:#334155;border:1px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;">
+                        <i class="bi bi-pencil"></i> Modifier le contrat
+                    </a>
+                    {% if contract.can_be_renewed %}
+                    <a href="/employees/contract/{{ contract.id }}/renew/"
+                       style="display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem 0.9rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;">
+                        <i class="bi bi-arrow-repeat"></i> Renouveler
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <div style="padding:0.8rem 0.9rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;color:#64748b;font-size:0.82rem;font-weight:600;">
+                        Mode consultation uniquement pour votre rôle.
+                    </div>
+                    {% endif %}
+                    <a href="/employees/contracts/"
+                       style="display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem 0.9rem;background:#1e40af;color:white;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;">
+                        <i class="bi bi-arrow-left"></i> Retour à la liste
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-modern bg-white overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-info-circle-fill"></i></div>
+                <span class="card-header-title">Lecture rapide</span>
+            </div>
+            <div class="p-4 d-flex flex-column gap-3">
+                <div style="padding:0.85rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;">
+                    <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Échéance</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#1e293b;margin-top:0.2rem;">
+                        {% if contract.date_fin %}{{ contract.date_fin|timeuntil }}{% else %}Sans fin prévue{% endif %}
+                    </div>
+                </div>
+                <div style="padding:0.85rem 1rem;border:1px solid #eef2f7;border-radius:14px;background:#f8fafc;">
+                    <div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Matricule</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#1e293b;margin-top:0.2rem;">{{ contract.employee.matricule }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -63,6 +63,7 @@ import ManagePages from './pages/CompanyCulture/ManagePages';
 import ViewPage from './pages/CompanyCulture/ViewPage';
 import ApiTest from './components/ApiTest';
 import AdminSpecialDashboard from './pages/Admin/AdminSpecialDashboard';
+import UserManagement from './pages/Admin/UserManagement';
 import RecommendProfile from './pages/Employee/RecommendProfile';
 import ApplyJob from './pages/Employee/ApplyJob';
 import { useAuth } from './contexts/AuthContext';
@@ -369,7 +370,7 @@ function App() {
             <Route
               path="/employees/create"
               element={
-                <ProtectedRoute roles={['hr_manager', 'administrator']}>
+                <ProtectedRoute roles={['hr_manager']}>
                   <MainLayout>
                     <CreateEmployee />
                   </MainLayout>
@@ -381,7 +382,7 @@ function App() {
             <Route
               path="/employees/edit/:id"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
                   <MainLayout>
                     <EditEmployee />
                   </MainLayout>
@@ -771,6 +772,17 @@ function App() {
                 <ProtectedRoute roles={['administrator']}>
                   <MainLayout>
                     <AdminSpecialDashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute roles={['administrator']}>
+                  <MainLayout>
+                    <UserManagement />
                   </MainLayout>
                 </ProtectedRoute>
               }

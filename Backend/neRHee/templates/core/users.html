@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des Utilisateurs — neRHee{% endblock %}
+
+{% block content %}
+
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-person-badge-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Gestion des Utilisateurs</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">{{ users|length }} compte{{ users|length|pluralize }} enregistré{{ users|length|pluralize }}</p>
+                </div>
+            </div>
+            <a href="{% url 'admin_create_user' %}"
+               style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.45rem 1.1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;transition:all 0.2s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <i class="bi bi-plus-lg"></i> Nouveau Compte
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-people-fill" style="color:#1976d2;font-size:1rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#1976d2;line-height:1;">{{ users|length }}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Total</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#2e7d3215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-person-check-fill" style="color:#2e7d32;font-size:1rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#2e7d32;line-height:1;">{% for u in users %}{% if u.is_active %}{% if forloop.last %}{{ forloop.counter }}{% endif %}{% endif %}{% empty %}0{% endfor %}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Actifs</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#c6282815;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-shield-fill" style="color:#c62828;font-size:1rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#c62828;line-height:1;">{% for u in users %}{% if u.role == 'administrator' %}{% if forloop.last %}{{ forloop.counter }}{% endif %}{% endif %}{% empty %}0{% endfor %}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Admins</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#1565c015;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-person-workspace" style="color:#1565c0;font-size:1rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#1565c0;line-height:1;">{% for u in users %}{% if u.role == 'hr_manager' or u.role == 'hr_director' %}{% if forloop.last %}{{ forloop.counter }}{% endif %}{% endif %}{% empty %}0{% endfor %}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Équipe RH</div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="card-modern bg-white mb-3"><div class="p-3">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="flex-grow-1" style="min-width:200px;position:relative;">
+            <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+            <input id="searchInput" type="text" placeholder="Rechercher par nom, username, email…"
+                style="width:100%;padding:0.45rem 0.75rem 0.45rem 2rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;outline:none;"
+                onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+        </div>
+        <select id="roleFilter" style="padding:0.45rem 0.75rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.85rem;min-width:160px;outline:none;"
+            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+            <option value="">Tous les rôles</option>
+            <option value="administrator">Administrateur</option>
+            <option value="hr_director">Directeur RH</option>
+            <option value="hr_manager">Responsable RH</option>
+            <option value="employee">Employé</option>
+        </select>
+        <span id="resultCount" style="font-size:0.8rem;color:#64748b;white-space:nowrap;"></span>
+    </div>
+</div></div>
+
+<!-- Table -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-table"></i></div>
+        <span class="card-header-title">Liste des Comptes</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0" id="userTable">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Utilisateur</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Email</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Rôle</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Statut</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Créé le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                {% with role=u.role %}
+                <tr class="user-row"
+                    data-name="{{ u.get_full_name|lower }} {{ u.username|lower }}"
+                    data-email="{{ u.email|lower }}"
+                    data-role="{{ u.role }}"
+                    style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;"
+                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+
+                    <!-- Utilisateur -->
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:36px;height:36px;border-radius:50%;
+                                background:{% if role == 'administrator' %}#c62828{% elif role == 'hr_director' %}#6a1b9a{% elif role == 'hr_manager' %}#1565c0{% else %}#2e7d32{% endif %};
+                                display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.78rem;flex-shrink:0;">
+                                {{ u.first_name|first|upper|default:u.username|first|upper }}{{ u.last_name|first|upper|default:"" }}
+                            </div>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:600;color:#1e293b;">
+                                    {% if u.get_full_name %}{{ u.get_full_name }}{% else %}{{ u.username }}{% endif %}
+                                </div>
+                                <div style="font-size:0.72rem;color:#94a3b8;">@{{ u.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Email -->
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ u.email|default:"—" }}</td>
+
+                    <!-- Rôle -->
+                    <td style="padding:0.85rem 1rem;">
+                        {% if role == 'administrator' %}
+                            <span style="background:#ffebee;color:#c62828;border:1px solid #ffcdd2;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Administrateur</span>
+                        {% elif role == 'hr_director' %}
+                            <span style="background:#f3e5f5;color:#6a1b9a;border:1px solid #ce93d8;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Dir. RH</span>
+                        {% elif role == 'hr_manager' %}
+                            <span style="background:#e3f2fd;color:#1565c0;border:1px solid #90caf9;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Resp. RH</span>
+                        {% else %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">Employé</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Statut -->
+                    <td style="padding:0.85rem 1rem;">
+                        {% if u.is_active %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;"><i class="bi bi-check-circle-fill me-1"></i>Actif</span>
+                        {% else %}
+                            <span style="background:#f5f5f5;color:#757575;border:1px solid #bdbdbd;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;"><i class="bi bi-x-circle-fill me-1"></i>Inactif</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Date -->
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#64748b;">{{ u.date_joined|date:"d/m/Y" }}</td>
+
+                    <!-- Actions -->
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{% url 'admin_edit_user' u.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+                               onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            {% if u.id != request.user.id %}
+                            <form method="post" action="{% url 'admin_toggle_user' u.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    style="display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.7rem;background:{% if u.is_active %}#ffebee{% else %}#e8f5e9{% endif %};color:{% if u.is_active %}#c62828{% else %}#2e7d32{% endif %};border:1px solid {% if u.is_active %}#ffcdd2{% else %}#a5d6a7{% endif %};border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.15s;">
+                                    {% if u.is_active %}<i class="bi bi-person-x-fill"></i> Désactiver{% else %}<i class="bi bi-person-check-fill"></i> Activer{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr><td colspan="6" style="padding:3rem;text-align:center;">
+                    <i class="bi bi-people" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:0.75rem;"></i>
+                    <p style="color:#94a3b8;margin:0;">Aucun utilisateur trouvé</p>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mt-3">{% for m in messages %}
+    <div class="alert alert-{{ m.tags }} alert-dismissible fade show">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+{% endfor %}</div>
+{% endif %}
+
+<script>
+(function(){
+    const s=document.getElementById('searchInput'), r=document.getElementById('roleFilter'), c=document.getElementById('resultCount');
+    const rows=document.querySelectorAll('.user-row');
+    function filter(){
+        const q=s.value.toLowerCase(), role=r.value;
+        let n=0;
+        rows.forEach(function(row){
+            const ok=(!q||(row.dataset.name+' '+row.dataset.email).includes(q))&&(!role||row.dataset.role===role);
+            row.style.display=ok?'':'none';
+            if(ok)n++;
+        });
+        c.textContent=n+' résultat'+(n!==1?'s':'');
+    }
+    s.addEventListener('input',filter); r.addEventListener('change',filter); filter();
+})();
+</script>
+{% endblock %}

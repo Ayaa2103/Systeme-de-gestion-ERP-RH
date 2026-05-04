@@ -370,6 +370,104 @@ def employee_dashboard_data(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def users_list(request):
+    """Liste tous les utilisateurs - admin uniquement"""
+    if request.user.role != 'administrator':
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    users = User.objects.all().order_by('date_joined')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_user(request):
+    """Créer un compte utilisateur - admin uniquement"""
+    if request.user.role != 'administrator':
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    data = request.data
+    if User.objects.filter(username=data.get('username')).exists():
+        return Response({'error': "Ce nom d'utilisateur existe déjà"}, status=status.HTTP_400_BAD_REQUEST)
+    if User.objects.filter(email=data.get('email')).exists():
+        return Response({'error': 'Cet email est déjà utilisé'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.create_user(
+            username=data['username'],
+            email=data.get('email', ''),
+            password=data['password'],
+            first_name=data.get('first_name', ''),
+            last_name=data.get('last_name', ''),
+            phone=data.get('phone', ''),
+            role=data.get('role', 'employee'),
+        )
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_user(request, user_id):
+    """Modifier le rôle ou les infos d'un utilisateur - admin uniquement"""
+    if request.user.role != 'administrator':
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+
+    for field in ('first_name', 'last_name', 'email', 'phone', 'role'):
+        if field in request.data:
+            setattr(user, field, request.data[field])
+    user.save()
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reset_user_password(request, user_id):
+    """Réinitialiser le mot de passe d'un utilisateur - admin uniquement"""
+    if request.user.role != 'administrator':
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+
+    new_password = request.data.get('new_password')
+    if not new_password or len(new_password) < 6:
+        return Response({'error': 'Le mot de passe doit contenir au moins 6 caractères'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(new_password)
+    user.save()
+    return Response({'message': 'Mot de passe réinitialisé avec succès'})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_user_active(request, user_id):
+    """Activer / désactiver un compte utilisateur - admin uniquement"""
+    if request.user.role != 'administrator':
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+    if request.user.id == user_id:
+        return Response({'error': 'Vous ne pouvez pas désactiver votre propre compte'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+
+    user.is_active = not user.is_active
+    user.save()
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def kpi_data(request):
     """API KPI simplifié"""
     if request.user.role != 'hr_director':

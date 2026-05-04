@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}neRHee HRM{% endblock %}</title>
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -28,18 +25,24 @@
             min-height: 100vh;
         }
 
-        /* ── Navbar ── */
         .top-navbar {
             background: linear-gradient(135deg, var(--navy-1) 0%, var(--navy-2) 60%, var(--navy-3) 100%);
-            padding: 0 1.5rem;
-            height: 60px;
+            padding: 0.85rem 1.5rem;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 0.85rem;
             position: sticky;
             top: 0;
             z-index: 1030;
             box-shadow: 0 2px 16px rgba(15,23,42,0.3);
+        }
+
+        .navbar-top-row {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
         }
 
         .navbar-brand-box {
@@ -49,11 +52,14 @@
         }
 
         .brand-icon {
-            width: 36px; height: 36px;
+            width: 36px;
+            height: 36px;
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
             font-size: 1.1rem;
         }
@@ -76,13 +82,15 @@
         .navbar-links {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.4rem;
+            width: 100%;
+            flex-wrap: wrap;
         }
 
         .nav-link-item {
             color: rgba(255,255,255,0.7) !important;
             text-decoration: none;
-            padding: 0.4rem 0.75rem;
+            padding: 0.42rem 0.78rem;
             border-radius: 8px;
             font-size: 0.82rem;
             font-weight: 500;
@@ -103,6 +111,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            flex-shrink: 0;
         }
 
         .user-pill {
@@ -120,10 +129,13 @@
         .user-pill:hover { background: rgba(255,255,255,0.18); }
 
         .user-avatar {
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
             background: rgba(255,255,255,0.25);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.75rem;
             font-weight: 700;
             color: white;
@@ -154,14 +166,12 @@
             background: rgba(239,68,68,0.15);
         }
 
-        /* ── Page wrapper ── */
         .page-wrapper {
             max-width: 1280px;
             margin: 0 auto;
             padding: 1.75rem 1.5rem;
         }
 
-        /* ── Cards ── */
         .card-modern {
             border: 1px solid var(--border-color);
             border-radius: 14px;
@@ -183,10 +193,13 @@
         }
 
         .card-header-icon {
-            width: 30px; height: 30px;
+            width: 30px;
+            height: 30px;
             background: rgba(255,255,255,0.12);
             border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
             font-size: 0.9rem;
         }
@@ -198,10 +211,8 @@
             margin: 0;
         }
 
-        /* ── Alerts ── */
         .alert { border-radius: 10px; border: none; }
 
-        /* ── Forms ── */
         .form-control, .form-select {
             border-radius: 8px;
             border-color: var(--border-color);
@@ -222,10 +233,8 @@
         }
 
         .btn-primary:hover { background: #1565c0; border-color: #1565c0; }
-
         .btn-outline-secondary { border-radius: 8px; font-size: 0.88rem; }
 
-        /* ── Tables ── */
         .table {
             font-size: 0.875rem;
         }
@@ -242,8 +251,17 @@
 
         .table td { border-color: var(--border-color); vertical-align: middle; }
 
-        /* ── Messages ── */
         .django-messages { margin-bottom: 1.25rem; }
+
+        @media (max-width: 991.98px) {
+            .top-navbar {
+                padding: 0.85rem 1rem;
+            }
+
+            .navbar-top-row {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -252,16 +270,29 @@
 
 {% if user.is_authenticated %}
 <nav class="top-navbar">
-    <!-- Brand -->
-    <div class="navbar-brand-box">
-        <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
-        <div>
-            <div class="brand-name">neRHee</div>
-            <div class="brand-subtitle">HRM System</div>
+    <div class="navbar-top-row">
+        <div class="navbar-brand-box">
+            <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
+            <div>
+                <div class="brand-name">neRHee</div>
+                <div class="brand-subtitle">HRM System</div>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <div class="user-pill">
+                <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                <div>
+                    <div class="user-name">{{ user.get_full_name|truncatechars:18 }}</div>
+                    <div class="user-role">{{ user.get_role_display }}</div>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn" title="Déconnexion">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
         </div>
     </div>
 
-    <!-- Navigation links -->
     <div class="navbar-links d-none d-lg-flex">
         <a href="{% url 'dashboard' %}" class="nav-link-item {% block nav_dashboard %}{% endblock %}">
             <i class="bi bi-speedometer2"></i> Dashboard
@@ -291,33 +322,38 @@
             </a>
         {% endif %}
         {% if user.role == 'administrator' %}
+            <a href="{% url 'manage_users' %}" class="nav-link-item">
+                <i class="bi bi-person-badge"></i> Utilisateurs
+            </a>
+            <a href="{% url 'employee_list' %}" class="nav-link-item">
+                <i class="bi bi-people"></i> Employés
+            </a>
+            <a href="{% url 'manage_contracts' %}" class="nav-link-item">
+                <i class="bi bi-file-earmark-text"></i> Contrats
+            </a>
+            <a href="{% url 'department_structure_management' %}" class="nav-link-item">
+                <i class="bi bi-diagram-3"></i> Structures
+            </a>
+            <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item">
+                <i class="bi bi-briefcase"></i> Offres
+            </a>
+            <a href="{% url 'manage_events' %}" class="nav-link-item">
+                <i class="bi bi-calendar-event"></i> Événements
+            </a>
             <a href="{% url 'system_management' %}" class="nav-link-item">
-                <i class="bi bi-gear"></i> Système
+                <i class="bi bi-sliders2"></i> Configuration
             </a>
             <a href="/admin/" class="nav-link-item">
-                <i class="bi bi-shield-lock"></i> Admin Django
+                <i class="bi bi-kanban"></i> Panel Django
+            </a>
+        {% else %}
+            <a href="{% url 'manage_events' %}" class="nav-link-item">
+                <i class="bi bi-calendar-event"></i> Événements
+            </a>
+            <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
+                <i class="bi bi-building"></i> Culture
             </a>
         {% endif %}
-        <a href="{% url 'manage_events' %}" class="nav-link-item">
-            <i class="bi bi-calendar-event"></i> Événements
-        </a>
-        <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
-            <i class="bi bi-building"></i> Culture
-        </a>
-    </div>
-
-    <!-- Right side -->
-    <div class="navbar-right">
-        <div class="user-pill">
-            <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
-            <div>
-                <div class="user-name">{{ user.get_full_name|truncatechars:18 }}</div>
-                <div class="user-role">{{ user.get_role_display }}</div>
-            </div>
-        </div>
-        <a href="{% url 'logout' %}" class="logout-btn" title="Déconnexion">
-            <i class="bi bi-box-arrow-right"></i>
-        </a>
     </div>
 </nav>
 {% endif %}

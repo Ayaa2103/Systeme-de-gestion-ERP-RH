@@ -4,7 +4,7 @@ from .models import User, Event, HRPolicy
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'phone']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'phone', 'is_active', 'date_joined']
         extra_kwargs = {'password': {'write_only': True}}
 
 class EventSerializer(serializers.ModelSerializer):

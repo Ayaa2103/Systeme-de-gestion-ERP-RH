@@ -221,7 +221,7 @@ const EmployeeList = () => {
             {employees.length} employé{employees.length > 1 ? 's' : ''} enregistré{employees.length > 1 ? 's' : ''}
           </Typography>
         </Box>
-        {(user?.role === 'hr_manager' || user?.role === 'administrator') && (
+        {user?.role === 'hr_manager' && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -350,10 +350,12 @@ const EmployeeList = () => {
           <ViewIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
           <Typography variant="body2">Voir le profil</Typography>
         </MenuItem>
-        <MenuItem onClick={() => { navigate(`/employees/edit/${selectedEmployee?.id}`); handleMenuClose(); }}>
-          <EditIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
-          <Typography variant="body2">Modifier</Typography>
-        </MenuItem>
+        {user?.role !== 'administrator' && (
+          <MenuItem onClick={() => { navigate(`/employees/edit/${selectedEmployee?.id}`); handleMenuClose(); }}>
+            <EditIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />
+            <Typography variant="body2">Modifier</Typography>
+          </MenuItem>
+        )}
         {(user?.role === 'hr_manager' || user?.role === 'hr_director') && (
           <MenuItem onClick={() => { navigate(`/contracts?employee=${selectedEmployee?.id}`); handleMenuClose(); }}>
             <WorkIcon sx={{ mr: 1.5, fontSize: 18, color: 'text.secondary' }} />

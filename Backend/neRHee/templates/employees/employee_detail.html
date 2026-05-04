@@ -103,7 +103,7 @@
     {% endif %}
 
     <div class="mt-4">
-        {% if user.role == 'hr_manager' or user.role == 'hr_director' or user.role == 'administrator' %}
+        {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
             <a href="{% url 'edit_employee' employee.id %}" class="btn btn-primary">Modifier</a>
         {% endif %}
         {% if user.role == 'hr_manager' %}

@@ -22,10 +22,10 @@ def can_view_employees(user):
     return user.role in ['hr_manager', 'hr_director', 'administrator']
 
 def can_manage_employees(user):
-    return user.role == 'administrator'
+    return user.role in ['hr_manager', 'administrator']
 
 def can_edit_employees(user):
-    return user.role in ['hr_manager', 'hr_director', 'administrator']
+    return user.role in ['hr_manager', 'hr_director']
 
 @user_passes_test(can_view_employees)
 def employee_list(request):
@@ -62,7 +62,10 @@ def employee_detail(request, employee_id):
         'skills': skills
     })
 
-@user_passes_test(is_hr_manager_or_director)
+def can_view_contracts(user):
+    return user.role in ['hr_manager', 'hr_director', 'administrator']
+
+@user_passes_test(can_view_contracts)
 def manage_contracts(request):
     contracts = Contract.objects.all()
     return render(request, 'employees/contracts.html', {'contracts': contracts})
@@ -212,7 +215,7 @@ def reject_training(request, training_id):
     
     return redirect('manage_training')
 
-@user_passes_test(is_hr_manager_or_director)
+@user_passes_test(can_view_contracts)
 def contract_detail(request, contract_id):
     contract = get_object_or_404(Contract, id=contract_id)
     return render(request, 'employees/contract_detail.html', {'contract': contract})
@@ -274,7 +277,7 @@ def renew_contract(request, contract_id):
     
     return render(request, 'employees/renew_contract.html', {'contract': old_contract})
 
-@user_passes_test(is_hr_manager_or_director)
+@user_passes_test(can_view_contracts)
 def expiring_contracts(request):
     from datetime import date, timedelta
     contracts = Contract.objects.filter(
@@ -284,7 +287,7 @@ def expiring_contracts(request):
     )
     return render(request, 'employees/expiring_contracts.html', {'contracts': contracts})
 
-@user_passes_test(can_manage_employees)
+@user_passes_test(is_hr_manager)
 def create_employee(request):
     if request.method == 'POST':
         username = request.POST['username']

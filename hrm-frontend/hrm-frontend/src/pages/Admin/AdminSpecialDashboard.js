@@ -17,17 +17,13 @@ import {
 import {
   People as PeopleIcon,
   Settings as SettingsIcon,
-  Security as SecurityIcon,
   AdminPanelSettings as AdminIcon,
   Assignment as ContractIcon,
   Inbox as RequestIcon,
   Warning as WarningIcon,
-  TrendingUp as TrendingIcon,
   ArrowForward as ArrowIcon,
   CalendarToday as CalendarIcon,
   CheckCircle as CheckIcon,
-  Build as BuildIcon,
-  Storage as StorageIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -173,7 +169,7 @@ const AdminSpecialDashboard = () => {
   const modules = [
     {
       title: 'Gestion des Employés',
-      description: 'Consulter, créer et modifier les profils employés',
+      description: 'Consulter les profils et informations employés',
       icon: <PeopleIcon />,
       color: '#1976d2',
       badge: stats.totalEmployees,
@@ -193,15 +189,15 @@ const AdminSpecialDashboard = () => {
       icon: <AdminIcon />,
       color: '#9c27b0',
       badge: null,
-      action: () => window.open('http://localhost:8000/admin/core/user/', '_blank'),
+      action: () => navigate('/admin/users'),
     },
     {
-      title: 'Droits & Sécurité',
-      description: 'Configurer les permissions et groupes d\'accès',
-      icon: <SecurityIcon />,
+      title: 'Offres d\'Emploi',
+      description: 'Consulter les offres publiées et les candidatures',
+      icon: <SettingsIcon />,
       color: '#e65100',
       badge: null,
-      action: () => window.open('http://localhost:8000/admin/auth/group/', '_blank'),
+      action: () => navigate('/job-offers'),
     },
   ];
 
@@ -267,25 +263,8 @@ const AdminSpecialDashboard = () => {
                   color: 'white',
                   border: '1px solid rgba(76,175,80,0.5)',
                   fontWeight: 600,
-                  mb: 1,
                 }}
               />
-              <Box>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
-                    textTransform: 'none',
-                  }}
-                  onClick={() => window.open('http://localhost:8000/admin/', '_blank')}
-                  startIcon={<BuildIcon />}
-                >
-                  Admin Django
-                </Button>
-              </Box>
             </Grid>
           </Grid>
         </CardContent>
@@ -357,75 +336,6 @@ const AdminSpecialDashboard = () => {
         ))}
       </Grid>
 
-      {/* Accès Système */}
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-        Accès Système
-      </Typography>
-      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={2}>
-            {[
-              {
-                label: 'Interface Admin Django',
-                desc: 'Accès complet à l\'administration Django',
-                icon: <AdminIcon />,
-                color: '#1976d2',
-                url: 'http://localhost:8000/admin/',
-              },
-              {
-                label: 'Gestion des Utilisateurs',
-                desc: 'Créer et modifier les comptes utilisateurs',
-                icon: <PeopleIcon />,
-                color: '#9c27b0',
-                url: 'http://localhost:8000/admin/core/user/',
-              },
-              {
-                label: 'Base de Données',
-                desc: 'Accès direct aux tables de données',
-                icon: <StorageIcon />,
-                color: '#e65100',
-                url: 'http://localhost:8000/admin/',
-              },
-              {
-                label: 'Groupes & Permissions',
-                desc: 'Gérer les rôles et droits d\'accès',
-                icon: <SecurityIcon />,
-                color: '#2e7d32',
-                url: 'http://localhost:8000/admin/auth/group/',
-              },
-            ].map((item, i) => (
-              <Grid item xs={12} sm={6} key={i}>
-                <Box
-                  onClick={() => window.open(item.url, '_blank')}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    p: 2,
-                    borderRadius: 2,
-                    border: '1px solid #e8ecf0',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    '&:hover': { bgcolor: '#f8fafc', borderColor: item.color + '40' },
-                  }}
-                >
-                  <Avatar sx={{ bgcolor: `${item.color}15`, width: 40, height: 40, mr: 2 }}>
-                    {React.cloneElement(item.icon, { sx: { color: item.color, fontSize: 20 } })}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {item.label}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {item.desc}
-                    </Typography>
-                  </Box>
-                  <ArrowIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
     </Box>
   );
 };

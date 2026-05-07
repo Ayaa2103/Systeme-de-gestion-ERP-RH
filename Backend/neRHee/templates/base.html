@@ -25,151 +25,239 @@
             min-height: 100vh;
         }
 
+        /* ── Navbar ── */
         .top-navbar {
-            background: linear-gradient(135deg, var(--navy-1) 0%, var(--navy-2) 60%, var(--navy-3) 100%);
-            padding: 0.85rem 1.5rem;
+            background: #0f172a;
+            height: 58px;
             display: flex;
-            flex-direction: column;
-            gap: 0.85rem;
+            align-items: center;
+            padding: 0 1.5rem;
             position: sticky;
             top: 0;
             z-index: 1030;
-            box-shadow: 0 2px 16px rgba(15,23,42,0.3);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.35);
+            gap: 0;
         }
 
-        .navbar-top-row {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
+        /* Brand */
         .navbar-brand-box {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
+            text-decoration: none;
+            flex-shrink: 0;
+            margin-right: 2rem;
         }
 
         .brand-icon {
-            width: 36px;
-            height: 36px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.1rem;
-        }
-
-        .brand-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: white;
-            letter-spacing: 0.3px;
-        }
-
-        .brand-subtitle {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.55);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        .nav-link-item {
-            color: rgba(255,255,255,0.7) !important;
-            text-decoration: none;
-            padding: 0.42rem 0.78rem;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            white-space: nowrap;
-        }
-
-        .nav-link-item:hover,
-        .nav-link-item.active {
-            color: white !important;
-            background: rgba(255,255,255,0.1);
-        }
-
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            font-size: 1rem;
             flex-shrink: 0;
         }
 
-        .user-pill {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0.3rem 0.75rem 0.3rem 0.4rem;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .brand-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.3px;
         }
 
-        .user-pill:hover { background: rgba(255,255,255,0.18); }
+        .brand-dot {
+            color: #3b82f6;
+        }
+
+        /* Nav links */
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .nav-link-item {
+            color: rgba(255,255,255,0.55);
+            text-decoration: none;
+            padding: 0.38rem 0.75rem;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .nav-link-item i {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .nav-link-item:hover {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.07);
+        }
+
+        .nav-link-item.active {
+            color: white;
+            background: rgba(59,130,246,0.2);
+            font-weight: 600;
+        }
+
+        .nav-link-item.active i {
+            opacity: 1;
+            color: #60a5fa;
+        }
+
+        /* Separator */
+        .nav-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            margin: 0 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Right side */
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.28rem 0.65rem 0.28rem 0.35rem;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+        }
 
         .user-avatar {
-            width: 28px;
-            height: 28px;
-            background: rgba(255,255,255,0.25);
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.68rem;
             font-weight: 700;
             color: white;
+            flex-shrink: 0;
         }
 
-        .user-name {
-            font-size: 0.8rem;
+        .user-info .user-name {
+            font-size: 0.78rem;
             font-weight: 600;
             color: white;
+            line-height: 1.1;
         }
 
-        .user-role {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.55);
+        .user-info .user-role {
+            font-size: 0.62rem;
+            color: rgba(255,255,255,0.4);
+            line-height: 1;
         }
 
         .logout-btn {
-            color: rgba(255,255,255,0.6) !important;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.45);
             text-decoration: none;
-            padding: 0.4rem 0.6rem;
             border-radius: 8px;
-            transition: all 0.2s;
             font-size: 1rem;
+            transition: all 0.18s;
+            flex-shrink: 0;
         }
 
         .logout-btn:hover {
-            color: #f87171 !important;
-            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            background: rgba(239,68,68,0.12);
+        }
+
+        /* Hamburger mobile */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            margin-left: 0.5rem;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 58px;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 0.75rem 1rem 1rem;
+            z-index: 1029;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .mobile-menu.open { display: flex; }
+
+        .mobile-menu .nav-link-item {
+            padding: 0.6rem 0.85rem;
+            border-radius: 8px;
+        }
+
+        .mobile-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+            margin: 0.5rem 0;
         }
 
         .page-wrapper {
             max-width: 1280px;
             margin: 0 auto;
             padding: 1.75rem 1.5rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-links { display: none !important; }
+            .nav-hamburger { display: flex; }
+            .top-navbar { padding: 0 1rem; }
+        }
+
+        @media (max-width: 575px) {
+            .user-info { display: none; }
+            .page-wrapper { padding: 1.25rem 1rem; }
         }
 
         .card-modern {
@@ -253,15 +341,6 @@
 
         .django-messages { margin-bottom: 1.25rem; }
 
-        @media (max-width: 991.98px) {
-            .top-navbar {
-                padding: 0.85rem 1rem;
-            }
-
-            .navbar-top-row {
-                flex-wrap: wrap;
-            }
-        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -269,59 +348,91 @@
 <body>
 
 {% if user.is_authenticated %}
+{% url 'dashboard' as url_dash %}
 <nav class="top-navbar">
-    <div class="navbar-top-row">
-        <div class="navbar-brand-box">
-            <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
-            <div>
-                <div class="brand-name">neRHee</div>
-                <div class="brand-subtitle">HRM System</div>
-            </div>
-        </div>
 
-        <div class="navbar-right">
-            <div class="user-pill">
-                <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
-                <div>
-                    <div class="user-name">{{ user.get_full_name|truncatechars:18 }}</div>
-                    <div class="user-role">{{ user.get_role_display }}</div>
-                </div>
-            </div>
-            <a href="{% url 'logout' %}" class="logout-btn" title="Déconnexion">
-                <i class="bi bi-box-arrow-right"></i>
-            </a>
-        </div>
-    </div>
+    <!-- Brand -->
+    <a href="{{ url_dash }}" class="navbar-brand-box">
+        <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
+        <span class="brand-name">ne<span class="brand-dot">RH</span>ee</span>
+    </a>
 
-    <div class="navbar-links d-none d-lg-flex">
-        <a href="{% url 'dashboard' %}" class="nav-link-item {% block nav_dashboard %}{% endblock %}">
-            <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
+    <!-- Links (desktop) -->
+    <div class="navbar-links">
+
         {% if user.role == 'employee' %}
+            <a href="{{ url_dash }}" class="nav-link-item {% block nav_dashboard %}{% endblock %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
             <a href="{% url 'my_requests' %}" class="nav-link-item">
                 <i class="bi bi-clipboard-check"></i> Mes demandes
             </a>
             <a href="{% url 'employee_onboarding_portal' %}" class="nav-link-item">
                 <i class="bi bi-person-check"></i> Mon intégration
             </a>
-        {% endif %}
-        {% if user.role in 'hr_manager,hr_director' %}
+            <div class="nav-sep"></div>
+            <a href="{% url 'manage_events' %}" class="nav-link-item">
+                <i class="bi bi-calendar-event"></i> Événements
+            </a>
+            <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
+                <i class="bi bi-building"></i> Culture
+            </a>
+
+        {% elif user.role == 'hr_manager' %}
+            <a href="{{ url_dash }}" class="nav-link-item {% block nav_dashboard_hr %}{% endblock %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
             <a href="{% url 'employee_list' %}" class="nav-link-item">
                 <i class="bi bi-people"></i> Employés
             </a>
             <a href="{% url 'manage_requests' %}" class="nav-link-item">
                 <i class="bi bi-clipboard-data"></i> Demandes
             </a>
+            <a href="{% url 'manage_contracts' %}" class="nav-link-item">
+                <i class="bi bi-file-earmark-text"></i> Contrats
+            </a>
+            <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item">
+                <i class="bi bi-briefcase"></i> Offres
+            </a>
             <a href="{% url 'onboarding_dashboard' %}" class="nav-link-item">
                 <i class="bi bi-person-plus"></i> Intégration
             </a>
-        {% endif %}
-        {% if user.role == 'hr_director' %}
+            <div class="nav-sep"></div>
+            <a href="{% url 'manage_events' %}" class="nav-link-item">
+                <i class="bi bi-calendar-event"></i> Événements
+            </a>
+            <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
+                <i class="bi bi-building"></i> Culture
+            </a>
+
+        {% elif user.role == 'hr_director' %}
+            <a href="{{ url_dash }}" class="nav-link-item {% block nav_dashboard_dir %}{% endblock %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="{% url 'employee_list' %}" class="nav-link-item">
+                <i class="bi bi-people"></i> Employés
+            </a>
+            <a href="{% url 'manage_requests' %}" class="nav-link-item">
+                <i class="bi bi-clipboard-data"></i> Demandes
+            </a>
+            <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item">
+                <i class="bi bi-briefcase"></i> Offres
+            </a>
             <a href="{% url 'kpi_dashboard' %}" class="nav-link-item">
                 <i class="bi bi-bar-chart-line"></i> KPIs
             </a>
-        {% endif %}
-        {% if user.role == 'administrator' %}
+            <div class="nav-sep"></div>
+            <a href="{% url 'manage_events' %}" class="nav-link-item">
+                <i class="bi bi-calendar-event"></i> Événements
+            </a>
+            <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
+                <i class="bi bi-building"></i> Culture
+            </a>
+
+        {% elif user.role == 'administrator' %}
+            <a href="{{ url_dash }}" class="nav-link-item {% block nav_dashboard_admin %}{% endblock %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
             <a href="{% url 'manage_users' %}" class="nav-link-item">
                 <i class="bi bi-person-badge"></i> Utilisateurs
             </a>
@@ -331,31 +442,85 @@
             <a href="{% url 'manage_contracts' %}" class="nav-link-item">
                 <i class="bi bi-file-earmark-text"></i> Contrats
             </a>
-            <a href="{% url 'department_structure_management' %}" class="nav-link-item">
-                <i class="bi bi-diagram-3"></i> Structures
-            </a>
             <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item">
                 <i class="bi bi-briefcase"></i> Offres
             </a>
             <a href="{% url 'manage_events' %}" class="nav-link-item">
                 <i class="bi bi-calendar-event"></i> Événements
             </a>
+            <div class="nav-sep"></div>
+            <a href="{% url 'department_structure_management' %}" class="nav-link-item">
+                <i class="bi bi-diagram-3"></i> Structures
+            </a>
             <a href="{% url 'system_management' %}" class="nav-link-item">
                 <i class="bi bi-sliders2"></i> Configuration
             </a>
-            <a href="/admin/" class="nav-link-item">
-                <i class="bi bi-kanban"></i> Panel Django
-            </a>
-        {% else %}
-            <a href="{% url 'manage_events' %}" class="nav-link-item">
-                <i class="bi bi-calendar-event"></i> Événements
-            </a>
-            <a href="{% url 'culture_dashboard' %}" class="nav-link-item">
-                <i class="bi bi-building"></i> Culture
-            </a>
         {% endif %}
+
+    </div>
+
+    <!-- Right side -->
+    <div class="navbar-right">
+        <div class="user-badge">
+            <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ user.get_full_name|truncatechars:16 }}</div>
+                <div class="user-role">{{ user.get_role_display }}</div>
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn" title="Déconnexion">
+            <i class="bi bi-box-arrow-right"></i>
+        </a>
+
+        <!-- Hamburger -->
+        <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+    {% if user.role == 'employee' %}
+        <a href="{{ url_dash }}" class="nav-link-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{% url 'my_requests' %}" class="nav-link-item"><i class="bi bi-clipboard-check"></i> Mes demandes</a>
+        <a href="{% url 'employee_onboarding_portal' %}" class="nav-link-item"><i class="bi bi-person-check"></i> Mon intégration</a>
+        <div class="mobile-divider"></div>
+        <a href="{% url 'manage_events' %}" class="nav-link-item"><i class="bi bi-calendar-event"></i> Événements</a>
+        <a href="{% url 'culture_dashboard' %}" class="nav-link-item"><i class="bi bi-building"></i> Culture</a>
+    {% elif user.role == 'hr_manager' %}
+        <a href="{{ url_dash }}" class="nav-link-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{% url 'employee_list' %}" class="nav-link-item"><i class="bi bi-people"></i> Employés</a>
+        <a href="{% url 'manage_requests' %}" class="nav-link-item"><i class="bi bi-clipboard-data"></i> Demandes</a>
+        <a href="{% url 'manage_contracts' %}" class="nav-link-item"><i class="bi bi-file-earmark-text"></i> Contrats</a>
+        <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item"><i class="bi bi-briefcase"></i> Offres</a>
+        <a href="{% url 'onboarding_dashboard' %}" class="nav-link-item"><i class="bi bi-person-plus"></i> Intégration</a>
+        <div class="mobile-divider"></div>
+        <a href="{% url 'manage_events' %}" class="nav-link-item"><i class="bi bi-calendar-event"></i> Événements</a>
+        <a href="{% url 'culture_dashboard' %}" class="nav-link-item"><i class="bi bi-building"></i> Culture</a>
+    {% elif user.role == 'hr_director' %}
+        <a href="{{ url_dash }}" class="nav-link-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{% url 'employee_list' %}" class="nav-link-item"><i class="bi bi-people"></i> Employés</a>
+        <a href="{% url 'manage_requests' %}" class="nav-link-item"><i class="bi bi-clipboard-data"></i> Demandes</a>
+        <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item"><i class="bi bi-briefcase"></i> Offres</a>
+        <a href="{% url 'kpi_dashboard' %}" class="nav-link-item"><i class="bi bi-bar-chart-line"></i> KPIs</a>
+        <div class="mobile-divider"></div>
+        <a href="{% url 'manage_events' %}" class="nav-link-item"><i class="bi bi-calendar-event"></i> Événements</a>
+        <a href="{% url 'culture_dashboard' %}" class="nav-link-item"><i class="bi bi-building"></i> Culture</a>
+    {% elif user.role == 'administrator' %}
+        <a href="{{ url_dash }}" class="nav-link-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{% url 'manage_users' %}" class="nav-link-item"><i class="bi bi-person-badge"></i> Utilisateurs</a>
+        <a href="{% url 'employee_list' %}" class="nav-link-item"><i class="bi bi-people"></i> Employés</a>
+        <a href="{% url 'manage_contracts' %}" class="nav-link-item"><i class="bi bi-file-earmark-text"></i> Contrats</a>
+        <a href="{% url 'recruitment:job_offer_list' %}" class="nav-link-item"><i class="bi bi-briefcase"></i> Offres</a>
+        <a href="{% url 'manage_events' %}" class="nav-link-item"><i class="bi bi-calendar-event"></i> Événements</a>
+        <div class="mobile-divider"></div>
+        <a href="{% url 'department_structure_management' %}" class="nav-link-item"><i class="bi bi-diagram-3"></i> Structures</a>
+        <a href="{% url 'system_management' %}" class="nav-link-item"><i class="bi bi-sliders2"></i> Configuration</a>
+    {% endif %}
+    <div class="mobile-divider"></div>
+    <a href="{% url 'logout' %}" class="nav-link-item" style="color:#f87171;"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+</div>
 {% endif %}
 
 <div class="page-wrapper">
@@ -374,6 +539,29 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+    var btn  = document.getElementById('navHamburger');
+    var menu = document.getElementById('mobileMenu');
+    if(!btn || !menu) return;
+    btn.addEventListener('click', function(){
+        menu.classList.toggle('open');
+    });
+    // Fermer au clic en dehors
+    document.addEventListener('click', function(e){
+        if(!btn.contains(e.target) && !menu.contains(e.target)){
+            menu.classList.remove('open');
+        }
+    });
+    // Marquer le lien actif selon l'URL courante
+    var path = window.location.pathname;
+    document.querySelectorAll('.nav-link-item').forEach(function(a){
+        if(a.getAttribute('href') && path === a.getAttribute('href')){
+            a.classList.add('active');
+        }
+    });
+})();
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

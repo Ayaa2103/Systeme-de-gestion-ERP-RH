@@ -1,53 +1,133 @@
 {% extends 'base.html' %}
-
 {% block title %}{{ title }} — neRHee{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
-    <div>
-        <h2 class="mb-1" style="font-weight:800;color:#1e293b;">{{ title }}</h2>
-        <p class="mb-0" style="color:#64748b;font-size:0.9rem;">Renseignez les informations du département dans un écran dédié.</p>
+
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-building" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">{{ title }}</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">Renseignez les informations du département</p>
+                </div>
+            </div>
+            <a href="{% url 'department_structure_management' %}"
+               style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
+                <i class="bi bi-arrow-left"></i> Retour à la liste
+            </a>
+        </div>
     </div>
-    <a href="{% url 'department_structure_management' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Retour à la liste
-    </a>
 </div>
 
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8">
         <div class="card-modern bg-white overflow-hidden">
-            <div class="p-3 border-bottom" style="border-color:#e8ecf0 !important;">
-                <h5 class="mb-0" style="font-weight:700;color:#1e293b;">Informations du département</h5>
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-building"></i></div>
+                <span class="card-header-title">Informations du département</span>
             </div>
             <div class="p-4">
-                <form method="post" class="d-flex flex-column gap-3">
+                <form method="post" class="d-flex flex-column gap-4">
                     {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div style="background:#ffebee;border:1px solid #ffcdd2;border-radius:8px;padding:0.75rem 1rem;">
+                        <div style="font-size:0.82rem;color:#c62828;font-weight:600;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Veuillez corriger les erreurs ci-dessous</div>
+                        {% for field in form %}{% for error in field.errors %}
+                        <div style="font-size:0.78rem;color:#c62828;margin-top:3px;">• {{ field.label }} : {{ error }}</div>
+                        {% endfor %}{% endfor %}
+                    </div>
+                    {% endif %}
+
                     <div class="row g-3">
+                        <!-- Nom -->
                         <div class="col-12 col-md-8">
-                            <label class="form-label">{{ form.name.label }}</label>
-                            {{ form.name }}
+                            <label style="font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:5px;display:block;">
+                                {{ form.name.label }} <span style="color:#ef4444;">*</span>
+                            </label>
+                            <div style="position:relative;">
+                                <i class="bi bi-building" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+                                {{ form.name }}
+                            </div>
+                            {% if form.name.errors %}<div style="font-size:0.75rem;color:#ef4444;margin-top:3px;">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
+
+                        <!-- Code -->
                         <div class="col-12 col-md-4">
-                            <label class="form-label">{{ form.code.label }}</label>
-                            {{ form.code }}
+                            <label style="font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:5px;display:block;">
+                                {{ form.code.label }} <span style="color:#ef4444;">*</span>
+                            </label>
+                            <div style="position:relative;">
+                                <i class="bi bi-hash" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;"></i>
+                                {{ form.code }}
+                            </div>
+                            {% if form.code.errors %}<div style="font-size:0.75rem;color:#ef4444;margin-top:3px;">{{ form.code.errors.0 }}</div>{% endif %}
                         </div>
+
+                        <!-- Responsable -->
                         <div class="col-12">
-                            <label class="form-label">{{ form.manager.label }}</label>
-                            {{ form.manager }}
+                            <label style="font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:5px;display:block;">
+                                {{ form.manager.label }}
+                            </label>
+                            <div style="position:relative;">
+                                <i class="bi bi-person-fill" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.85rem;z-index:1;pointer-events:none;"></i>
+                                {{ form.manager }}
+                            </div>
+                            {% if form.manager.errors %}<div style="font-size:0.75rem;color:#ef4444;margin-top:3px;">{{ form.manager.errors.0 }}</div>{% endif %}
                         </div>
+
+                        <!-- Description -->
                         <div class="col-12">
-                            <label class="form-label">{{ form.description.label }}</label>
+                            <label style="font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:5px;display:block;">
+                                {{ form.description.label }}
+                            </label>
                             {{ form.description }}
+                            {% if form.description.errors %}<div style="font-size:0.75rem;color:#ef4444;margin-top:3px;">{{ form.description.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2 flex-wrap pt-2">
-                        <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
-                        <a href="{% url 'department_structure_management' %}" class="btn btn-outline-secondary">Annuler</a>
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 pt-2">
+                        <button type="submit"
+                            style="padding:0.5rem 1.4rem;background:#1976d2;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+                            <i class="bi bi-check-lg"></i> {{ submit_label }}
+                        </button>
+                        <a href="{% url 'department_structure_management' %}"
+                           style="padding:0.5rem 1.2rem;background:white;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:0.85rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+#id_name, #id_code, #id_manager, #id_description {
+    width:100%;
+    padding:0.45rem 0.75rem 0.45rem 2rem;
+    border:1px solid #e8ecf0;
+    border-radius:8px;
+    font-size:0.85rem;
+    outline:none;
+    transition:border-color 0.15s;
+}
+#id_description {
+    padding-left:0.75rem;
+    min-height:90px;
+    resize:vertical;
+}
+#id_manager { padding-left:2rem; }
+#id_name:focus, #id_code:focus, #id_manager:focus, #id_description:focus {
+    border-color:#1976d2;
+    box-shadow:0 0 0 3px rgba(25,118,210,0.08);
+}
+</style>
 {% endblock %}

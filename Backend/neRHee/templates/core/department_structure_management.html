@@ -1,120 +1,326 @@
 {% extends 'base.html' %}
-
 {% block title %}Départements & Structures — neRHee{% endblock %}
 
 {% block content %}
+
+<!-- Banner -->
 <div class="card-modern mb-4 overflow-hidden border-0">
-    <div style="background:linear-gradient(135deg,#1e293b 0%,#334155 55%,#475569 100%);padding:1.4rem 1.75rem;">
-        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-            <div>
-                <h4 class="mb-1 fw-bold" style="color:white;">Départements & structures</h4>
-                <p class="mb-0" style="color:rgba(255,255,255,0.72);font-size:0.84rem;">Vue d’ensemble claire pour organiser les départements et les postes de la plateforme.</p>
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-diagram-3-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Départements & Structures</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">Organisation hiérarchique de la plateforme</p>
+                </div>
             </div>
             <a href="{% url 'system_management' %}"
-               style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.9rem;background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.18);border-radius:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+               style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
                 <i class="bi bi-arrow-left"></i> Retour configuration
             </a>
         </div>
     </div>
 </div>
 
+<!-- Stat cards -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card-modern bg-white h-100">
-            <div class="p-3">
-                <div style="font-size:0.74rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Départements</div>
-                <div style="font-size:1.85rem;font-weight:800;color:#1e293b;margin-top:0.25rem;">{{ departments_count }}</div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-building" style="color:#1976d2;font-size:1rem;"></i>
             </div>
-        </div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#1976d2;line-height:1;">{{ departments_count }}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Départements</div>
+        </div></div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card-modern bg-white h-100">
-            <div class="p-3">
-                <div style="font-size:0.74rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Postes</div>
-                <div style="font-size:1.85rem;font-weight:800;color:#1e293b;margin-top:0.25rem;">{{ positions_count }}</div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:36px;height:36px;background:#7b1fa215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-person-workspace" style="color:#7b1fa2;font-size:1rem;"></i>
             </div>
-        </div>
+            <div class="fw-bold" style="font-size:1.6rem;color:#7b1fa2;line-height:1;">{{ positions_count }}</div>
+            <div style="font-size:0.76rem;color:#64748b;margin-top:3px;">Postes</div>
+        </div></div>
     </div>
-    <div class="col-12 col-md-6">
-        <div class="card-modern bg-white h-100">
-            <div class="p-3 d-flex gap-2 flex-wrap justify-content-md-end">
-                <a href="{% url 'department_create' %}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg"></i> Nouveau département
-                </a>
-                <a href="{% url 'position_create' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-plus-lg"></i> Nouveau poste
-                </a>
-            </div>
-        </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3 d-flex flex-column justify-content-center h-100">
+            <a href="{% url 'department_create' %}"
+               style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.9rem;background:#1976d2;color:white;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;justify-content:center;">
+                <i class="bi bi-plus-lg"></i> Nouveau département
+            </a>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3 d-flex flex-column justify-content-center h-100">
+            <a href="{% url 'position_create' %}"
+               style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.9rem;background:#7b1fa2;color:white;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;justify-content:center;">
+                <i class="bi bi-plus-lg"></i> Nouveau poste
+            </a>
+        </div></div>
     </div>
 </div>
 
 <div class="row g-4">
+
+    <!-- Départements -->
     <div class="col-12 col-xl-5">
         <div class="card-modern bg-white overflow-hidden">
-            <div class="p-3 border-bottom" style="border-color:#e8ecf0 !important;">
-                <h5 class="mb-0" style="font-weight:700;color:#1e293b;">Départements</h5>
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-building"></i></div>
+                <span class="card-header-title">Départements</span>
+                {% if departments_count %}
+                <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.75rem;">{{ departments_count }}</span>
+                {% endif %}
             </div>
-            <div class="p-3 d-flex flex-column gap-2">
+
+            <!-- Search -->
+            <div class="p-3 border-bottom" style="border-color:#f1f5f9;">
+                <div style="position:relative;">
+                    <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.82rem;"></i>
+                    <input id="deptSearch" type="text" placeholder="Rechercher un département…"
+                        style="width:100%;padding:0.4rem 0.75rem 0.4rem 2rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.82rem;outline:none;"
+                        onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+                </div>
+            </div>
+
+            <div class="p-3 d-flex flex-column gap-2" id="deptList">
                 {% for department in departments %}
-                <div style="padding:0.95rem 1rem;border:1px solid #e8ecf0;border-radius:12px;background:white;">
-                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                        <div>
-                            <div style="font-size:0.95rem;font-weight:700;color:#1e293b;">{{ department.name }}</div>
-                            <div style="font-size:0.77rem;color:#64748b;">Code {{ department.code }}</div>
-                            {% if department.manager %}
-                            <div style="font-size:0.77rem;color:#64748b;margin-top:0.2rem;">Responsable : {{ department.manager.user.get_full_name }}</div>
-                            {% endif %}
-                            {% if department.description %}
-                            <div style="font-size:0.8rem;color:#475569;margin-top:0.45rem;">{{ department.description }}</div>
-                            {% endif %}
+                <div class="dept-item" data-name="{{ department.name|lower }} {{ department.code|lower }}"
+                     style="padding:0.9rem 1rem;border:1px solid #e8ecf0;border-radius:10px;background:white;transition:all 0.15s;">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="d-flex align-items-start gap-2">
+                            <div style="width:34px;height:34px;border-radius:9px;background:#1976d215;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                                <i class="bi bi-building" style="color:#1976d2;font-size:0.85rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:700;color:#1e293b;">{{ department.name }}</div>
+                                <div style="font-size:0.72rem;color:#94a3b8;margin-top:1px;">Code : {{ department.code }}</div>
+                                {% if department.manager %}
+                                <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">
+                                    <i class="bi bi-person-fill me-1" style="color:#1976d2;"></i>{{ department.manager.user.get_full_name }}
+                                </div>
+                                {% endif %}
+                                {% if department.description %}
+                                <div style="font-size:0.78rem;color:#475569;margin-top:4px;">{{ department.description|truncatewords:10 }}</div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <a href="{% url 'department_edit' department.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                        <a href="{% url 'department_edit' department.id %}"
+                           style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.72rem;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
                     </div>
                 </div>
                 {% empty %}
-                <div style="padding:1rem;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#64748b;font-size:0.85rem;">
-                    Aucun département enregistré.
+                <div style="padding:2.5rem 1rem;text-align:center;">
+                    <i class="bi bi-building" style="font-size:2.2rem;color:#cbd5e1;display:block;margin-bottom:0.5rem;"></i>
+                    <p style="color:#94a3b8;margin:0;font-size:0.85rem;">Aucun département enregistré</p>
+                    <a href="{% url 'department_create' %}" style="font-size:0.8rem;color:#1976d2;text-decoration:none;margin-top:0.5rem;display:inline-block;">+ Créer le premier département</a>
                 </div>
                 {% endfor %}
+            </div>
+            <div id="deptEmpty" style="display:none;padding:1.5rem;text-align:center;color:#94a3b8;font-size:0.82rem;">Aucun résultat</div>
+
+            <!-- Pagination départements -->
+            <div id="deptPager" style="display:none;padding:0.75rem 1rem;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+                <span id="deptRange" style="font-size:0.78rem;color:#64748b;"></span>
+                <div class="d-flex gap-1">
+                    <button id="deptPrev" onclick="deptPage(-1)"
+                        style="padding:0.3rem 0.75rem;border:1px solid #e2e8f0;background:white;color:#475569;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-chevron-left"></i> Précédent
+                    </button>
+                    <button id="deptNext" onclick="deptPage(1)"
+                        style="padding:0.3rem 0.75rem;border:1px solid #e2e8f0;background:white;color:#475569;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+                        Suivant <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Postes -->
     <div class="col-12 col-xl-7">
         <div class="card-modern bg-white overflow-hidden">
-            <div class="p-3 border-bottom" style="border-color:#e8ecf0 !important;">
-                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                    <h5 class="mb-0" style="font-weight:700;color:#1e293b;">Postes / structures</h5>
-                    <span style="font-size:0.78rem;color:#94a3b8;">Aperçu des 8 premiers</span>
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-person-workspace"></i></div>
+                <span class="card-header-title">Postes</span>
+                {% if positions_count %}
+                <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.75rem;">{{ positions_count }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Search + Filter -->
+            <div class="p-3 border-bottom" style="border-color:#f1f5f9;">
+                <div class="d-flex gap-2">
+                    <div class="flex-grow-1" style="position:relative;">
+                        <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.82rem;"></i>
+                        <input id="posSearch" type="text" placeholder="Rechercher un poste…"
+                            style="width:100%;padding:0.4rem 0.75rem 0.4rem 2rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.82rem;outline:none;"
+                            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+                    </div>
+                    <select id="posDeptFilter" style="padding:0.4rem 0.65rem;border:1px solid #e8ecf0;border-radius:8px;font-size:0.8rem;min-width:140px;outline:none;"
+                        onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#e8ecf0'">
+                        <option value="">Tous les départements</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.name|lower }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
-            <div class="p-3 d-flex flex-column gap-2">
-                {% for position in positions|slice:":8" %}
-                <div style="padding:0.95rem 1rem;border:1px solid #e8ecf0;border-radius:12px;background:white;">
-                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                        <div>
-                            <div style="font-size:0.95rem;font-weight:700;color:#1e293b;">{{ position.name }}</div>
-                            <div style="font-size:0.77rem;color:#64748b;">Département : {{ position.department.name }}</div>
-                            {% if position.description %}
-                            <div style="font-size:0.8rem;color:#475569;margin-top:0.45rem;">{{ position.description }}</div>
-                            {% endif %}
+
+            <div class="p-3 d-flex flex-column gap-2" id="posList">
+                {% for position in positions %}
+                <div class="pos-item"
+                     data-name="{{ position.name|lower }}"
+                     data-dept="{{ position.department.name|lower }}"
+                     style="padding:0.9rem 1rem;border:1px solid #e8ecf0;border-radius:10px;background:white;transition:all 0.15s;">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="d-flex align-items-start gap-2">
+                            <div style="width:34px;height:34px;border-radius:9px;background:#7b1fa215;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                                <i class="bi bi-person-workspace" style="color:#7b1fa2;font-size:0.85rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:700;color:#1e293b;">{{ position.name }}</div>
+                                <div style="font-size:0.72rem;margin-top:2px;">
+                                    <span style="background:#e3f2fd;color:#1565c0;border:1px solid #1565c030;padding:2px 7px;border-radius:50px;font-size:0.68rem;font-weight:600;">{{ position.department.name }}</span>
+                                </div>
+                                {% if position.description %}
+                                <div style="font-size:0.78rem;color:#475569;margin-top:4px;">{{ position.description|truncatewords:10 }}</div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <a href="{% url 'position_edit' position.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                        <a href="{% url 'position_edit' position.id %}"
+                           style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#fdf4ff;color:#7b1fa2;border:1px solid #e9d5ff;border-radius:6px;font-size:0.72rem;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
                     </div>
                 </div>
                 {% empty %}
-                <div style="padding:1rem;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#64748b;font-size:0.85rem;">
-                    Aucun poste enregistré.
+                <div style="padding:2.5rem 1rem;text-align:center;">
+                    <i class="bi bi-person-workspace" style="font-size:2.2rem;color:#cbd5e1;display:block;margin-bottom:0.5rem;"></i>
+                    <p style="color:#94a3b8;margin:0;font-size:0.85rem;">Aucun poste enregistré</p>
+                    <a href="{% url 'position_create' %}" style="font-size:0.8rem;color:#7b1fa2;text-decoration:none;margin-top:0.5rem;display:inline-block;">+ Créer le premier poste</a>
                 </div>
                 {% endfor %}
-                {% if positions_count > 8 %}
-                <div style="padding:0.9rem 1rem;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#64748b;font-size:0.82rem;">
-                    {{ positions_count|add:"-8" }} autre{{ positions_count|add:"-8"|pluralize }} poste{{ positions_count|add:"-8"|pluralize }} non affiché{{ positions_count|add:"-8"|pluralize }} pour garder cette vue légère.
+            </div>
+            <div id="posEmpty" style="display:none;padding:1.5rem;text-align:center;color:#94a3b8;font-size:0.82rem;">Aucun résultat</div>
+
+            <!-- Pagination postes -->
+            <div id="posPager" style="display:none;padding:0.75rem 1rem;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+                <span id="posRange" style="font-size:0.78rem;color:#64748b;"></span>
+                <div class="d-flex gap-1">
+                    <button id="posPrev" onclick="posPage(-1)"
+                        style="padding:0.3rem 0.75rem;border:1px solid #e2e8f0;background:white;color:#475569;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-chevron-left"></i> Précédent
+                    </button>
+                    <button id="posNext" onclick="posPage(1)"
+                        style="padding:0.3rem 0.75rem;border:1px solid #e2e8f0;background:white;color:#475569;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+                        Suivant <i class="bi bi-chevron-right"></i>
+                    </button>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// ── Paginator générique ──────────────────────────────────────────────────
+function makePaginator(opts){
+    // opts: { items, perPage, rangeEl, prevBtn, nextBtn, pagerEl, emptyEl }
+    var cur = 1;
+    var filtered = Array.from(opts.items); // sous-ensemble visible après filtre
+
+    function render(){
+        var total = filtered.length;
+        var pages = Math.ceil(total / opts.perPage) || 1;
+        if(cur > pages) cur = pages;
+        var from = (cur - 1) * opts.perPage;
+        var to   = Math.min(from + opts.perPage, total);
+
+        opts.items.forEach(function(el){ el.style.display = 'none'; });
+        filtered.forEach(function(el, i){
+            el.style.display = (i >= from && i < to) ? '' : 'none';
+        });
+
+        // Range label
+        if(total === 0){
+            opts.rangeEl.textContent = '';
+        } else {
+            opts.rangeEl.textContent = (from + 1) + '–' + to + ' sur ' + total;
+        }
+
+        // Boutons
+        opts.prevBtn.disabled = cur <= 1;
+        opts.prevBtn.style.opacity = cur <= 1 ? '0.4' : '1';
+        opts.nextBtn.disabled = cur >= pages;
+        opts.nextBtn.style.opacity = cur >= pages ? '0.4' : '1';
+
+        // Masquer pager si tout tient sur une page
+        opts.pagerEl.style.display = total > opts.perPage ? 'flex' : 'none';
+
+        // Message vide
+        if(opts.emptyEl) opts.emptyEl.style.display = total === 0 ? '' : 'none';
+    }
+
+    function applyFilter(fn){
+        filtered = Array.from(opts.items).filter(fn);
+        cur = 1;
+        render();
+    }
+
+    function go(delta){
+        var pages = Math.ceil(filtered.length / opts.perPage) || 1;
+        cur = Math.max(1, Math.min(pages, cur + delta));
+        render();
+    }
+
+    render();
+    return { applyFilter: applyFilter, go: go };
+}
+
+// ── Départements ────────────────────────────────────────────────────────
+var deptPag = makePaginator({
+    items:   Array.from(document.querySelectorAll('.dept-item')),
+    perPage: 10,
+    rangeEl: document.getElementById('deptRange'),
+    prevBtn: document.getElementById('deptPrev'),
+    nextBtn: document.getElementById('deptNext'),
+    pagerEl: document.getElementById('deptPager'),
+    emptyEl: document.getElementById('deptEmpty')
+});
+
+function deptPage(d){ deptPag.go(d); }
+
+var deptSearch = document.getElementById('deptSearch');
+deptSearch && deptSearch.addEventListener('input', function(){
+    var q = this.value.toLowerCase();
+    deptPag.applyFilter(function(el){ return !q || el.dataset.name.includes(q); });
+});
+
+// ── Postes ──────────────────────────────────────────────────────────────
+var posPag = makePaginator({
+    items:   Array.from(document.querySelectorAll('.pos-item')),
+    perPage: 10,
+    rangeEl: document.getElementById('posRange'),
+    prevBtn: document.getElementById('posPrev'),
+    nextBtn: document.getElementById('posNext'),
+    pagerEl: document.getElementById('posPager'),
+    emptyEl: document.getElementById('posEmpty')
+});
+
+function posPage(d){ posPag.go(d); }
+
+function applyPosFilter(){
+    var q    = (document.getElementById('posSearch').value || '').toLowerCase();
+    var dept = (document.getElementById('posDeptFilter').value || '').toLowerCase();
+    posPag.applyFilter(function(el){
+        return (!q || el.dataset.name.includes(q)) && (!dept || el.dataset.dept === dept);
+    });
+}
+document.getElementById('posSearch')     && document.getElementById('posSearch').addEventListener('input', applyPosFilter);
+document.getElementById('posDeptFilter') && document.getElementById('posDeptFilter').addEventListener('change', applyPosFilter);
+</script>
 {% endblock %}

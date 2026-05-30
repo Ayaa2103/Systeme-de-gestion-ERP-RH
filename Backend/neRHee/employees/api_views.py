@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db import models
 from datetime import date, timedelta
 from .models import Employee, Contract, Training, Department
 from .serializers import EmployeeSerializer, ContractSerializer, TrainingSerializer, DepartmentSerializer
@@ -458,21 +459,122 @@ def reject_training(request, training_id):
 @permission_classes([IsAuthenticated])
 def departments_list(request):
     """Liste des départements"""
-    departments = Department.objects.all()
-    serializer = DepartmentSerializer(departments, many=True)
-    return Response(serializer.data)
+    departments = Department.objects.annotate(
+        employee_count=models.Count('employees'),
+        position_count=models.Count('positions'),
+    ).all()
+    data = []
+    for d in departments:
+        data.append({
+            'id': d.id,
+            'name': d.name,
+            'code': d.code,
+            'description': d.description,
+            'manager_id': d.manager_id,
+            'manager_name': d.manager.user.get_full_name() if d.manager else None,
+            'employee_count': d.employee_count,
+            'position_count': d.position_count,
+        })
+    return Response(data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_department(request):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    name = request.data.get('name', '').strip()
+    code = request.data.get('code', '').strip()
+    description = request.data.get('description', '').strip()
+    if not name or not code:
+        return Response({'error': 'Nom et code sont requis'}, status=400)
+    if Department.objects.filter(name=name).exists():
+        return Response({'error': 'Ce nom de département existe déjà'}, status=400)
+    if Department.objects.filter(code=code).exists():
+        return Response({'error': 'Ce code existe déjà'}, status=400)
+    dept = Department.objects.create(name=name, code=code, description=description)
+    return Response({'id': dept.id, 'name': dept.name, 'code': dept.code, 'description': dept.description}, status=201)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_department(request, dept_id):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    dept = get_object_or_404(Department, id=dept_id)
+    dept.name = request.data.get('name', dept.name).strip()
+    dept.code = request.data.get('code', dept.code).strip()
+    dept.description = request.data.get('description', dept.description).strip()
+    if Department.objects.filter(name=dept.name).exclude(id=dept_id).exists():
+        return Response({'error': 'Ce nom de département existe déjà'}, status=400)
+    if Department.objects.filter(code=dept.code).exclude(id=dept_id).exists():
+        return Response({'error': 'Ce code existe déjà'}, status=400)
+    dept.save()
+    return Response({'id': dept.id, 'name': dept.name, 'code': dept.code, 'description': dept.description})
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_department(request, dept_id):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    dept = get_object_or_404(Department, id=dept_id)
+    dept.delete()
+    return Response({'message': 'Département supprimé'})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def positions_list(request):
-    """Liste des postes existants"""
+    """Liste des postes avec info département"""
     try:
         from knowledge_management.models import Position
-        positions = Position.objects.all().order_by('name')
-        positions_data = [{'id': pos.id, 'name': pos.name} for pos in positions]
-        return Response(positions_data)
+        positions = Position.objects.select_related('department').all().order_by('department__name', 'name')
+        data = [{'id': p.id, 'name': p.name, 'description': p.description,
+                 'department_id': p.department_id, 'department_name': p.department.name} for p in positions]
+        return Response(data)
     except:
         return Response([])
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_position_api(request):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    from knowledge_management.models import Position
+    name = request.data.get('name', '').strip()
+    dept_id = request.data.get('department_id')
+    description = request.data.get('description', '').strip()
+    if not name or not dept_id:
+        return Response({'error': 'Nom et département sont requis'}, status=400)
+    dept = get_object_or_404(Department, id=dept_id)
+    if Position.objects.filter(name=name, department=dept).exists():
+        return Response({'error': 'Ce poste existe déjà dans ce département'}, status=400)
+    pos = Position.objects.create(name=name, department=dept, description=description)
+    return Response({'id': pos.id, 'name': pos.name, 'department_id': dept.id, 'department_name': dept.name, 'description': pos.description}, status=201)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_position_api(request, pos_id):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    from knowledge_management.models import Position
+    pos = get_object_or_404(Position, id=pos_id)
+    pos.name = request.data.get('name', pos.name).strip()
+    pos.description = request.data.get('description', pos.description).strip()
+    dept_id = request.data.get('department_id')
+    if dept_id:
+        pos.department = get_object_or_404(Department, id=dept_id)
+    if Position.objects.filter(name=pos.name, department=pos.department).exclude(id=pos_id).exists():
+        return Response({'error': 'Ce poste existe déjà dans ce département'}, status=400)
+    pos.save()
+    return Response({'id': pos.id, 'name': pos.name, 'department_id': pos.department_id, 'department_name': pos.department.name, 'description': pos.description})
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_position_api(request, pos_id):
+    if request.user.role not in ['administrator', 'hr_manager', 'hr_director']:
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    from knowledge_management.models import Position
+    pos = get_object_or_404(Position, id=pos_id)
+    pos.delete()
+    return Response({'message': 'Poste supprimé'})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

@@ -94,19 +94,21 @@ const UserManagement = () => {
 
   /* ── Actions ─────────────────────────────────────────────── */
   const openEdit = (user) => {
+    document.activeElement?.blur();
     setSelectedUser(user);
     setForm({ username: user.username, email: user.email, first_name: user.first_name, last_name: user.last_name, phone: user.phone || '', role: user.role, password: '' });
     setFormError('');
-    setEditDialog(true);
     setAnchorEl(null);
+    setEditDialog(true);
   };
 
   const openReset = (user) => {
+    document.activeElement?.blur();
     setSelectedUser(user);
     setNewPassword('');
     setFormError('');
-    setResetDialog(true);
     setAnchorEl(null);
+    setResetDialog(true);
   };
 
   const handleToggleActive = async (user) => {
@@ -179,7 +181,7 @@ const UserManagement = () => {
           </Box>
           <Button
             variant="contained" startIcon={<AddIcon />}
-            onClick={() => { setForm(emptyForm); setFormError(''); setCreateDialog(true); }}
+            onClick={() => { document.activeElement?.blur(); setForm(emptyForm); setFormError(''); setCreateDialog(true); }}
             sx={{
               bgcolor: 'rgba(255,255,255,0.15)', color: 'white',
               border: '1px solid rgba(255,255,255,0.25)', borderRadius: 2,
@@ -225,11 +227,13 @@ const UserManagement = () => {
               placeholder="Rechercher par nom, username, email…"
               value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               size="small" sx={{ flex: 1, minWidth: 200, ...fieldSx }}
+              disabled={createDialog || editDialog || resetDialog}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} /></InputAdornment> }}
             />
             <TextField
               select size="small" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
               sx={{ width: 180, ...fieldSx }} SelectProps={{ displayEmpty: true }}
+              disabled={createDialog || editDialog || resetDialog}
             >
               <MenuItem value="">Tous les rôles</MenuItem>
               {ROLE_CHOICES.map(r => <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>)}
@@ -343,7 +347,8 @@ const UserManagement = () => {
       />
 
       {/* Dialog — Reset MDP */}
-      <Dialog open={resetDialog} onClose={() => setResetDialog(false)} maxWidth="xs" fullWidth>
+      <Dialog open={resetDialog} onClose={() => setResetDialog(false)} maxWidth="xs" fullWidth
+        TransitionProps={{ onEntered: () => document.getElementById('reset-pwd-input')?.focus() }}>
         <DialogTitle sx={{
           background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
           color: 'white', py: 2,
@@ -355,7 +360,7 @@ const UserManagement = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Compte : <strong>@{selectedUser?.username}</strong>
           </Typography>
-          <TextField fullWidth label="Nouveau mot de passe" type="password"
+          <TextField id="reset-pwd-input" fullWidth label="Nouveau mot de passe" type="password"
             value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
             sx={fieldSx} helperText="Minimum 6 caractères" />
         </DialogContent>
@@ -376,8 +381,10 @@ const UserManagement = () => {
 /* ── Sub-component: UserFormDialog ───────────────────────── */
 const UserFormDialog = ({ open, onClose, title, form, setForm, onSubmit, saving, error, isCreate }) => {
   const f = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+  const firstFieldRef = React.useRef(null);
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
+      TransitionProps={{ onEntered: () => firstFieldRef.current?.focus() }}>
       <DialogTitle sx={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e40af 100%)',
         color: 'white', py: 2,
@@ -388,7 +395,7 @@ const UserFormDialog = ({ open, onClose, title, form, setForm, onSubmit, saving,
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2}>
           <Grid item xs={6}>
-            <TextField fullWidth label="Prénom" value={form.first_name} onChange={f('first_name')} sx={fieldSx} />
+            <TextField inputRef={firstFieldRef} fullWidth label="Prénom" value={form.first_name} onChange={f('first_name')} sx={fieldSx} />
           </Grid>
           <Grid item xs={6}>
             <TextField fullWidth label="Nom" value={form.last_name} onChange={f('last_name')} sx={fieldSx} />

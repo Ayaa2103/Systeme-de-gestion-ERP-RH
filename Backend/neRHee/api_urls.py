@@ -8,7 +8,9 @@ from employees.api_views import (
     employees_list, employee_detail, create_employee, update_employee, delete_employee,
     contracts_list, create_contract, contract_detail, update_contract, renew_contract, expiring_contracts,
     trainings_list, create_training, approve_training, reject_training,
-    departments_list, positions_list, employee_contracts, employee_trainings, my_trainings, my_profile
+    departments_list, create_department, update_department, delete_department,
+    positions_list, create_position_api, update_position_api, delete_position_api,
+    employee_contracts, employee_trainings, my_trainings, my_profile
 )
 from requests_app.api_views import (
     pending_requests, my_requests, create_leave_request, create_attestation_request,
@@ -72,9 +74,17 @@ urlpatterns = [
     path('employees/<int:employee_id>/update/', update_employee, name='api_update_employee'),
     path('employees/<int:employee_id>/delete/', delete_employee, name='api_delete_employee'),
     
-    # Departments
+    # Departments CRUD
     path('departments/', departments_list, name='departments_list'),
+    path('departments/create/', create_department, name='create_department'),
+    path('departments/<int:dept_id>/update/', update_department, name='update_department'),
+    path('departments/<int:dept_id>/delete/', delete_department, name='delete_department'),
+
+    # Positions CRUD
     path('positions/', positions_list, name='positions_list'),
+    path('positions/create/', create_position_api, name='create_position_api'),
+    path('positions/<int:pos_id>/update/', update_position_api, name='update_position_api'),
+    path('positions/<int:pos_id>/delete/', delete_position_api, name='delete_position_api'),
     
     # Employee details
     path('employees/<int:employee_id>/contracts/', employee_contracts, name='employee_contracts'),

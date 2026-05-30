@@ -39,6 +39,9 @@ import {
   ChevronRight as ExpandIcon,
   ManageAccounts as UsersIcon,
   OpenInNew as ExternalIcon,
+  AccountTree as StructureIcon,
+  Tune as ConfigIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 
 export const SIDEBAR_EXPANDED = 240;
@@ -73,16 +76,69 @@ const Sidebar = ({ collapsed, onToggle }) => {
   };
 
   const menuItems = [
+    // ── Commun ──────────────────────────────────────────────
     {
       title: 'Tableau de bord',
       icon: <DashboardIcon fontSize="small" />,
       path: '/dashboard',
       roles: ['employee', 'hr_manager', 'hr_director', 'administrator'],
     },
+
+    // ── Administrateur ───────────────────────────────────────
+    {
+      title: 'Admin Dashboard',
+      icon: <AdminIcon fontSize="small" />,
+      path: '/admin',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Utilisateurs',
+      icon: <UsersIcon fontSize="small" />,
+      path: '/admin/users',
+      roles: ['administrator'],
+    },
     {
       title: 'Employés',
       icon: <PeopleIcon fontSize="small" />,
-      roles: ['hr_manager', 'hr_director', 'administrator'],
+      path: '/employees',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Contrats',
+      icon: <AssignmentIcon fontSize="small" />,
+      path: '/contracts',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Recrutement',
+      icon: <WorkIcon fontSize="small" />,
+      path: '/job-offers',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Événements',
+      icon: <EventsIcon fontSize="small" />,
+      path: '/events',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Départements & Postes',
+      icon: <StructureIcon fontSize="small" />,
+      path: '/admin/structures',
+      roles: ['administrator'],
+    },
+    {
+      title: 'Configuration',
+      icon: <ConfigIcon fontSize="small" />,
+      path: '/admin/configuration',
+      roles: ['administrator'],
+    },
+
+    // ── RH Manager / Directeur ───────────────────────────────
+    {
+      title: 'Employés',
+      icon: <PeopleIcon fontSize="small" />,
+      roles: ['hr_manager', 'hr_director'],
       children: [
         { title: 'Liste', icon: <PersonIcon fontSize="small" />, path: '/employees' },
         { title: 'Contrats', icon: <AssignmentIcon fontSize="small" />, path: '/contracts' },
@@ -91,51 +147,40 @@ const Sidebar = ({ collapsed, onToggle }) => {
     {
       title: 'Demandes',
       icon: <RequestIcon fontSize="small" />,
-      roles: ['employee', 'hr_manager', 'hr_director'],
+      roles: ['hr_manager', 'hr_director'],
       children: [
-        { title: 'Mes demandes', icon: <RequestIcon fontSize="small" />, path: '/employee/requests', roles: ['employee'] },
-        { title: 'Congé', icon: <RequestIcon fontSize="small" />, path: '/employee/requests/create-leave', roles: ['employee'] },
-        { title: 'Attestation', icon: <AssignmentIcon fontSize="small" />, path: '/employee/requests/create-attestation', roles: ['employee'] },
-        { title: 'Mission', icon: <WorkIcon fontSize="small" />, path: '/employee/requests/create-mission', roles: ['employee'] },
-        { title: 'Bulletin', icon: <BusinessIcon fontSize="small" />, path: '/employee/requests/create-payslip', roles: ['employee'] },
-        { title: 'Gérer', icon: <AssignmentIcon fontSize="small" />, path: '/manage-requests', roles: ['hr_manager', 'hr_director'] },
-      ],
-    },
-    {
-      title: 'Formations',
-      icon: <TrainingIcon fontSize="small" />,
-      roles: ['employee', 'hr_manager', 'hr_director'],
-      children: [
-        { title: 'Mes formations', icon: <SchoolIcon fontSize="small" />, path: '/employee/trainings', roles: ['employee'] },
-        { title: 'Connaissances', icon: <AssessmentIcon fontSize="small" />, path: '/employee/knowledge', roles: ['employee'] },
-        { title: 'Gérer', icon: <TrainingIcon fontSize="small" />, path: '/manage-trainings', roles: ['hr_manager', 'hr_director'] },
-        { title: 'Créer', icon: <SchoolIcon fontSize="small" />, path: '/trainings/create', roles: ['hr_manager'] },
+        { title: 'Gérer', icon: <AssignmentIcon fontSize="small" />, path: '/manage-requests' },
       ],
     },
     {
       title: 'Recrutement',
       icon: <WorkIcon fontSize="small" />,
-      roles: ['hr_manager', 'hr_director', 'administrator'],
+      roles: ['hr_manager', 'hr_director'],
       children: [
-        { title: 'Tableau de bord', icon: <AnalyticsIcon fontSize="small" />, path: '/recruitment', roles: ['hr_manager', 'hr_director'] },
+        { title: 'Tableau de bord', icon: <AnalyticsIcon fontSize="small" />, path: '/recruitment' },
         { title: 'Offres', icon: <WorkIcon fontSize="small" />, path: '/job-offers' },
-        { title: 'Candidatures', icon: <PersonIcon fontSize="small" />, path: '/recruitment/applications', roles: ['hr_manager', 'hr_director'] },
-        { title: 'Recommandations', icon: <AssessmentIcon fontSize="small" />, path: '/recruitment/recommendations', roles: ['hr_manager', 'hr_director'] },
+        { title: 'Candidatures', icon: <PersonIcon fontSize="small" />, path: '/recruitment/applications' },
+        { title: 'Recommandations', icon: <AssessmentIcon fontSize="small" />, path: '/recruitment/recommendations' },
       ],
     },
     {
-      title: 'Événements',
-      icon: <EventsIcon fontSize="small" />,
-      path: '/employee/events',
-      roles: ['employee'],
+      title: 'Formations',
+      icon: <TrainingIcon fontSize="small" />,
+      roles: ['hr_manager', 'hr_director'],
+      children: [
+        { title: 'Gérer', icon: <TrainingIcon fontSize="small" />, path: '/manage-trainings' },
+        { title: 'Créer', icon: <SchoolIcon fontSize="small" />, path: '/trainings/create', roles: ['hr_manager'] },
+      ],
     },
     {
-      title: 'Culture',
-      icon: <CorporateIcon fontSize="small" />,
-      roles: ['employee', 'hr_manager', 'hr_director'],
+      title: 'Intégration',
+      icon: <PersonIcon fontSize="small" />,
+      roles: ['hr_manager', 'hr_director'],
       children: [
-        { title: 'Tableau de bord', icon: <CorporateIcon fontSize="small" />, path: '/culture' },
-        { title: 'Suggestions', icon: <SuggestionIcon fontSize="small" />, path: '/culture/suggestions' },
+        { title: 'Tableau de bord', icon: <DashboardIcon fontSize="small" />, path: '/onboarding' },
+        { title: 'Ajouter', icon: <PersonIcon fontSize="small" />, path: '/onboarding/add-employee' },
+        { title: 'Employés', icon: <PeopleIcon fontSize="small" />, path: '/onboarding/employees' },
+        { title: 'Tâches', icon: <SchoolIcon fontSize="small" />, path: '/onboarding/tasks' },
       ],
     },
     {
@@ -153,17 +198,15 @@ const Sidebar = ({ collapsed, onToggle }) => {
       title: 'Événements',
       icon: <EventsIcon fontSize="small" />,
       path: '/events',
-      roles: ['hr_manager', 'hr_director', 'administrator'],
+      roles: ['hr_manager', 'hr_director'],
     },
     {
-      title: 'Intégration',
-      icon: <PersonIcon fontSize="small" />,
+      title: 'Culture',
+      icon: <CorporateIcon fontSize="small" />,
       roles: ['hr_manager', 'hr_director'],
       children: [
-        { title: 'Tableau de bord', icon: <DashboardIcon fontSize="small" />, path: '/onboarding' },
-        { title: 'Ajouter', icon: <PersonIcon fontSize="small" />, path: '/onboarding/add-employee' },
-        { title: 'Employés', icon: <PeopleIcon fontSize="small" />, path: '/onboarding/employees' },
-        { title: 'Tâches', icon: <SchoolIcon fontSize="small" />, path: '/onboarding/tasks' },
+        { title: 'Tableau de bord', icon: <CorporateIcon fontSize="small" />, path: '/culture' },
+        { title: 'Suggestions', icon: <SuggestionIcon fontSize="small" />, path: '/culture/suggestions' },
       ],
     },
     {
@@ -172,13 +215,48 @@ const Sidebar = ({ collapsed, onToggle }) => {
       path: '/kpi-dashboard',
       roles: ['hr_director'],
     },
+
+    // ── Employé ──────────────────────────────────────────────
     {
-      title: 'Administration',
-      icon: <SettingsIcon fontSize="small" />,
-      roles: ['administrator'],
+      title: 'Mes demandes',
+      icon: <RequestIcon fontSize="small" />,
+      roles: ['employee'],
       children: [
-        { title: 'Tableau de bord', icon: <DashboardIcon fontSize="small" />, path: '/admin' },
-        { title: 'Utilisateurs', icon: <UsersIcon fontSize="small" />, path: '/admin/users' },
+        { title: 'Toutes mes demandes', icon: <RequestIcon fontSize="small" />, path: '/employee/requests' },
+        { title: 'Congé', icon: <RequestIcon fontSize="small" />, path: '/employee/requests/create-leave' },
+        { title: 'Attestation', icon: <AssignmentIcon fontSize="small" />, path: '/employee/requests/create-attestation' },
+        { title: 'Mission', icon: <WorkIcon fontSize="small" />, path: '/employee/requests/create-mission' },
+        { title: 'Bulletin', icon: <BusinessIcon fontSize="small" />, path: '/employee/requests/create-payslip' },
+      ],
+    },
+    {
+      title: 'Mon intégration',
+      icon: <PersonIcon fontSize="small" />,
+      path: '/employee/onboarding',
+      roles: ['employee'],
+    },
+    {
+      title: 'Formations',
+      icon: <TrainingIcon fontSize="small" />,
+      roles: ['employee'],
+      children: [
+        { title: 'Mes formations', icon: <SchoolIcon fontSize="small" />, path: '/employee/trainings' },
+        { title: 'Connaissances', icon: <AssessmentIcon fontSize="small" />, path: '/employee/knowledge' },
+      ],
+    },
+    {
+      title: 'Événements',
+      icon: <EventsIcon fontSize="small" />,
+      path: '/employee/events',
+      roles: ['employee'],
+    },
+    {
+      title: 'Culture',
+      icon: <CorporateIcon fontSize="small" />,
+      roles: ['employee'],
+      children: [
+        { title: 'Tableau de bord', icon: <CorporateIcon fontSize="small" />, path: '/culture' },
+        { title: 'Suggestions', icon: <SuggestionIcon fontSize="small" />, path: '/culture/suggestions' },
       ],
     },
   ];

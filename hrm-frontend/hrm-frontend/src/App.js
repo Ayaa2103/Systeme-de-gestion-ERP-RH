@@ -64,6 +64,8 @@ import ViewPage from './pages/CompanyCulture/ViewPage';
 import ApiTest from './components/ApiTest';
 import AdminSpecialDashboard from './pages/Admin/AdminSpecialDashboard';
 import UserManagement from './pages/Admin/UserManagement';
+import DepartmentStructure from './pages/Admin/DepartmentStructure';
+import SystemConfiguration from './pages/Admin/SystemConfiguration';
 import RecommendProfile from './pages/Employee/RecommendProfile';
 import ApplyJob from './pages/Employee/ApplyJob';
 import { useAuth } from './contexts/AuthContext';
@@ -787,7 +789,29 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
+
+            <Route
+              path="/admin/structures"
+              element={
+                <ProtectedRoute roles={['administrator']}>
+                  <MainLayout>
+                    <DepartmentStructure />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/configuration"
+              element={
+                <ProtectedRoute roles={['administrator']}>
+                  <MainLayout>
+                    <SystemConfiguration />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Route 404 */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

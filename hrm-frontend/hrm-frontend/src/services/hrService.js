@@ -22,13 +22,15 @@ export const deleteEmployee = (id) => {
   return api.delete(`/employees/${id}/delete/`);
 };
 
-export const getDepartments = () => {
-  return api.get('/departments/');
-};
+export const getDepartments = () => api.get('/departments/');
+export const createDepartment = (data) => api.post('/departments/create/', data);
+export const updateDepartment = (id, data) => api.put(`/departments/${id}/update/`, data);
+export const deleteDepartment = (id) => api.delete(`/departments/${id}/delete/`);
 
-export const getPositions = () => {
-  return api.get('/positions/');
-};
+export const getPositions = () => api.get('/positions/');
+export const createPosition = (data) => api.post('/positions/create/', data);
+export const updatePosition = (id, data) => api.put(`/positions/${id}/update/`, data);
+export const deletePosition = (id) => api.delete(`/positions/${id}/delete/`);
 
 // Contracts
 export const getContracts = (filters = {}) => {

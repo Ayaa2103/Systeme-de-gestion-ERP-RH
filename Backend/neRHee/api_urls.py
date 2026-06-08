@@ -1,6 +1,6 @@
 from django.urls import path, include
 from core.api_views import (
-    login_api, dashboard_stats, events_list, create_event, approve_event, reject_event,
+    login_api, dashboard_stats, events_list, create_event, approve_event, reject_event, update_event, delete_event,
     hr_policies_list, new_employees_today, recent_job_offers, health_check, employee_dashboard_data, kpi_data,
     users_list, create_user, update_user, reset_user_password, toggle_user_active,
 )
@@ -17,7 +17,7 @@ from requests_app.api_views import (
     create_mission_request, create_payslip_request, approve_request, reject_request
 )
 from recruitment.api_views import (
-    job_offers_list, create_job_offer, job_offer_detail, update_job_offer, publish_job_offer, close_job_offer,
+    job_offers_list, create_job_offer, job_offer_detail, update_job_offer, publish_job_offer, close_job_offer, delete_job_offer,
     applications_list, application_detail, update_application_status, create_interview, submit_interview_feedback,
     profile_recommendations_list, update_recommendation_status, recruitment_dashboard_stats,
     public_job_offers, public_job_detail, apply_to_job, recommend_profile
@@ -48,6 +48,8 @@ urlpatterns = [
     path('events/create/', create_event, name='create_event'),
     path('events/<int:event_id>/approve/', approve_event, name='approve_event'),
     path('events/<int:event_id>/reject/', reject_event, name='reject_event'),
+    path('events/<int:event_id>/update/', update_event, name='update_event'),
+    path('events/<int:event_id>/delete/', delete_event, name='delete_event'),
     
     # HR Policies
     path('hr-policies/', hr_policies_list, name='hr_policies_list'),
@@ -123,6 +125,7 @@ urlpatterns = [
     path('recruitment/job-offers/<int:job_offer_id>/update/', update_job_offer, name='update_job_offer'),
     path('recruitment/job-offers/<int:job_offer_id>/publish/', publish_job_offer, name='publish_job_offer'),
     path('recruitment/job-offers/<int:job_offer_id>/close/', close_job_offer, name='close_job_offer'),
+    path('recruitment/job-offers/<int:job_offer_id>/delete/', delete_job_offer, name='delete_job_offer'),
     path('recruitment/applications/', applications_list, name='applications_list'),
     path('recruitment/applications/<int:application_id>/', application_detail, name='application_detail'),
     path('recruitment/applications/<int:application_id>/update-status/', update_application_status, name='update_application_status'),

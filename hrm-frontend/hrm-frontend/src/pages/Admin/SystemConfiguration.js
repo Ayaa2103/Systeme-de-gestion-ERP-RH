@@ -74,7 +74,7 @@ export default function SystemConfiguration() {
       description: 'Administrez les groupes d\'accès, les niveaux d\'autorisation et la structure des permissions globales.',
       actionLabel: 'Gérer les groupes',
       actionColor: '#0891b2',
-      onClick: () => window.open('/admin/auth/group/', '_blank'),
+      onClick: () => window.open('http://localhost:8000/admin/auth/group/', '_blank'),
       external: true,
     },
     {
@@ -85,7 +85,7 @@ export default function SystemConfiguration() {
       description: 'Accédez aux modèles principaux du noyau applicatif et aux réglages métier de l\'administration Django.',
       actionLabel: 'Ouvrir la configuration core',
       actionColor: '#1976d2',
-      onClick: () => window.open('/admin/core/', '_blank'),
+      onClick: () => window.open('http://localhost:8000/admin/core/', '_blank'),
       external: true,
     },
     {
@@ -96,7 +96,7 @@ export default function SystemConfiguration() {
       description: 'Accédez au panel Django pour les opérations techniques avancées et les besoins d\'administration brute.',
       actionLabel: 'Ouvrir le panel Django',
       actionColor: '#ea580c',
-      onClick: () => window.open('/admin/', '_blank'),
+      onClick: () => window.open('http://localhost:8000/admin/', '_blank'),
       external: true,
     },
   ];

@@ -1,368 +1,310 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Box,
-  LinearProgress,
-  Avatar,
-  Paper,
-  Divider,
-  IconButton,
-  Tooltip
+  Box, Card, CardContent, Typography, Grid, Chip, Avatar,
+  Skeleton, Button, TextField, InputAdornment, Divider,
 } from '@mui/material';
 import {
   Event as EventIcon,
   CalendarToday as CalendarIcon,
   LocationOn as LocationIcon,
-  Person as PersonIcon,
-  AccessTime as TimeIcon,
-  Bookmark as BookmarkIcon,
-  Share as ShareIcon,
-  Notifications as NotificationIcon
+  ArrowBack as BackIcon,
+  Search as SearchIcon,
+  CheckCircle as ApprovedIcon,
+  Schedule as PendingIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import { eventsService } from '../../services/eventsService';
+import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const FILTERS = [
+  { key: 'all',      label: 'Tous' },
+  { key: 'upcoming', label: 'À venir',  color: '#1976d2', bg: '#eff6ff' },
+  { key: 'today',    label: 'Aujourd\'hui', color: '#2e7d32', bg: '#e8f5e9' },
+  { key: 'past',     label: 'Passés',   color: '#64748b', bg: '#f1f5f9' },
+];
+
+const getEventTiming = (dateStr) => {
+  if (!dateStr) return 'other';
+  const d = new Date(dateStr);
+  if (isToday(d))  return 'today';
+  if (isPast(d))   return 'past';
+  return 'upcoming';
+};
+
+const formatEventDate = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isToday(d))    return 'Aujourd\'hui';
+  if (isTomorrow(d)) return 'Demain';
+  return format(d, 'EEEE d MMMM yyyy', { locale: fr });
+};
+
+const TIMING_CONFIG = {
+  today:    { color: '#2e7d32', bg: '#e8f5e9', label: 'Aujourd\'hui' },
+  upcoming: { color: '#1976d2', bg: '#e3f2fd', label: 'À venir' },
+  past:     { color: '#64748b', bg: '#f1f5f9', label: 'Passé' },
+  other:    { color: '#64748b', bg: '#f1f5f9', label: '—' },
+};
 
 const Events = () => {
-  const [events, setEvents] = useState([]);
+  const navigate = useNavigate();
+  const [events,  setEvents]  = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedEvents, setExpandedEvents] = useState({});
+  const [search,  setSearch]  = useState('');
+  const [filter,  setFilter]  = useState('all');
+  const [expanded,setExpanded]= useState({});
 
   useEffect(() => {
-    fetchEvents();
+    eventsService.getEvents()
+      .then(data => setEvents(
+        (Array.isArray(data) ? data : data?.results || [])
+          .filter(e => e.status === 'approved')
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+      ))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const data = await eventsService.getEvents();
-      setEvents(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des événements:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const withTiming = useMemo(() =>
+    events.map(e => ({ ...e, _timing: getEventTiming(e.date) })), [events]);
 
-  const getEventTypeColor = (type) => {
-    const colors = {
-      'meeting': { bg: '#e3f2fd', color: '#1976d2', icon: '🤝' },
-      'training': { bg: '#e8f5e8', color: '#2e7d32', icon: '🎓' },
-      'celebration': { bg: '#fff3e0', color: '#f57c00', icon: '🎉' },
-      'announcement': { bg: '#f3e5f5', color: '#7b1fa2', icon: '📢' }
-    };
-    return colors[type] || { bg: '#f5f5f5', color: '#757575', icon: '📅' };
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return "Aujourd'hui";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Demain";
-    }
-    
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
-  };
-
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const isUpcoming = (dateString) => {
-    return new Date(dateString) > new Date();
-  };
-
-  const toggleDescription = (eventId) => {
-    setExpandedEvents(prev => ({
-      ...prev,
-      [eventId]: !prev[eventId]
-    }));
-  };
-
-  if (loading) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Box sx={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '50%',
-            p: 1.5,
-            mr: 2
-          }}>
-            <EventIcon sx={{ color: 'white', fontSize: 28 }} />
-          </Box>
-          <Typography variant="h4" fontWeight="bold">
-            Événements d'Entreprise
-          </Typography>
-        </Box>
-        <LinearProgress sx={{ borderRadius: 2, height: 6 }} />
-        <Typography variant="h6" sx={{ mt: 2, textAlign: 'center' }}>
-          Chargement des événements...
-        </Typography>
-      </Container>
+  const displayed = useMemo(() => {
+    const q = search.toLowerCase();
+    return withTiming.filter(e =>
+      (!q || (e.name || e.title)?.toLowerCase().includes(q) || e.location?.toLowerCase().includes(q)) &&
+      (filter === 'all' || e._timing === filter)
     );
-  }
+  }, [withTiming, search, filter]);
+
+  const counts = {
+    all:      events.length,
+    upcoming: withTiming.filter(e => e._timing === 'upcoming').length,
+    today:    withTiming.filter(e => e._timing === 'today').length,
+    past:     withTiming.filter(e => e._timing === 'past').length,
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Header avec design moderne */}
-      <Box sx={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: 4,
-        p: 4,
-        mb: 4,
-        color: 'white',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <Box sx={{
-          position: 'absolute',
-          top: -50,
-          right: -50,
-          width: 200,
-          height: 200,
-          background: 'rgba(255,255,255,0.1)',
-          borderRadius: '50%'
-        }} />
-        <Box sx={{
-          position: 'absolute',
-          bottom: -30,
-          left: -30,
-          width: 150,
-          height: 150,
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: '50%'
-        }} />
-        <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Box display="flex" alignItems="center" mb={2}>
-            <EventIcon sx={{ mr: 2, fontSize: 36 }} />
-            <Typography variant="h3" fontWeight="bold">
-              Événements
-            </Typography>
-          </Box>
-          <Typography variant="h6" sx={{ opacity: 0.9 }}>
-            Découvrez tous les événements de votre entreprise
-          </Typography>
-        </Box>
-      </Box>
+    <Box sx={{ width: '100%' }}>
 
-      {events.length === 0 ? (
-        <Paper elevation={0} sx={{ 
-          textAlign: 'center', 
-          py: 8,
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          borderRadius: 4
-        }}>
-          <Box sx={{
-            background: 'rgba(255,255,255,0.8)',
-            borderRadius: '50%',
-            width: 120,
-            height: 120,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 3
-          }}>
-            <EventIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
+      {/* ── Banner ── */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'hidden' }}>
+        <Box sx={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)',
+          px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button startIcon={<BackIcon />} onClick={() => navigate('/dashboard')} size="small"
+              sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', borderRadius: 2,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', color: 'white' } }}>
+              Retour
+            </Button>
+            <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'inline-flex' }}>
+              <EventIcon sx={{ fontSize: 22, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">Événements d'entreprise</Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.3 }}>
+                Découvrez tous les événements de votre organisation
+              </Typography>
+            </Box>
           </Box>
-          <Typography variant="h5" fontWeight="600" color="text.secondary" gutterBottom>
-            Aucun événement programmé
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Les prochains événements apparaîtront ici
-          </Typography>
-        </Paper>
+          {/* Mini stats */}
+          <Box sx={{ display: 'flex', gap: 2.5 }}>
+            {[
+              { label: 'Aujourd\'hui', value: counts.today,    color: '#86efac' },
+              { label: 'À venir',      value: counts.upcoming, color: '#60a5fa' },
+              { label: 'Total',        value: counts.all,      color: 'rgba(255,255,255,0.7)' },
+            ].map(s => (
+              <Box key={s.label} sx={{ textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.3rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>{s.label}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Card>
+
+      {/* ── Stat cards ── */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {FILTERS.map(f => {
+          const cnt = f.key === 'all' ? counts.all : (counts[f.key] ?? 0);
+          const active = filter === f.key;
+          if (f.key !== 'all' && cnt === 0) return null;
+          return (
+            <Grid item xs={6} sm={3} key={f.key}>
+              <Card elevation={0} onClick={() => setFilter(f.key)}
+                sx={{ border: `1px solid ${active ? (f.color || '#1976d2') : `${f.color || '#1976d2'}20`}`,
+                  borderRadius: 3, cursor: 'pointer', transition: 'all 0.2s',
+                  bgcolor: active ? (f.bg || '#eff6ff') : 'white',
+                  '&:hover': { boxShadow: `0 4px 16px ${f.color || '#1976d2'}15`, borderColor: `${f.color || '#1976d2'}45` } }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Avatar sx={{ bgcolor: `${f.color || '#1976d2'}12`, width: 30, height: 30, mb: 1 }}>
+                    <EventIcon sx={{ color: f.color || '#1976d2', fontSize: 15 }} />
+                  </Avatar>
+                  <Typography variant="h4" fontWeight={800} sx={{ color: f.color || '#1976d2', lineHeight: 1 }}>{cnt}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.4, display: 'block' }}>{f.label}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      {/* ── Search + filter pills ── */}
+      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, mb: 3 }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <TextField placeholder="Rechercher par titre ou lieu…" value={search}
+              onChange={e => setSearch(e.target.value)} size="small"
+              sx={{ flex: 1, minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 17, color: '#94a3b8' }} /></InputAdornment> }} />
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {FILTERS.map(f => {
+                const cnt = f.key === 'all' ? counts.all : (counts[f.key] ?? 0);
+                if (f.key !== 'all' && cnt === 0) return null;
+                const active = filter === f.key;
+                return (
+                  <Box key={f.key} onClick={() => setFilter(f.key)}
+                    sx={{ px: 1.5, py: 0.4, borderRadius: 50, cursor: 'pointer', fontSize: '0.78rem',
+                      fontWeight: active ? 700 : 500, userSelect: 'none', transition: 'all 0.15s',
+                      border: `1px solid ${active ? (f.color || '#1976d2') : '#e8ecf0'}`,
+                      bgcolor: active ? (f.bg || '#eff6ff') : 'white',
+                      color: active ? (f.color || '#1976d2') : '#475569' }}>
+                    {f.label}
+                  </Box>
+                );
+              })}
+            </Box>
+            <Chip label={`${displayed.length} événement${displayed.length !== 1 ? 's' : ''}`} size="small"
+              sx={{ bgcolor: '#eff6ff', color: '#1976d2', fontWeight: 600, border: '1px solid #bfdbfe' }} />
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* ── Événements ── */}
+      {loading ? (
+        <Grid container spacing={2}>
+          {[1,2,3,4].map(i => (
+            <Grid item xs={12} sm={6} md={4} key={i}>
+              <Skeleton variant="rounded" height={240} sx={{ borderRadius: 3 }} />
+            </Grid>
+          ))}
+        </Grid>
+      ) : displayed.length === 0 ? (
+        <Card elevation={0} sx={{ borderRadius: 3, border: '2px dashed #e8ecf0' }}>
+          <CardContent sx={{ textAlign: 'center', py: 8 }}>
+            <EventIcon sx={{ fontSize: 52, color: '#cbd5e1', mb: 2 }} />
+            <Typography variant="h6" fontWeight={600} color="text.secondary">
+              {search || filter !== 'all' ? 'Aucun résultat' : 'Aucun événement pour le moment'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Les événements approuvés par la direction apparaîtront ici
+            </Typography>
+          </CardContent>
+        </Card>
       ) : (
-        <Grid container spacing={3}>
-          {events.map((event) => {
-            const eventStyle = getEventTypeColor(event.event_type);
-            const upcoming = isUpcoming(event.date);
-            
+        <Grid container spacing={2}>
+          {displayed.map(event => {
+            const tc = TIMING_CONFIG[event._timing] || TIMING_CONFIG.other;
+            const name = event.name || event.title || '—';
+            const isExpanded = expanded[event.id];
+            const longDesc = event.description && event.description.length > 140;
+
             return (
-              <Grid item xs={12} md={6} lg={4} key={event.id}>
-                <Card sx={{ 
-                  height: '100%',
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease',
-                  border: upcoming ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
-                  }
+              <Grid item xs={12} sm={6} md={4} key={event.id}>
+                <Card elevation={0} sx={{
+                  borderRadius: 3, overflow: 'hidden', height: '100%',
+                  border: `1px solid ${tc.color}25`,
+                  borderTop: `3px solid ${tc.color}`,
+                  transition: 'all 0.2s',
+                  '&:hover': { boxShadow: `0 6px 24px ${tc.color}15`, transform: 'translateY(-2px)' },
                 }}>
+
                   {/* Header coloré */}
-                  <Box sx={{
-                    background: `linear-gradient(135deg, ${eventStyle.color} 0%, ${eventStyle.color}dd 100%)`,
-                    p: 2,
-                    color: 'white',
-                    position: 'relative'
-                  }}>
-                    <Box sx={{
-                      position: 'absolute',
-                      top: -20,
-                      right: -20,
-                      fontSize: '60px',
-                      opacity: 0.3
-                    }}>
-                      {eventStyle.icon}
-                    </Box>
-                    <Box sx={{ position: 'relative', zIndex: 1 }}>
-                      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                        <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
-                          {event.name || event.title}
-                        </Typography>
-                        {upcoming && (
-                          <Chip 
-                            label="À venir" 
-                            size="small"
-                            sx={{ 
-                              backgroundColor: 'rgba(255,255,255,0.2)',
-                              color: 'white',
-                              fontWeight: 'bold'
-                            }}
-                          />
+                  <Box sx={{ px: 2.5, pt: 2.5, pb: 2, bgcolor: tc.bg }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.25 }}>
+                      {/* Bloc date */}
+                      <Box sx={{ width: 46, height: 46, borderRadius: 2, bgcolor: 'white',
+                        border: `1px solid ${tc.color}25`, display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {event.date ? (
+                          <>
+                            <Typography sx={{ fontSize: '0.58rem', color: tc.color, fontWeight: 700,
+                              textTransform: 'uppercase', lineHeight: 1 }}>
+                              {format(new Date(event.date), 'MMM', { locale: fr })}
+                            </Typography>
+                            <Typography sx={{ fontSize: '1.1rem', color: tc.color, fontWeight: 800, lineHeight: 1.2 }}>
+                              {format(new Date(event.date), 'd')}
+                            </Typography>
+                          </>
+                        ) : (
+                          <EventIcon sx={{ fontSize: 18, color: tc.color }} />
                         )}
                       </Box>
-                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                        {event.event_type === 'meeting' ? 'Réunion' :
-                         event.event_type === 'training' ? 'Formation' :
-                         event.event_type === 'celebration' ? 'Célébration' :
-                         event.event_type === 'announcement' ? 'Annonce' : 'Événement'}
+
+                      <Box sx={{ flex: 1, ml: 1.5, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b',
+                          lineHeight: 1.3, mb: 0.3 }} noWrap>
+                          {name}
+                        </Typography>
+                        <Chip label={tc.label} size="small"
+                          sx={{ bgcolor: `${tc.color}15`, color: tc.color, fontWeight: 700,
+                            fontSize: '0.65rem', height: 18, border: `1px solid ${tc.color}25` }} />
+                      </Box>
+                    </Box>
+
+                    {/* Date lisible */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <CalendarIcon sx={{ fontSize: 13, color: tc.color }} />
+                      <Typography sx={{ fontSize: '0.78rem', color: tc.color, fontWeight: 600,
+                        textTransform: 'capitalize' }}>
+                        {formatEventDate(event.date)}
                       </Typography>
                     </Box>
                   </Box>
 
-                  <CardContent sx={{ p: 3 }}>
-                    <Box>
-                      <Typography 
-                        variant="body1" 
-                        color="text.secondary" 
-                        paragraph 
-                        sx={{ 
-                          display: '-webkit-box',
-                          WebkitLineClamp: expandedEvents[event.id] ? 'none' : 3,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          lineHeight: 1.6
-                        }}
-                      >
-                        {event.description}
-                      </Typography>
-                      {event.description && event.description.length > 150 && (
-                        <Typography 
-                          variant="body2" 
-                          color="primary" 
-                          sx={{ 
-                            cursor: 'pointer', 
-                            fontWeight: 600,
-                            '&:hover': { textDecoration: 'underline' }
-                          }}
-                          onClick={() => toggleDescription(event.id)}
-                        >
-                          {expandedEvents[event.id] ? 'Voir moins' : 'Voir plus'}
+                  <CardContent sx={{ p: 2.5, pt: 2 }}>
+                    {/* Description */}
+                    {event.description && (
+                      <Box sx={{ mb: 1.75 }}>
+                        <Typography sx={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.7,
+                          overflow: isExpanded ? 'visible' : 'hidden',
+                          display: isExpanded ? 'block' : '-webkit-box',
+                          WebkitLineClamp: isExpanded ? 'none' : 3,
+                          WebkitBoxOrient: 'vertical' }}>
+                          {event.description}
                         </Typography>
-                      )}
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informations détaillées */}
-                    <Box sx={{ mb: 2 }}>
-                      <Box display="flex" alignItems="center" mb={1.5} sx={{
-                        p: 1,
-                        backgroundColor: '#f8fafc',
-                        borderRadius: 2
-                      }}>
-                        <CalendarIcon sx={{ fontSize: 18, mr: 1.5, color: eventStyle.color }} />
-                        <Typography variant="body2" fontWeight="600">
-                          {formatDate(event.date)}
-                        </Typography>
-                      </Box>
-                      
-                      {event.time && (
-                        <Box display="flex" alignItems="center" mb={1.5} sx={{
-                          p: 1,
-                          backgroundColor: '#f8fafc',
-                          borderRadius: 2
-                        }}>
-                          <TimeIcon sx={{ fontSize: 18, mr: 1.5, color: eventStyle.color }} />
-                          <Typography variant="body2">
-                            {formatTime(event.date + 'T' + event.time)}
+                        {longDesc && (
+                          <Typography onClick={() => setExpanded(p => ({ ...p, [event.id]: !p[event.id] }))}
+                            sx={{ fontSize: '0.75rem', color: tc.color, fontWeight: 600, cursor: 'pointer', mt: 0.5,
+                              '&:hover': { textDecoration: 'underline' } }}>
+                            {isExpanded ? 'Voir moins' : 'Voir plus'}
                           </Typography>
-                        </Box>
-                      )}
-
-                      {event.location && (
-                        <Box display="flex" alignItems="center" mb={1.5} sx={{
-                          p: 1,
-                          backgroundColor: '#f8fafc',
-                          borderRadius: 2
-                        }}>
-                          <LocationIcon sx={{ fontSize: 18, mr: 1.5, color: eventStyle.color }} />
-                          <Typography variant="body2">
-                            {event.location}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Footer avec actions */}
-                    <Box display="flex" alignItems="center" justifyContent="space-between" sx={{
-                      pt: 2,
-                      borderTop: '1px solid #f0f0f0'
-                    }}>
-                      <Box display="flex" alignItems="center">
-                        <Avatar sx={{ 
-                          width: 28, 
-                          height: 28, 
-                          mr: 1,
-                          background: `linear-gradient(135deg, ${eventStyle.color} 0%, ${eventStyle.color}dd 100%)`,
-                          fontSize: 12
-                        }}>
-                          <PersonIcon sx={{ fontSize: 16 }} />
-                        </Avatar>
-                        <Typography variant="caption" color="text.secondary" fontWeight="500">
-                          Équipe RH
-                        </Typography>
-                      </Box>
-                      
-                      <Box>
-                        <Tooltip title="Ajouter aux favoris">
-                          <IconButton size="small" sx={{ mr: 0.5 }}>
-                            <BookmarkIcon sx={{ fontSize: 18 }} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Partager">
-                          <IconButton size="small" sx={{ mr: 0.5 }}>
-                            <ShareIcon sx={{ fontSize: 18 }} />
-                          </IconButton>
-                        </Tooltip>
-                        {upcoming && (
-                          <Tooltip title="Rappel">
-                            <IconButton size="small">
-                              <NotificationIcon sx={{ fontSize: 18, color: eventStyle.color }} />
-                            </IconButton>
-                          </Tooltip>
                         )}
                       </Box>
-                    </Box>
+                    )}
+
+                    {/* Lieu */}
+                    {event.location && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1,
+                        p: 1, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
+                        <LocationIcon sx={{ fontSize: 14, color: tc.color, flexShrink: 0 }} />
+                        <Typography sx={{ fontSize: '0.78rem', color: '#334155' }} noWrap>
+                          {event.location}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Créé par */}
+                    {(event.created_by_name || event.created_by) && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1,
+                        p: 1, bgcolor: '#f8fafc', borderRadius: 1.5 }}>
+                        <PeopleIcon sx={{ fontSize: 14, color: '#94a3b8', flexShrink: 0 }} />
+                        <Typography sx={{ fontSize: '0.78rem', color: '#64748b' }} noWrap>
+                          {event.created_by_name || event.created_by?.first_name || 'Équipe RH'}
+                        </Typography>
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
@@ -370,7 +312,7 @@ const Events = () => {
           })}
         </Grid>
       )}
-    </Container>
+    </Box>
   );
 };
 

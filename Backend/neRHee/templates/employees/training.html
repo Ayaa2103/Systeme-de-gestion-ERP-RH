@@ -1,130 +1,163 @@
 {% extends 'base.html' %}
-
-{% block title %}Gestion des Formations{% endblock %}
+{% block title %}Gestion des Formations — neRHee{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0 text-gray-800">🎓 Gestion des Formations</h1>
-                    <p class="text-muted mb-0">Créer et gérer les programmes de formation</p>
+
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;color:white;"></i>
                 </div>
-                {% if user.role == 'hr_manager' %}
                 <div>
-                    <a href="{% url 'create_training' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Créer une Formation
-                    </a>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Gestion des Formations</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">{{ trainings|length }} formation{{ trainings|length|pluralize }} enregistrée{{ trainings|length|pluralize }}</p>
                 </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'dashboard' %}" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+                {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+                <a href="{% url 'create_training' %}" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                    <i class="bi bi-plus-lg"></i> Nouvelle Formation
+                </a>
                 {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Formations Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Liste des Formations</h6>
-                </div>
-                <div class="card-body">
-                    {% if trainings %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Nom de la Formation</th>
-                                    <th>Description</th>
-                                    <th>Période</th>
-                                    <th>Durée</th>
-                                    <th>Participants</th>
-                                    <th>Créé par</th>
-                                    <th>Statut</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for training in trainings %}
-                                <tr class="{% if training.status == 'pending' %}table-warning{% elif training.status == 'approved' %}table-success{% elif training.status == 'rejected' %}table-danger{% endif %}">
-                                    <td><strong>{{ training.name }}</strong></td>
-                                    <td>{{ training.description|truncatewords:8 }}</td>
-                                    <td>
-                                        <small class="text-muted">
-                                            {{ training.start_date|date:"d/m/Y" }} - {{ training.end_date|date:"d/m/Y" }}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ training.duration_days }} jour{{ training.duration_days|pluralize }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary">{{ training.employees.count }} participant{{ training.employees.count|pluralize }}</span>
-                                    </td>
-                                    <td>{{ training.created_by.get_full_name }}</td>
-                                    <td>
-                                        {% if training.status == 'pending' %}
-                                            <span class="badge bg-warning">🕰️ {{ training.get_status_display }}</span>
-                                        {% elif training.status == 'approved' %}
-                                            <span class="badge bg-success">✅ {{ training.get_status_display }}</span>
-                                            {% if training.is_active %}
-                                                <br><small class="text-success">En cours</small>
-                                            {% endif %}
-                                        {% elif training.status == 'rejected' %}
-                                            <span class="badge bg-danger">❌ {{ training.get_status_display }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if user.role == 'hr_director' and training.status == 'pending' %}
-                                            <div class="btn-group" role="group">
-                                                <a href="{% url 'approve_training' training.id %}" 
-                                                   class="btn btn-success btn-sm"
-                                                   onclick="return confirm('Approuver cette formation ?')">
-                                                    <i class="fas fa-check"></i>
-                                                </a>
-                                                <a href="{% url 'reject_training' training.id %}" 
-                                                   class="btn btn-danger btn-sm"
-                                                   onclick="return confirm('Rejeter cette formation ?')">
-                                                    <i class="fas fa-times"></i>
-                                                </a>
-                                            </div>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-graduation-cap fa-3x text-gray-300 mb-3"></i>
-                        <h5 class="text-gray-500">Aucune formation trouvée</h5>
-                        {% if user.role == 'hr_manager' %}
-                        <p class="text-muted">Commencez par créer votre première formation.</p>
-                        <a href="{% url 'create_training' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Créer une Formation
-                        </a>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;"><i class="bi bi-mortarboard-fill" style="color:#1976d2;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#1976d2;line-height:1;">{{ trainings|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Total</div>
+        </div></div>
     </div>
-
-    <!-- Navigation -->
-    <div class="row">
-        <div class="col-12 text-center">
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg mx-2">
-                <i class="fas fa-arrow-left"></i> Retour Dashboard
-            </a>
-            <a href="{% url 'employee_list' %}" class="btn btn-info btn-lg mx-2">
-                <i class="fas fa-users"></i> Liste Employés
-            </a>
-        </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#f57c0015;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;"><i class="bi bi-hourglass-split" style="color:#f57c00;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#f57c00;line-height:1;">{{ trainings|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">En attente</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#2e7d3215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;"><i class="bi bi-check-circle-fill" style="color:#2e7d32;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#2e7d32;line-height:1;">
+                {% with approved=trainings|length %}0{% endwith %}
+            </div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Approuvées</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#0288d115;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;"><i class="bi bi-play-circle-fill" style="color:#0288d1;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#0288d1;line-height:1;">0</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">En cours</div>
+        </div></div>
     </div>
 </div>
+
+<!-- Table formations -->
+<div class="card-modern bg-white overflow-hidden">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-table"></i></div>
+        <span class="card-header-title">Liste des Formations</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0" id="trainingTable">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Formation</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Période</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Durée</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Participants</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Créée par</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Statut</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for training in trainings %}
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:36px;height:36px;border-radius:9px;background:#1976d215;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="bi bi-mortarboard" style="color:#1976d2;font-size:0.9rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:0.875rem;font-weight:700;color:#1e293b;">{{ training.name }}</div>
+                                {% if training.description %}
+                                <div style="font-size:0.72rem;color:#94a3b8;">{{ training.description|truncatewords:8 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.8rem;color:#334155;">
+                        {{ training.start_date|date:"d/m/Y" }}<br>
+                        <span style="color:#94a3b8;font-size:0.72rem;">→ {{ training.end_date|date:"d/m/Y" }}</span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="background:#e3f2fd;color:#1565c0;border:1px solid #1565c030;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">
+                            {{ training.duration_days }} j
+                        </span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;font-weight:600;color:#475569;">
+                        {{ training.employees.count }} pers.
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.8rem;color:#64748b;">{{ training.created_by.get_full_name }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        {% if training.status == 'pending' %}
+                            <span style="background:#fff8e1;color:#f57c00;border:1px solid #f57c0030;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;">En attente</span>
+                        {% elif training.status == 'approved' %}
+                            <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;">Approuvée</span>
+                            {% if training.is_active %}<br><span style="font-size:0.7rem;color:#0288d1;">En cours</span>{% endif %}
+                        {% elif training.status == 'rejected' %}
+                            <span style="background:#ffebee;color:#c62828;border:1px solid #c6282830;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;">Rejetée</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{% url 'training_detail' training.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;">
+                                <i class="bi bi-eye"></i> Voir
+                            </a>
+                            {% if user.role == 'hr_director' and training.status == 'pending' %}
+                            <a href="{% url 'approve_training' training.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;"
+                               onclick="return confirm('Approuver cette formation ?')">
+                                <i class="bi bi-check-lg"></i> Approuver
+                            </a>
+                            <a href="{% url 'reject_training' training.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;"
+                               onclick="return confirm('Rejeter cette formation ?')">
+                                <i class="bi bi-x-lg"></i> Rejeter
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="padding:3rem;text-align:center;">
+                    <i class="bi bi-mortarboard" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:0.75rem;"></i>
+                    <p style="color:#94a3b8;margin:0;">Aucune formation enregistrée</p>
+                    {% if user.role == 'hr_manager' or user.role == 'hr_director' %}
+                    <a href="{% url 'create_training' %}" style="display:inline-flex;align-items:center;gap:0.4rem;margin-top:1rem;padding:0.5rem 1.2rem;background:#1976d2;color:white;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;">
+                        <i class="bi bi-plus-lg"></i> Créer la première formation
+                    </a>
+                    {% endif %}
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}

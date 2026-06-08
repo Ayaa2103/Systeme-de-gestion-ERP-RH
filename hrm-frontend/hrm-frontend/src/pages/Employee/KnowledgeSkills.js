@@ -1,552 +1,504 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Box,
-  Tabs,
-  Tab,
-  TextField,
-  MenuItem,
-  LinearProgress,
-  IconButton,
-  Tooltip
+  Box, Card, CardContent, Typography, Grid, Chip, Avatar,
+  LinearProgress, Skeleton, Button, TextField, InputAdornment,
+  Divider, Tooltip,
 } from '@mui/material';
 import {
-  School as SkillIcon,
-  Description as DocumentIcon,
-  Download as DownloadIcon,
+  Psychology as SkillIcon,
+  Description as DocIcon,
+  GetApp as DownloadIcon,
   Search as SearchIcon,
   Star as StarIcon,
-  StarBorder as StarBorderIcon,
-  Work as PositionIcon
+  Work as PositionIcon,
+  ArrowBack as BackIcon,
+  Lightbulb as KnowledgeIcon,
+  Verified as CertIcon,
 } from '@mui/icons-material';
 import { knowledgeService } from '../../services/knowledgeService';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-function TabPanel({ children, value, index, ...other }) {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`knowledge-tabpanel-${index}`}
-      aria-labelledby={`knowledge-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+/* ── Niveaux compétences ── */
+const SKILL_LEVELS = {
+  0: { label: 'Non évalué',  color: '#94a3b8', bg: '#f8fafc' },
+  1: { label: 'Débutant',    color: '#c62828', bg: '#ffebee' },
+  2: { label: 'Intermédiaire',color: '#f57c00', bg: '#fff8e1' },
+  3: { label: 'Confirmé',    color: '#1976d2', bg: '#e3f2fd' },
+  4: { label: 'Expert',      color: '#2e7d32', bg: '#e8f5e9' },
+};
+
+/* ── Niveaux polyvalence ── */
+const POLY_LEVELS = {
+  0: { label: 'Non formé',   color: '#94a3b8', bg: '#f8fafc' },
+  1: { label: 'Accompagné',  color: '#c62828', bg: '#ffebee' },
+  2: { label: 'Supervisé',   color: '#f57c00', bg: '#fff8e1' },
+  3: { label: 'Autonome',    color: '#1976d2', bg: '#e3f2fd' },
+  4: { label: 'Expert',      color: '#2e7d32', bg: '#e8f5e9' },
+};
+
+const DOC_CATEGORIES = {
+  quality:    { label: 'Qualité',     color: '#1976d2', bg: '#e3f2fd' },
+  production: { label: 'Production',  color: '#7b1fa2', bg: '#f3e5f5' },
+  security:   { label: 'Sécurité',    color: '#c62828', bg: '#ffebee' },
+  hr:         { label: 'RH',          color: '#2e7d32', bg: '#e8f5e9' },
+  other:      { label: 'Autre',       color: '#64748b', bg: '#f1f5f9' },
+};
+
+const colSx = {
+  fontSize: '0.68rem', fontWeight: 700, color: '#475569',
+  textTransform: 'uppercase', letterSpacing: '0.5px', py: 1, px: 2,
+  bgcolor: '#f8fafc', borderBottom: '2px solid #e8ecf0',
+};
+
+const NavHeader = ({ title, icon }) => (
+  <Box sx={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#1e40af)',
+    px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+    <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.12)', width: 28, height: 28, borderRadius: 1.5 }}>
+      {React.cloneElement(icon, { sx: { fontSize: 14, color: 'white' } })}
+    </Avatar>
+    <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '0.88rem' }}>{title}</Typography>
+  </Box>
+);
+
+/* ── Barre de niveau visuelle ── */
+const LevelBars = ({ level, max = 4 }) => (
+  <Box sx={{ display: 'flex', gap: 0.35, alignItems: 'flex-end', height: 16 }}>
+    {Array.from({ length: max }).map((_, i) => {
+      const lv = SKILL_LEVELS[level] || SKILL_LEVELS[0];
+      return (
+        <Box key={i} sx={{ width: 5, borderRadius: 1,
+          height: `${i <= level - 1 ? (i + 1) * 3 + 3 : 3}px`,
+          bgcolor: i <= level - 1 ? lv.color : '#e2e8f0' }} />
+      );
+    })}
+  </Box>
+);
+
+const TABS = ['Compétences', 'Polyvalence', 'Documents'];
 
 const KnowledgeSkills = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [skills, setSkills] = useState([]);
+  const navigate = useNavigate();
+  const [skills,    setSkills]    = useState([]);
   const [positions, setPositions] = useState([]);
   const [documents, setDocuments] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [loading,   setLoading]   = useState(true);
+  const [tab,       setTab]       = useState(0);
+  const [docSearch, setDocSearch] = useState('');
+  const [docFilter, setDocFilter] = useState('');
 
   useEffect(() => {
-    fetchData();
+    Promise.all([
+      knowledgeService.getEmployeeSkills(),
+      knowledgeService.getEmployeeDocuments(),
+    ]).then(([skillsData, docsData]) => {
+      setSkills(skillsData.skills    || []);
+      setPositions(skillsData.positions || []);
+      setDocuments(docsData.documents   || []);
+    }).catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [skillsData, documentsData] = await Promise.all([
-        knowledgeService.getEmployeeSkills(),
-        knowledgeService.getEmployeeDocuments()
-      ]);
-      
-      setSkills(skillsData.skills || []);
-      setPositions(skillsData.positions || []);
-      setDocuments(documentsData.documents || []);
-      setCategories(documentsData.categories || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const groupedSkills = useMemo(() =>
+    skills.reduce((acc, s) => {
+      const cat = s.category || 'Autres';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(s);
+      return acc;
+    }, {}), [skills]);
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  const getLevelColor = (level) => {
-    const colors = {
-      0: 'default',
-      1: 'error',
-      2: 'warning', 
-      3: 'info',
-      4: 'success'
-    };
-    return colors[level] || 'default';
-  };
-
-  const getLevelColorValue = (level) => {
-    const colors = {
-      0: '#9e9e9e',
-      1: '#f44336',
-      2: '#ff9800',
-      3: '#2196f3',
-      4: '#4caf50'
-    };
-    return colors[level] || '#9e9e9e';
-  };
-
-  const getLevelProgress = (level) => {
-    return (level / 4) * 100;
-  };
-
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || doc.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const groupedSkills = skills.reduce((acc, skill) => {
-    const category = skill.category || 'Autres';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(skill);
-    return acc;
-  }, {});
-
-  if (loading) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <LinearProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Chargement des formations et connaissances...
-        </Typography>
-      </Container>
+  const filteredDocs = useMemo(() => {
+    const q = docSearch.toLowerCase();
+    return documents.filter(d =>
+      (!q || d.title?.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)) &&
+      (!docFilter || d.category === docFilter)
     );
-  }
+  }, [documents, docSearch, docFilter]);
+
+  const certifiedCount  = skills.filter(s => s.certified).length;
+  const avgLevel        = skills.length > 0
+    ? (skills.reduce((s, k) => s + (k.level || 0), 0) / skills.length).toFixed(1)
+    : 0;
+  const autonomousCount = positions.filter(p => p.level >= 3).length;
+
+  if (loading) return (
+    <Box sx={{ p: 3 }}>
+      {[1,2,3].map(i => <Skeleton key={i} variant="rounded" height={80} sx={{ mb: 2, borderRadius: 3 }} />)}
+    </Box>
+  );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Formation et Connaissances
-      </Typography>
+    <Box sx={{ width: '100%' }}>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab 
-            icon={<SkillIcon />} 
-            label="Mes Compétences" 
-            iconPosition="start"
-          />
-          <Tab 
-            icon={<PositionIcon />} 
-            label="Ma Polyvalence" 
-            iconPosition="start"
-          />
-          <Tab 
-            icon={<DocumentIcon />} 
-            label="Documents" 
-            iconPosition="start"
-          />
-        </Tabs>
-      </Box>
-
-      <TabPanel value={tabValue} index={0}>
-        <Typography variant="h6" gutterBottom>
-          Matrice de Compétences
-        </Typography>
-        
-        {Object.keys(groupedSkills).length === 0 ? (
-          <Card>
-            <CardContent>
-              <Typography variant="body1" color="text.secondary">
-                Aucune compétence assignée pour le moment.
+      {/* ── Banner ── */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'hidden' }}>
+        <Box sx={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)',
+          px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button startIcon={<BackIcon />} onClick={() => navigate('/dashboard')} size="small"
+              sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', borderRadius: 2,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', color: 'white' } }}>
+              Retour
+            </Button>
+            <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'inline-flex' }}>
+              <KnowledgeIcon sx={{ fontSize: 22, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">Mes Connaissances</Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.3 }}>
+                Compétences · Polyvalence · Documents
               </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2.5 }}>
+            {[
+              { label: 'Compétences',  value: skills.length,    color: '#60a5fa' },
+              { label: 'Certifiées',   value: certifiedCount,   color: '#fbbf24' },
+              { label: 'Niveau moy.',  value: avgLevel,         color: '#86efac' },
+            ].map(s => (
+              <Box key={s.label} sx={{ textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.3rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>{s.label}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Card>
+
+      {/* ── Tabs custom ── */}
+      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', borderBottom: '1px solid #e8ecf0' }}>
+          {TABS.map((t, i) => (
+            <Box key={i} onClick={() => setTab(i)}
+              sx={{ px: 2.5, py: 1.5, cursor: 'pointer', flex: 1, textAlign: 'center',
+                borderBottom: `3px solid ${tab === i ? '#1976d2' : 'transparent'}`,
+                color: tab === i ? '#1976d2' : '#64748b',
+                fontWeight: tab === i ? 700 : 500, fontSize: '0.85rem', transition: 'all 0.15s',
+                '&:hover': { color: '#1976d2', bgcolor: '#f8fafc' } }}>
+              {t}
+            </Box>
+          ))}
+        </Box>
+      </Card>
+
+      {/* ══ Onglet 0 — Compétences ══ */}
+      {tab === 0 && (
+        Object.keys(groupedSkills).length === 0 ? (
+          <Card elevation={0} sx={{ borderRadius: 3, border: '2px dashed #e8ecf0' }}>
+            <CardContent sx={{ textAlign: 'center', py: 7 }}>
+              <SkillIcon sx={{ fontSize: 44, color: '#cbd5e1', mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">Aucune compétence assignée pour le moment</Typography>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-                Matrice de Compétences Professionnelles
-              </Typography>
-              
-              {Object.entries(groupedSkills).map(([category, categorySkills]) => (
-                <Box key={category} sx={{ mb: 4 }}>
-                  <Typography variant="h6" color="primary" sx={{ mb: 2, borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                    {category || 'Compétences Générales'}
-                  </Typography>
-                  
-                  <Grid container spacing={1} sx={{ mb: 2 }}>
-                    <Grid item xs={5}>
-                      <Typography variant="subtitle2" fontWeight="bold">Compétence</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                      <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Niveau</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Progression</Typography>
-                    </Grid>
-                    <Grid item xs={2}>
-                      <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Statut</Typography>
-                    </Grid>
-                  </Grid>
-                  
-                  {categorySkills.map((skill) => (
-                    <Grid container spacing={1} key={skill.id} sx={{ 
-                      py: 1.5, 
-                      borderBottom: '1px solid #f0f0f0',
-                      '&:hover': { backgroundColor: '#f9f9f9' }
-                    }}>
-                      <Grid item xs={5}>
-                        <Box>
-                          <Typography variant="body1" fontWeight="500">
-                            {skill.name}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Légende */}
+            <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8',
+                    textTransform: 'uppercase', letterSpacing: '0.5px' }}>Niveaux :</Typography>
+                  {Object.entries(SKILL_LEVELS).filter(([k]) => k > 0).map(([k, v]) => (
+                    <Box key={k} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <LevelBars level={parseInt(k)} />
+                      <Typography sx={{ fontSize: '0.72rem', color: v.color, fontWeight: 600 }}>{v.label}</Typography>
+                    </Box>
+                  ))}
+                  <Divider orientation="vertical" flexItem />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <StarIcon sx={{ fontSize: 14, color: '#ffc107' }} />
+                    <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>Certifié</Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {Object.entries(groupedSkills).map(([cat, catSkills]) => (
+              <Card key={cat} elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+                <NavHeader title={cat || 'Compétences générales'} icon={<SkillIcon />} />
+                <Box>
+                  {/* En-têtes de colonnes */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 110px 120px 60px',
+                    px: 2, py: 1, bgcolor: '#f8fafc', borderBottom: '2px solid #e8ecf0' }}>
+                    {['Compétence', 'Niveau', 'Progression', 'Certif.'].map(h => (
+                      <Typography key={h} sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#475569',
+                        textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</Typography>
+                    ))}
+                  </Box>
+                  {catSkills.map((skill, i) => {
+                    const lv = SKILL_LEVELS[skill.level] || SKILL_LEVELS[0];
+                    return (
+                      <Box key={skill.id}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 110px 120px 60px',
+                          px: 2, py: 1.5, alignItems: 'center',
+                          '&:hover': { bgcolor: '#f8fafc' }, transition: 'background 0.15s' }}>
+
+                          {/* Compétence */}
+                          <Box>
+                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                              {skill.name}
+                            </Typography>
+                            {skill.description && (
+                              <Typography variant="caption" color="text.secondary" noWrap
+                                sx={{ display: 'block', maxWidth: 220 }}>
+                                {skill.description}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          {/* Niveau */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LevelBars level={skill.level || 0} />
+                            <Chip label={skill.level_display || lv.label} size="small"
+                              sx={{ bgcolor: lv.bg, color: lv.color, fontWeight: 700, fontSize: '0.65rem',
+                                height: 20, border: `1px solid ${lv.color}25` }} />
+                          </Box>
+
+                          {/* Progression */}
+                          <Box sx={{ pr: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.4 }}>
+                              <LinearProgress variant="determinate" value={(skill.level / 4) * 100}
+                                sx={{ flex: 1, height: 5, borderRadius: 3, bgcolor: `${lv.color}12`,
+                                  '& .MuiLinearProgress-bar': { bgcolor: lv.color, borderRadius: 3 } }} />
+                              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: lv.color, ml: 1, minWidth: 28 }}>
+                                {Math.round((skill.level / 4) * 100)}%
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Certification */}
+                          <Box sx={{ textAlign: 'center' }}>
+                            {skill.certified ? (
+                              <Tooltip title={skill.certification_date
+                                ? `Certifié le ${format(new Date(skill.certification_date), 'dd MMM yyyy', { locale: fr })}`
+                                : 'Certifié'}>
+                                <StarIcon sx={{ fontSize: 18, color: '#ffc107' }} />
+                              </Tooltip>
+                            ) : (
+                              <StarIcon sx={{ fontSize: 18, color: '#e2e8f0' }} />
+                            )}
+                          </Box>
+                        </Box>
+                        {i < catSkills.length - 1 && <Divider />}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Card>
+            ))}
+          </Box>
+        )
+      )}
+
+      {/* ══ Onglet 1 — Polyvalence ══ */}
+      {tab === 1 && (
+        positions.length === 0 ? (
+          <Card elevation={0} sx={{ borderRadius: 3, border: '2px dashed #e8ecf0' }}>
+            <CardContent sx={{ textAlign: 'center', py: 7 }}>
+              <PositionIcon sx={{ fontSize: 44, color: '#cbd5e1', mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">Aucune polyvalence assignée pour le moment</Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Stat polyvalence */}
+            <Grid container spacing={2}>
+              {[
+                { label: 'Postes évalués', value: positions.length,    color: '#1976d2', bg: '#eff6ff' },
+                { label: 'Autonomes+',     value: autonomousCount,     color: '#2e7d32', bg: '#e8f5e9' },
+                { label: 'Non formés',     value: positions.filter(p => p.level === 0).length, color: '#94a3b8', bg: '#f8fafc' },
+              ].map(s => (
+                <Grid item xs={4} key={s.label}>
+                  <Card elevation={0} sx={{ border: `1px solid ${s.color}20`, borderRadius: 3 }}>
+                    <CardContent sx={{ p: 2, textAlign: 'center' }}>
+                      <Typography variant="h4" fontWeight={800} sx={{ color: s.color, lineHeight: 1 }}>{s.value}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>{s.label}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Légende polyvalence */}
+            <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8',
+                    textTransform: 'uppercase', letterSpacing: '0.5px' }}>Autonomie :</Typography>
+                  {Object.entries(POLY_LEVELS).filter(([k]) => k > 0).map(([k, v]) => (
+                    <Box key={k} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Box sx={{ display: 'flex', gap: 0.25 }}>
+                        {[1,2,3,4].map(i => (
+                          <Box key={i} sx={{ width: i <= parseInt(k) ? 7 : 5, height: i <= parseInt(k) ? 7 : 5,
+                            borderRadius: 0.75, bgcolor: i <= parseInt(k) ? v.color : '#e2e8f0' }} />
+                        ))}
+                      </Box>
+                      <Typography sx={{ fontSize: '0.72rem', color: v.color, fontWeight: 600 }}>{v.label}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Tableau polyvalence */}
+            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+              <NavHeader title="Ma polyvalence par poste" icon={<PositionIcon />} />
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px',
+                px: 2, py: 1, bgcolor: '#f8fafc', borderBottom: '2px solid #e8ecf0' }}>
+                {['Poste / Département', 'Autonomie', 'Progression'].map(h => (
+                  <Typography key={h} sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#475569',
+                    textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</Typography>
+                ))}
+              </Box>
+              {positions.map((pos, i) => {
+                const lv = POLY_LEVELS[pos.level] || POLY_LEVELS[0];
+                return (
+                  <Box key={pos.id}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px',
+                      px: 2, py: 1.5, alignItems: 'center',
+                      '&:hover': { bgcolor: '#f8fafc' }, transition: 'background 0.15s' }}>
+                      <Box>
+                        <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>
+                          {pos.name}
+                        </Typography>
+                        {pos.department && (
+                          <Typography variant="caption" color="text.secondary">{pos.department}</Typography>
+                        )}
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 0.25 }}>
+                          {[1,2,3,4].map(i => (
+                            <Box key={i} sx={{ width: i <= pos.level ? 8 : 5, height: i <= pos.level ? 8 : 5,
+                              borderRadius: 0.75, bgcolor: i <= pos.level ? lv.color : '#e2e8f0' }} />
+                          ))}
+                        </Box>
+                        <Chip label={pos.level_display || lv.label} size="small"
+                          sx={{ bgcolor: lv.bg, color: lv.color, fontWeight: 700,
+                            fontSize: '0.62rem', height: 18, border: `1px solid ${lv.color}25` }} />
+                      </Box>
+                      <Box sx={{ pr: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <LinearProgress variant="determinate" value={(pos.level / 4) * 100}
+                            sx={{ flex: 1, height: 5, borderRadius: 3, bgcolor: `${lv.color}12`,
+                              '& .MuiLinearProgress-bar': { bgcolor: lv.color, borderRadius: 3 } }} />
+                          <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: lv.color, minWidth: 28 }}>
+                            {Math.round((pos.level / 4) * 100)}%
                           </Typography>
-                          {skill.description && (
+                        </Box>
+                      </Box>
+                    </Box>
+                    {i < positions.length - 1 && <Divider />}
+                  </Box>
+                );
+              })}
+            </Card>
+          </Box>
+        )
+      )}
+
+      {/* ══ Onglet 2 — Documents ══ */}
+      {tab === 2 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Search + filter */}
+          <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                <TextField placeholder="Rechercher un document…" value={docSearch}
+                  onChange={e => setDocSearch(e.target.value)} size="small"
+                  sx={{ flex: 1, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 16, color: '#94a3b8' }} /></InputAdornment> }} />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {[{ val: '', label: 'Tous' }, ...Object.entries(DOC_CATEGORIES).map(([k,v]) => ({ val: k, label: v.label }))].map(f => {
+                    const active = docFilter === f.val;
+                    const cfg = f.val ? DOC_CATEGORIES[f.val] : null;
+                    return (
+                      <Box key={f.val} onClick={() => setDocFilter(p => p === f.val ? '' : f.val)}
+                        sx={{ px: 1.5, py: 0.4, borderRadius: 50, cursor: 'pointer', fontSize: '0.78rem',
+                          fontWeight: active ? 700 : 500, userSelect: 'none', transition: 'all 0.15s',
+                          border: `1px solid ${active ? (cfg?.color || '#1976d2') : '#e8ecf0'}`,
+                          bgcolor: active ? (cfg?.bg || '#eff6ff') : 'white',
+                          color: active ? (cfg?.color || '#1976d2') : '#475569' }}>
+                        {f.label}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Documents grid */}
+          {filteredDocs.length === 0 ? (
+            <Card elevation={0} sx={{ borderRadius: 3, border: '2px dashed #e8ecf0' }}>
+              <CardContent sx={{ textAlign: 'center', py: 7 }}>
+                <DocIcon sx={{ fontSize: 44, color: '#cbd5e1', mb: 1 }} />
+                <Typography variant="body2" color="text.secondary">Aucun document trouvé</Typography>
+              </CardContent>
+            </Card>
+          ) : (
+            <Grid container spacing={2}>
+              {filteredDocs.map(doc => {
+                const cat = DOC_CATEGORIES[doc.category] || DOC_CATEGORIES.other;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={doc.id}>
+                    <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${cat.color}20`,
+                      borderTop: `3px solid ${cat.color}`, height: '100%', overflow: 'hidden',
+                      transition: 'all 0.2s', '&:hover': { boxShadow: `0 4px 16px ${cat.color}12` } }}>
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.3 }}>
+                              {doc.title}
+                            </Typography>
+                          </Box>
+                          {doc.file_url && (
+                            <Tooltip title="Télécharger">
+                              <Box component="a"
+                                href={`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${doc.file_url}`}
+                                download target="_blank" rel="noopener noreferrer"
+                                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  width: 28, height: 28, borderRadius: 1.5, bgcolor: cat.bg, flexShrink: 0, ml: 1,
+                                  color: cat.color, textDecoration: 'none',
+                                  '&:hover': { filter: 'brightness(0.95)' } }}>
+                                <DownloadIcon sx={{ fontSize: 15 }} />
+                              </Box>
+                            </Tooltip>
+                          )}
+                        </Box>
+
+                        <Chip label={cat.label} size="small"
+                          sx={{ bgcolor: cat.bg, color: cat.color, fontWeight: 700,
+                            fontSize: '0.68rem', height: 20, border: `1px solid ${cat.color}25`, mb: 1.25 }} />
+
+                        {doc.description && (
+                          <Typography sx={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.6, mb: 1.5,
+                            overflow: 'hidden', display: '-webkit-box',
+                            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {doc.description}
+                          </Typography>
+                        )}
+
+                        <Divider sx={{ mb: 1.25 }} />
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Chip label={`v${doc.version || '1.0'}`} size="small"
+                            sx={{ bgcolor: '#f8fafc', color: '#64748b', fontSize: '0.65rem', height: 18 }} />
+                          {doc.updated_at && (
                             <Typography variant="caption" color="text.secondary">
-                              {skill.description}
+                              {format(new Date(doc.updated_at), 'dd MMM yyyy', { locale: fr })}
                             </Typography>
                           )}
                         </Box>
-                      </Grid>
-                      
-                      <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Chip 
-                          label={skill.level_display} 
-                          size="small"
-                          sx={{
-                            backgroundColor: getLevelColorValue(skill.level),
-                            color: 'white',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                      </Grid>
-                      
-                      <Grid item xs={3} sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ width: '100%', px: 1 }}>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={getLevelProgress(skill.level)}
-                            sx={{
-                              height: 8,
-                              borderRadius: 4,
-                              backgroundColor: '#e0e0e0',
-                              '& .MuiLinearProgress-bar': {
-                                backgroundColor: getLevelColorValue(skill.level),
-                                borderRadius: 4
-                              }
-                            }}
-                          />
-                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', textAlign: 'center' }}>
-                            {Math.round(getLevelProgress(skill.level))}%
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      
-                      <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {skill.certified ? (
-                          <Tooltip title={`Certifié le ${skill.certification_date ? new Date(skill.certification_date).toLocaleDateString('fr-FR') : ''}`}>
-                            <StarIcon sx={{ color: '#ffa726' }} />
-                          </Tooltip>
-                        ) : (
-                          <Tooltip title="Non certifié">
-                            <StarBorderIcon sx={{ color: '#bdbdbd' }} />
-                          </Tooltip>
-                        )}
-                      </Grid>
-                    </Grid>
-                  ))}
-                </Box>
-              ))}
-              
-              <Box sx={{ mt: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>Légende des niveaux :</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#9e9e9e', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Non évalué</Typography>
-                    </Box>
+                      </CardContent>
+                    </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#f44336', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Débutant</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#ff9800', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Intermédiaire</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#2196f3', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Confirmé</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#4caf50', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Expert</Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={1}>
-        <Typography variant="h6" gutterBottom>
-          Matrice de Polyvalence
-        </Typography>
-        
-        {positions.length === 0 ? (
-          <Card>
-            <CardContent>
-              <Typography variant="body1" color="text.secondary">
-                Aucune polyvalence assignée pour le moment.
-              </Typography>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-                Polyvalence sur Différents Postes
-              </Typography>
-              
-              <Grid container spacing={1} sx={{ mb: 2 }}>
-                <Grid item xs={5}>
-                  <Typography variant="subtitle2" fontWeight="bold">Poste</Typography>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Niveau</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Autonomie</Typography>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="subtitle2" fontWeight="bold" textAlign="center">Statut</Typography>
-                </Grid>
-              </Grid>
-              
-              {positions.map((position) => (
-                <Grid container spacing={1} key={position.id} sx={{ 
-                  py: 1.5, 
-                  borderBottom: '1px solid #f0f0f0',
-                  '&:hover': { backgroundColor: '#f9f9f9' }
-                }}>
-                  <Grid item xs={5}>
-                    <Box>
-                      <Typography variant="body1" fontWeight="500">
-                        {position.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {position.department}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  
-                  <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Chip 
-                      label={position.level_display || `Niveau ${position.level}`} 
-                      size="small"
-                      sx={{
-                        backgroundColor: getLevelColorValue(position.level),
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={3} sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ width: '100%', px: 1 }}>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={getLevelProgress(position.level)}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: '#e0e0e0',
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: getLevelColorValue(position.level),
-                            borderRadius: 4
-                          }
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', textAlign: 'center' }}>
-                        {Math.round(getLevelProgress(position.level))}%
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  
-                  <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {position.is_current ? (
-                      <Tooltip title="Poste actuel">
-                        <StarIcon sx={{ color: '#ffa726' }} />
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Polyvalence">
-                        <StarBorderIcon sx={{ color: '#bdbdbd' }} />
-                      </Tooltip>
-                    )}
-                  </Grid>
-                </Grid>
-              ))}
-              
-              <Box sx={{ mt: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>Légende des niveaux d'autonomie :</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#9e9e9e', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Non formé</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#f44336', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Accompagné</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#ff9800', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Supervisé</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#2196f3', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Autonome</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box display="flex" alignItems="center">
-                      <Box sx={{ width: 16, height: 16, backgroundColor: '#4caf50', borderRadius: 1, mr: 1 }} />
-                      <Typography variant="caption">Expert</Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={2}>
-        <Box mb={3}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                placeholder="Rechercher un document..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                }}
-              />
+                );
+              })}
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                select
-                fullWidth
-                label="Catégorie"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <MenuItem value="">Toutes les catégories</MenuItem>
-                {categories.map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-          </Grid>
-        </Box>
-
-        <Grid container spacing={3}>
-          {filteredDocuments.length === 0 ? (
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="body1" color="text.secondary">
-                    Aucun document trouvé.
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ) : (
-            filteredDocuments.map((document) => (
-              <Grid item xs={12} md={6} lg={4} key={document.id}>
-                <Card>
-                  <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                      <Typography variant="h6" component="div">
-                        {document.title}
-                      </Typography>
-                      {document.file_url && (
-                        <Tooltip title="Télécharger">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              const link = window.document.createElement('a');
-                              link.href = `http://127.0.0.1:8000${document.file_url}`;
-                              link.download = document.title;
-                              link.target = '_blank';
-                              window.document.body.appendChild(link);
-                              link.click();
-                              window.document.body.removeChild(link);
-                            }}
-                          >
-                            <DownloadIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                    
-                    <Chip 
-                      label={document.category_display} 
-                      size="small" 
-                      color="primary" 
-                      variant="outlined"
-                      sx={{ mb: 2 }}
-                    />
-                    
-                    {document.description && (
-                      <Typography variant="body2" color="text.secondary" mb={2}>
-                        {document.description}
-                      </Typography>
-                    )}
-                    
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="caption" color="text.secondary">
-                        Version {document.version}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(document.updated_at).toLocaleDateString('fr-FR')}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
           )}
-        </Grid>
-      </TabPanel>
-    </Container>
+        </Box>
+      )}
+    </Box>
   );
 };
 

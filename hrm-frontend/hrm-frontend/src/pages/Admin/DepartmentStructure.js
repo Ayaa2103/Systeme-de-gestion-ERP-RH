@@ -41,6 +41,21 @@ const statCard = (icon, value, label, color) => (
   </Card>
 );
 
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2, fontSize: '0.875rem',
+    '&:hover fieldset': { borderColor: '#1976d2' },
+    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+  },
+};
+
+const SLabel = ({ label, required }) => (
+  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569',
+    textTransform: 'uppercase', letterSpacing: '0.5px', mb: 0.75 }}>
+    {label}{required && <span style={{ color: '#ef4444', marginLeft: 3 }}>*</span>}
+  </Typography>
+);
+
 // ── Modal départements ───────────────────────────────────────────────────
 const DeptModal = ({ open, dept, onClose, onSaved }) => {
   const [form, setForm] = useState({ name: '', code: '', description: '' });
@@ -65,30 +80,78 @@ const DeptModal = ({ open, dept, onClose, onSaved }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
-        <Avatar sx={{ bgcolor: '#1976d215', width: 36, height: 36 }}>
-          <BusinessIcon sx={{ color: '#1976d2', fontSize: 18 }} />
-        </Avatar>
-        <Typography fontWeight={700}>{dept ? 'Modifier le département' : 'Nouveau département'}</Typography>
-        <IconButton onClick={onClose} sx={{ ml: 'auto' }} size="small"><CloseIcon fontSize="small" /></IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 0.5 }}>
-          <TextField label="Nom du département *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-            fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-          <TextField label="Code *" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))}
-            fullWidth size="small" placeholder="ex: IT, RH, FIN" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-          <TextField label="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-            fullWidth size="small" multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+
+      {/* Header navy */}
+      <Box sx={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#1e40af)',
+        px: 3, py: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+          <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.15)', width: 38, height: 38, borderRadius: 2 }}>
+            <BusinessIcon sx={{ color: 'white', fontSize: 20 }} />
+          </Avatar>
+          <Box>
+            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
+              {dept ? 'Modifier le département' : 'Nouveau département'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+              {dept ? 'Mettre à jour les informations' : 'Créer un nouveau département'}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton size="small" onClick={onClose}
+          sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      <DialogContent sx={{ p: 3 }}>
+        {error && <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert>}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+
+          {/* Nom */}
+          <Box>
+            <SLabel label="Nom du département" required />
+            <TextField autoFocus fullWidth size="small" value={form.name}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              placeholder="ex: Informatique, Ressources Humaines…" sx={fieldSx} />
+          </Box>
+
+          {/* Code */}
+          <Box>
+            <SLabel label="Code" required />
+            <TextField fullWidth size="small" value={form.code}
+              onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+              placeholder="ex: IT, RH, FIN, MKT…" sx={fieldSx}
+              inputProps={{ maxLength: 10, style: { letterSpacing: '2px', fontWeight: 700 } }} />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Identifiant court unique · majuscules recommandées
+            </Typography>
+          </Box>
+
+          {/* Description */}
+          <Box>
+            <SLabel label="Description" />
+            <TextField fullWidth size="small" multiline rows={3} value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              placeholder="Décrivez brièvement le rôle et les responsabilités de ce département…" sx={fieldSx} />
+          </Box>
+
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2 }}>Annuler</Button>
+
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+        <Button onClick={onClose}
+          sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b', flex: 1,
+            border: '1px solid #e2e8f0', '&:hover': { bgcolor: '#f8fafc' } }}>
+          Annuler
+        </Button>
         <Button onClick={handleSave} disabled={loading} variant="contained"
-          sx={{ borderRadius: 2, bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}>
-          <CheckIcon sx={{ mr: 0.5, fontSize: 16 }} /> {dept ? 'Enregistrer' : 'Créer'}
+          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: 2,
+            background: 'linear-gradient(135deg,#1e3a5f,#1e40af)',
+            '&:hover': { background: 'linear-gradient(135deg,#0f172a,#1e3a5f)' } }}>
+          <CheckIcon sx={{ mr: 0.5, fontSize: 16 }} />
+          {loading ? 'Enregistrement…' : dept ? 'Enregistrer les modifications' : 'Créer le département'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -120,37 +183,112 @@ const PosModal = ({ open, pos, departments, onClose, onSaved }) => {
     } finally { setLoading(false); }
   };
 
+  const selectedDept = departments.find(d => d.id === form.department_id);
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
-        <Avatar sx={{ bgcolor: '#7b1fa215', width: 36, height: 36 }}>
-          <WorkIcon sx={{ color: '#7b1fa2', fontSize: 18 }} />
-        </Avatar>
-        <Typography fontWeight={700}>{pos ? 'Modifier le poste' : 'Nouveau poste'}</Typography>
-        <IconButton onClick={onClose} sx={{ ml: 'auto' }} size="small"><CloseIcon fontSize="small" /></IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 0.5 }}>
-          <TextField label="Nom du poste *" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-            fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-          <FormControl fullWidth size="small">
-            <InputLabel>Département *</InputLabel>
-            <Select value={form.department_id} label="Département *"
-              onChange={e => setForm(p => ({ ...p, department_id: e.target.value }))}
-              sx={{ borderRadius: 2 }}>
-              {departments.map(d => <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <TextField label="Description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-            fullWidth size="small" multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+
+      {/* Header navy violet */}
+      <Box sx={{ background: 'linear-gradient(135deg,#2d1b69,#4a1d96,#7c3aed)',
+        px: 3, py: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+          <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.15)', width: 38, height: 38, borderRadius: 2 }}>
+            <WorkIcon sx={{ color: 'white', fontSize: 20 }} />
+          </Avatar>
+          <Box>
+            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
+              {pos ? 'Modifier le poste' : 'Nouveau poste'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+              {pos ? 'Mettre à jour les informations' : 'Créer un nouveau poste dans un département'}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton size="small" onClick={onClose}
+          sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      <DialogContent sx={{ p: 3 }}>
+        {error && <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert>}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+
+          {/* Nom du poste */}
+          <Box>
+            <SLabel label="Nom du poste" required />
+            <TextField autoFocus fullWidth size="small" value={form.name}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              placeholder="ex: Développeur Full-Stack, Chef de projet, Analyste…"
+              sx={{ ...fieldSx, '& .MuiOutlinedInput-root': { ...fieldSx['& .MuiOutlinedInput-root'],
+                '&:hover fieldset': { borderColor: '#7c3aed' },
+                '&.Mui-focused fieldset': { borderColor: '#7c3aed' } } }} />
+          </Box>
+
+          {/* Département — sélection visuelle */}
+          <Box>
+            <SLabel label="Département" required />
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {departments.map(d => (
+                <Box key={d.id} onClick={() => setForm(p => ({ ...p, department_id: d.id }))}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75,
+                    borderRadius: 2, cursor: 'pointer', transition: 'all 0.15s',
+                    border: `2px solid ${form.department_id === d.id ? '#7c3aed' : '#e8ecf0'}`,
+                    bgcolor: form.department_id === d.id ? '#f5f3ff' : 'white',
+                    '&:hover': { borderColor: '#7c3aed', bgcolor: '#faf5ff' } }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%',
+                    bgcolor: form.department_id === d.id ? '#7c3aed' : '#e2e8f0' }} />
+                  <Typography sx={{ fontSize: '0.82rem', fontWeight: form.department_id === d.id ? 700 : 500,
+                    color: form.department_id === d.id ? '#7c3aed' : '#334155' }}>
+                    {d.name}
+                  </Typography>
+                  {d.code && (
+                    <Box sx={{ px: 0.75, py: 0.1, borderRadius: 1, bgcolor: form.department_id === d.id ? '#ede9fe' : '#f1f5f9',
+                      fontSize: '0.62rem', fontWeight: 700,
+                      color: form.department_id === d.id ? '#7c3aed' : '#64748b', lineHeight: 1.6 }}>
+                      {d.code}
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+            {selectedDept && (
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <CheckIcon sx={{ fontSize: 14, color: '#7c3aed' }} />
+                <Typography sx={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600 }}>
+                  Département sélectionné : {selectedDept.name}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* Description */}
+          <Box>
+            <SLabel label="Description" />
+            <TextField fullWidth size="small" multiline rows={3} value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              placeholder="Décrivez les responsabilités et missions de ce poste…"
+              sx={{ ...fieldSx, '& .MuiOutlinedInput-root': { ...fieldSx['& .MuiOutlinedInput-root'],
+                '&:hover fieldset': { borderColor: '#7c3aed' },
+                '&.Mui-focused fieldset': { borderColor: '#7c3aed' } } }} />
+          </Box>
+
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2 }}>Annuler</Button>
+
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+        <Button onClick={onClose}
+          sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b', flex: 1,
+            border: '1px solid #e2e8f0', '&:hover': { bgcolor: '#f8fafc' } }}>
+          Annuler
+        </Button>
         <Button onClick={handleSave} disabled={loading} variant="contained"
-          sx={{ borderRadius: 2, bgcolor: '#7b1fa2', '&:hover': { bgcolor: '#6a1b9a' } }}>
-          <CheckIcon sx={{ mr: 0.5, fontSize: 16 }} /> {pos ? 'Enregistrer' : 'Créer'}
+          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: 2,
+            background: 'linear-gradient(135deg,#4a1d96,#7c3aed)',
+            '&:hover': { background: 'linear-gradient(135deg,#2d1b69,#4a1d96)' } }}>
+          <CheckIcon sx={{ mr: 0.5, fontSize: 16 }} />
+          {loading ? 'Enregistrement…' : pos ? 'Enregistrer les modifications' : 'Créer le poste'}
         </Button>
       </DialogActions>
     </Dialog>

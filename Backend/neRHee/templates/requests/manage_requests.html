@@ -1,125 +1,300 @@
 {% extends 'base.html' %}
-
-{% block title %}Gestion des Demandes{% endblock %}
+{% block title %}Gestion des Demandes — neRHee{% endblock %}
 
 {% block content %}
-<h1>Gestion des Demandes</h1>
 
-<h3>Demandes de Congé en Attente</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Employé</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Type</th>
-            <th>Créé le</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in leave_requests %}
-        <tr>
-            <td>{{ request.requester.user.get_full_name }}</td>
-            <td>{{ request.start_date }}</td>
-            <td>{{ request.end_date }}</td>
-            <td>{{ request.leave_type }}</td>
-            <td>{{ request.created_at|date:"d/m/Y" }}</td>
-            <td>
-                <a href="{% url 'approve_request' 'leave' request.id %}" class="btn btn-success">Approuver</a>
-                <a href="{% url 'reject_request' 'leave' request.id %}" class="btn btn-danger">Rejeter</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6">Aucune demande de congé en attente</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.5rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-inbox-fill" style="font-size:1.3rem;color:white;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold" style="color:white;">Gestion des Demandes</h5>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.6);font-size:0.8rem;">
+                        {% with total=leave_requests|length|add:attestation_requests|length|add:mission_requests|length|add:payslip_requests|length %}
+                        {{ total }} demande{{ total|pluralize }} en attente de traitement
+                        {% endwith %}
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'dashboard' %}" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
+                <i class="bi bi-arrow-left"></i> Retour dashboard
+            </a>
+        </div>
+    </div>
+</div>
 
-<h3>Demandes d'Attestation en Attente</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Employé</th>
-            <th>Objet</th>
-            <th>Type</th>
-            <th>Créé le</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in attestation_requests %}
-        <tr>
-            <td>{{ request.requester.user.get_full_name }}</td>
-            <td>{{ request.purpose }}</td>
-            <td>{{ request.attestation_type }}</td>
-            <td>{{ request.created_at|date:"d/m/Y" }}</td>
-            <td>
-                <a href="{% url 'approve_request' 'attestation' request.id %}" class="btn btn-success">Approuver</a>
-                <a href="{% url 'reject_request' 'attestation' request.id %}" class="btn btn-danger">Rejeter</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">Aucune demande d'attestation en attente</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Stat cards par type -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-umbrella" style="color:#1976d2;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#1976d2;line-height:1;">{{ leave_requests|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Congés</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#7b1fa215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-file-earmark-text" style="color:#7b1fa2;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#7b1fa2;line-height:1;">{{ attestation_requests|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Attestations</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#e6510015;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-airplane" style="color:#e65100;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#e65100;line-height:1;">{{ mission_requests|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Missions</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-sm-3">
+        <div class="card-modern bg-white h-100"><div class="p-3">
+            <div style="width:34px;height:34px;background:#2e7d3215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                <i class="bi bi-receipt" style="color:#2e7d32;font-size:0.95rem;"></i></div>
+            <div class="fw-bold" style="font-size:1.5rem;color:#2e7d32;line-height:1;">{{ payslip_requests|length }}</div>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">Bulletins</div>
+        </div></div>
+    </div>
+</div>
 
-<h3>Demandes de Mission en Attente</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Employé</th>
-            <th>Destination</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Créé le</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in mission_requests %}
-        <tr>
-            <td>{{ request.requester.user.get_full_name }}</td>
-            <td>{{ request.destination }}</td>
-            <td>{{ request.start_date }}</td>
-            <td>{{ request.end_date }}</td>
-            <td>{{ request.created_at|date:"d/m/Y" }}</td>
-            <td>
-                <a href="{% url 'approve_request' 'mission' request.id %}" class="btn btn-success">Approuver</a>
-                <a href="{% url 'reject_request' 'mission' request.id %}" class="btn btn-danger">Rejeter</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6">Aucune demande de mission en attente</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Demandes de Congé -->
+<div class="card-modern bg-white overflow-hidden mb-4">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-umbrella-fill"></i></div>
+        <span class="card-header-title">Demandes de Congé</span>
+        <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.72rem;">{{ leave_requests|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Employé</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Début</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Fin</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Type</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Soumis le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;white-space:nowrap;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in leave_requests %}
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#1976d2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.72rem;flex-shrink:0;">
+                                {{ req.requester.user.first_name|first|upper }}{{ req.requester.user.last_name|first|upper }}
+                            </div>
+                            <div>
+                                <div style="font-size:0.82rem;font-weight:600;color:#1e293b;">{{ req.requester.user.get_full_name }}</div>
+                                <div style="font-size:0.7rem;color:#94a3b8;">{{ req.requester.matricule }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ req.start_date|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ req.end_date|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="background:#eff6ff;color:#1976d2;border:1px solid #bfdbfe;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;">{{ req.leave_type }}</span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.78rem;color:#64748b;">{{ req.created_at|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'approve_request' 'leave' req.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;"
+                               onclick="return confirm('Approuver cette demande ?')">
+                                <i class="bi bi-check-lg"></i> Approuver
+                            </a>
+                            <a href="{% url 'reject_request' 'leave' req.id %}"
+                               style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;"
+                               onclick="return confirm('Rejeter cette demande ?')">
+                                <i class="bi bi-x-lg"></i> Rejeter
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="padding:2.5rem;text-align:center;">
+                    <i class="bi bi-check-circle" style="font-size:2rem;color:#2e7d32;opacity:0.4;display:block;margin-bottom:0.5rem;"></i>
+                    <p style="color:#94a3b8;margin:0;font-size:0.85rem;">Aucune demande de congé en attente</p>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<h3>Demandes de Bulletin de Paie en Attente</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Employé</th>
-            <th>Période</th>
-            <th>Créé le</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in payslip_requests %}
-        <tr>
-            <td>{{ request.requester.user.get_full_name }}</td>
-            <td>{{ request.periode_mois }}</td>
-            <td>{{ request.created_at|date:"d/m/Y" }}</td>
-            <td>
-                <a href="{% url 'approve_request' 'payslip' request.id %}" class="btn btn-success">Approuver</a>
-                <a href="{% url 'reject_request' 'payslip' request.id %}" class="btn btn-danger">Rejeter</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">Aucune demande de bulletin de paie en attente</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- Demandes d'Attestation -->
+<div class="card-modern bg-white overflow-hidden mb-4">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+        <span class="card-header-title">Demandes d'Attestation</span>
+        <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.72rem;">{{ attestation_requests|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Employé</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Objectif</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Type</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Soumis le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in attestation_requests %}
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#7b1fa2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.72rem;flex-shrink:0;">
+                                {{ req.requester.user.first_name|first|upper }}{{ req.requester.user.last_name|first|upper }}
+                            </div>
+                            <div style="font-size:0.82rem;font-weight:600;color:#1e293b;">{{ req.requester.user.get_full_name }}</div>
+                        </div>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ req.purpose|truncatechars:40 }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="background:#f3e5f5;color:#7b1fa2;border:1px solid #7b1fa230;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;">{{ req.attestation_type }}</span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.78rem;color:#64748b;">{{ req.created_at|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'approve_request' 'attestation' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Approuver ?')">
+                                <i class="bi bi-check-lg"></i> Approuver
+                            </a>
+                            <a href="{% url 'reject_request' 'attestation' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Rejeter ?')">
+                                <i class="bi bi-x-lg"></i> Rejeter
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:0.85rem;">
+                    <i class="bi bi-check-circle" style="font-size:2rem;color:#2e7d32;opacity:0.4;display:block;margin-bottom:0.5rem;"></i>
+                    Aucune demande d'attestation en attente
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Demandes de Mission -->
+<div class="card-modern bg-white overflow-hidden mb-4">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-airplane-fill"></i></div>
+        <span class="card-header-title">Ordres de Mission</span>
+        <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.72rem;">{{ mission_requests|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Employé</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Destination</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Départ</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Retour</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Soumis le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in mission_requests %}
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.72rem;flex-shrink:0;">
+                                {{ req.requester.user.first_name|first|upper }}{{ req.requester.user.last_name|first|upper }}
+                            </div>
+                            <div style="font-size:0.82rem;font-weight:600;color:#1e293b;">{{ req.requester.user.get_full_name }}</div>
+                        </div>
+                    </td>
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="background:#fff3e0;color:#e65100;border:1px solid #e6510030;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">{{ req.destination }}</span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ req.start_date|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;font-size:0.82rem;color:#334155;">{{ req.end_date|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;font-size:0.78rem;color:#64748b;">{{ req.created_at|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'approve_request' 'mission' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Approuver ?')">
+                                <i class="bi bi-check-lg"></i> Approuver
+                            </a>
+                            <a href="{% url 'reject_request' 'mission' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Rejeter ?')">
+                                <i class="bi bi-x-lg"></i> Rejeter
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:0.85rem;">
+                    <i class="bi bi-check-circle" style="font-size:2rem;color:#2e7d32;opacity:0.4;display:block;margin-bottom:0.5rem;"></i>
+                    Aucune demande de mission en attente
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Demandes de Bulletin de Paie -->
+<div class="card-modern bg-white overflow-hidden mb-4">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-receipt-cutoff"></i></div>
+        <span class="card-header-title">Bulletins de Paie</span>
+        <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.72rem;">{{ payslip_requests|length }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Employé</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Période</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Soumis le</th>
+                    <th style="padding:0.85rem 1rem;font-size:0.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e8ecf0;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in payslip_requests %}
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;border-radius:50%;background:#2e7d32;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.72rem;flex-shrink:0;">
+                                {{ req.requester.user.first_name|first|upper }}{{ req.requester.user.last_name|first|upper }}
+                            </div>
+                            <div style="font-size:0.82rem;font-weight:600;color:#1e293b;">{{ req.requester.user.get_full_name }}</div>
+                        </div>
+                    </td>
+                    <td style="padding:0.85rem 1rem;">
+                        <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">{{ req.periode_mois }}</span>
+                    </td>
+                    <td style="padding:0.85rem 1rem;font-size:0.78rem;color:#64748b;">{{ req.created_at|date:"d/m/Y" }}</td>
+                    <td style="padding:0.85rem 1rem;">
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'approve_request' 'payslip' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Approuver ?')">
+                                <i class="bi bi-check-lg"></i> Approuver
+                            </a>
+                            <a href="{% url 'reject_request' 'payslip' req.id %}" style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.65rem;background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;font-size:0.72rem;font-weight:700;text-decoration:none;" onclick="return confirm('Rejeter ?')">
+                                <i class="bi bi-x-lg"></i> Rejeter
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:0.85rem;">
+                    <i class="bi bi-check-circle" style="font-size:2rem;color:#2e7d32;opacity:0.4;display:block;margin-bottom:0.5rem;"></i>
+                    Aucune demande de bulletin en attente
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% endblock %}

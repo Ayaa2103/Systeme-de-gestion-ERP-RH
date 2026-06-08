@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\vPro\\\\Desktop\\\\Application-RH\" -Recurse -Name)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\vPro\\\\Desktop\\\\Application-RH\" -Recurse -Name)",
+      "Bash(xargs grep -l \"hr_manager\\\\|@permission_required\\\\|@login_required\")",
+      "Bash(xargs cat)",
+      "Bash(tasklist)",
+      "Bash(findstr python *)"
     ]
   }
 }

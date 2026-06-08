@@ -22,6 +22,7 @@ import {
   EventBusy as EventBusyIcon,
   Payments as PaymentsIcon,
   Badge as BadgeIcon,
+  ArrowBack as BackIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -207,11 +208,18 @@ const ContractManagement = () => {
           px: 3, py: 2.5,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
-          <Box>
-            <Typography variant="h5" fontWeight={700} color="white">Gestion des Contrats</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.3 }}>
-              {filteredContracts.length} contrat{filteredContracts.length !== 1 ? 's' : ''} affichés sur {contracts.length} au total
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Button startIcon={<BackIcon />} onClick={() => navigate('/dashboard')} size="small"
+              sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontWeight: 500, borderRadius: 2, minWidth: 0,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', color: 'white' } }}>
+              Retour
+            </Button>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">Gestion des Contrats</Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.3 }}>
+                {filteredContracts.length} contrat{filteredContracts.length !== 1 ? 's' : ''} affichés sur {contracts.length} au total
+              </Typography>
+            </Box>
           </Box>
           {user?.role === 'hr_manager' && (
             <Button
@@ -376,62 +384,161 @@ const ContractManagement = () => {
       </Menu>
 
       {/* ── Create dialog ── */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Créer un nouveau contrat</DialogTitle>
-        <Divider />
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid item xs={12}>
+      <Dialog open={createDialogOpen} onClose={() => { setCreateDialogOpen(false); setError(''); }}
+        maxWidth="sm" fullWidth TransitionProps={{ onEntered: () => {} }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+
+        {/* Header navy */}
+        <Box sx={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)',
+          px: 3, py: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.15)', width: 38, height: 38, borderRadius: 2 }}>
+              <AssignmentIcon sx={{ color: 'white', fontSize: 20 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={700} color="white" sx={{ lineHeight: 1.2 }}>
+                Nouveau contrat
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                Renseignez les informations du contrat
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton size="small" onClick={() => { setCreateDialogOpen(false); setError(''); }}
+            sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        <DialogContent sx={{ p: 3 }}>
+          {error && <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }} onClose={() => setError('')}>{error}</Alert>}
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+
+            {/* Employé */}
+            <Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', mb: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Employé <span style={{ color: '#ef4444' }}>*</span>
+              </Typography>
               <FormControl fullWidth size="small">
-                <InputLabel>Employé *</InputLabel>
-                <Select value={formData.employee} label="Employé *"
+                <Select value={formData.employee} displayEmpty
                   onChange={(e) => setFormData({ ...formData, employee: e.target.value })}
+                  renderValue={(v) => {
+                    if (!v) return <Typography sx={{ color: '#94a3b8', fontSize: '0.875rem' }}>Sélectionner un employé…</Typography>;
+                    const emp = employees.find(e => e.id === v);
+                    if (!emp) return v;
+                    const name = `${emp.user?.first_name || ''} ${emp.user?.last_name || ''}`.trim();
+                    return (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.65rem', fontWeight: 700,
+                          bgcolor: ['#1976d2','#9c27b0','#2e7d32','#e65100'][(name.charCodeAt(0)||0) % 4] }}>
+                          {name[0]?.toUpperCase()}
+                        </Avatar>
+                        <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{name}</Typography>
+                        <Typography variant="caption" color="text.secondary">— {emp.matricule}</Typography>
+                      </Box>
+                    );
+                  }}
                   sx={{ borderRadius: 2 }}>
-                  {employees.map((emp) => (
-                    <MenuItem key={emp.id} value={emp.id}>
-                      {emp.user?.first_name} {emp.user?.last_name} — {emp.matricule}
-                    </MenuItem>
-                  ))}
+                  {employees.map((emp) => {
+                    const name = `${emp.user?.first_name || ''} ${emp.user?.last_name || ''}`.trim();
+                    return (
+                      <MenuItem key={emp.id} value={emp.id}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar sx={{ width: 28, height: 28, fontSize: '0.72rem', fontWeight: 700,
+                            bgcolor: ['#1976d2','#9c27b0','#2e7d32','#e65100'][(name.charCodeAt(0)||0) % 4] }}>
+                            {name[0]?.toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{emp.matricule} · {emp.poste || 'Poste non défini'}</Typography>
+                          </Box>
+                        </Box>
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
+            </Box>
+
+            {/* Type de contrat — sélection visuelle */}
+            <Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', mb: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Type de contrat <span style={{ color: '#ef4444' }}>*</span>
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1.5 }}>
+                {[
+                  { value: 'CDI',   label: 'CDI',   sub: 'Durée indéterminée', color: '#2e7d32', bg: '#e8f5e9' },
+                  { value: 'CDD',   label: 'CDD',   sub: 'Durée déterminée',   color: '#e65100', bg: '#fff3e0' },
+                  { value: 'Stage', label: 'Stage', sub: 'Stage professionnel', color: '#1976d2', bg: '#e3f2fd' },
+                ].map(t => (
+                  <Box key={t.value} onClick={() => setFormData({ ...formData, type: t.value })}
+                    sx={{ flex: 1, p: 1.5, borderRadius: 2, cursor: 'pointer', textAlign: 'center',
+                      border: `2px solid ${formData.type === t.value ? t.color : '#e8ecf0'}`,
+                      bgcolor: formData.type === t.value ? t.bg : 'white',
+                      transition: 'all 0.15s',
+                      '&:hover': { borderColor: t.color, bgcolor: t.bg } }}>
+                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: formData.type === t.value ? t.color : '#1e293b' }}>
+                      {t.label}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.68rem', color: formData.type === t.value ? t.color : '#94a3b8', mt: 0.2 }}>
+                      {t.sub}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Dates */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', mb: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Date de début <span style={{ color: '#ef4444' }}>*</span>
+                </Typography>
+                <TextField fullWidth size="small" type="date" InputLabelProps={{ shrink: true }}
+                  value={formData.date_debut} onChange={(e) => setFormData({ ...formData, date_debut: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', mb: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Date de fin
+                  <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 400, marginLeft: 6, textTransform: 'none' }}>
+                    (vide = indéterminée)
+                  </span>
+                </Typography>
+                <TextField fullWidth size="small" type="date" InputLabelProps={{ shrink: true }}
+                  value={formData.date_fin} onChange={(e) => setFormData({ ...formData, date_fin: e.target.value })}
+                  disabled={formData.type === 'CDI'}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Type de contrat</InputLabel>
-                <Select value={formData.type} label="Type de contrat"
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  sx={{ borderRadius: 2 }}>
-                  <MenuItem value="CDI">CDI</MenuItem>
-                  <MenuItem value="CDD">CDD</MenuItem>
-                  <MenuItem value="Stage">Stage</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth size="small" label="Salaire (MAD)" type="number"
+
+            {/* Salaire */}
+            <Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', mb: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Salaire mensuel (MAD)
+                <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 400, marginLeft: 6, textTransform: 'none' }}>
+                  optionnel
+                </span>
+              </Typography>
+              <TextField fullWidth size="small" type="number" placeholder="ex: 8000"
                 value={formData.salaire} onChange={(e) => setFormData({ ...formData, salaire: e.target.value })}
-                helperText="Optionnel" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth size="small" label="Date de début *" type="date"
-                InputLabelProps={{ shrink: true }} value={formData.date_debut}
-                onChange={(e) => setFormData({ ...formData, date_debut: e.target.value })}
+                InputProps={{ endAdornment: <Typography sx={{ color: '#94a3b8', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>MAD / mois</Typography> }}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth size="small" label="Date de fin" type="date"
-                InputLabelProps={{ shrink: true }} value={formData.date_fin}
-                onChange={(e) => setFormData({ ...formData, date_fin: e.target.value })}
-                helperText="Laisser vide pour CDI sans limite"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-            </Grid>
-          </Grid>
-          {error && <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>{error}</Alert>}
+            </Box>
+
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-          <Button onClick={() => setCreateDialogOpen(false)} sx={{ borderRadius: 2, textTransform: 'none' }}>Annuler</Button>
-          <Button onClick={handleCreateContract} variant="contained" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+          <Button onClick={() => { setCreateDialogOpen(false); setError(''); }}
+            sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b', fontWeight: 500, flex: 1 }}>
+            Annuler
+          </Button>
+          <Button onClick={handleCreateContract} variant="contained"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: 2,
+              background: 'linear-gradient(135deg,#1e3a5f,#1e40af)', py: 1,
+              '&:hover': { background: 'linear-gradient(135deg,#0f172a,#1e3a5f)' } }}>
             Créer le contrat
           </Button>
         </DialogActions>

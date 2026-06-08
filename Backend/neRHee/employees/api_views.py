@@ -395,7 +395,7 @@ def trainings_list(request):
 @permission_classes([IsAuthenticated])
 def create_training(request):
     """Créer une formation"""
-    if request.user.role != 'hr_manager':
+    if request.user.role not in ['hr_manager', 'hr_director']:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
     
     data = request.data.copy()

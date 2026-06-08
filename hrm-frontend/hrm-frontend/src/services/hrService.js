@@ -110,6 +110,10 @@ export const closeJobOffer = (id) => {
   return api.post(`/recruitment/job-offers/${id}/close/`);
 };
 
+export const deleteJobOffer = (id) => {
+  return api.delete(`/recruitment/job-offers/${id}/delete/`);
+};
+
 // Applications
 export const getApplications = (filters = {}) => {
   const params = new URLSearchParams(filters);
@@ -190,13 +194,10 @@ export const createEvent = (data) => {
   return api.post('/events/create/', data);
 };
 
-export const approveEvent = (id) => {
-  return api.post(`/events/${id}/approve/`);
-};
-
-export const rejectEvent = (id) => {
-  return api.post(`/events/${id}/reject/`);
-};
+export const approveEvent = (id) => api.post(`/events/${id}/approve/`);
+export const rejectEvent  = (id) => api.post(`/events/${id}/reject/`);
+export const updateEvent  = (id, data) => api.put(`/events/${id}/update/`, data);
+export const deleteEvent  = (id) => api.delete(`/events/${id}/delete/`);
 
 // Onboarding Plans
 export const getOnboardingPlans = () => {

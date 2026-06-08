@@ -1,369 +1,207 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Tabs,
-  Tab,
-  Chip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  IconButton,
-  Badge,
-  Grid
+  Box, Card, CardContent, Typography, Tabs, Tab, Chip, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  Avatar, IconButton, Grid, Divider, Alert, Snackbar, Skeleton,
 } from '@mui/material';
 import {
-  Assignment as AssignmentIcon,
   CheckCircle as CheckIcon,
-  Cancel as CancelIcon,
+  Cancel as RejectIcon,
   Schedule as ScheduleIcon,
-  Person as PersonIcon,
   CalendarToday as CalendarIcon,
-  Description as DescriptionIcon
+  Description as DocIcon,
+  Assignment as MissionIcon,
+  ArrowBack as BackIcon,
+  Inbox as InboxIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getPendingRequests, approveRequest, rejectRequest } from '../../services/hrService';
 
-const ManageRequests = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [requests, setRequests] = useState({
-    leave: [],
-    attestation: [],
-    mission: [],
-    payslip: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState('');
-  const [comment, setComment] = useState('');
+const COLORS = ['#1976d2','#9c27b0','#2e7d32','#e65100','#0097a7','#c62828'];
+const avatarColor = (name = '') => COLORS[(name.charCodeAt(0) || 0) % COLORS.length];
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+const TAB_CONFIG = [
+  { label: 'Congés',       key: 'leave',       icon: <CalendarIcon sx={{ fontSize: 16 }} />, color: '#1976d2', bg: '#eff6ff',  apiKey: 'leave_requests'       },
+  { label: 'Attestations', key: 'attestation', icon: <DocIcon     sx={{ fontSize: 16 }} />, color: '#7b1fa2', bg: '#fdf4ff',  apiKey: 'attestation_requests' },
+  { label: 'Missions',     key: 'mission',     icon: <MissionIcon sx={{ fontSize: 16 }} />, color: '#e65100', bg: '#fff7ed',  apiKey: 'mission_requests'     },
+  { label: 'Bulletins',    key: 'payslip',     icon: <DocIcon     sx={{ fontSize: 16 }} />, color: '#2e7d32', bg: '#f0fdf4',  apiKey: 'payslip_requests'     },
+];
+
+const ManageRequests = () => {
+  const navigate = useNavigate();
+  const [tabValue, setTabValue]   = useState(0);
+  const [requests, setRequests]   = useState({ leave: [], attestation: [], mission: [], payslip: [] });
+  const [loading, setLoading]     = useState(true);
+  const [dialog, setDialog]       = useState({ open: false, request: null, action: '' });
+  const [comment, setComment]     = useState('');
+  const [saving, setSaving]       = useState(false);
+  const [snack, setSnack]         = useState({ open: false, msg: '', severity: 'success' });
+
+  useEffect(() => { fetchRequests(); }, []);
 
   const fetchRequests = async () => {
+    setLoading(true);
     try {
-      const response = await getPendingRequests();
+      const res = await getPendingRequests();
       setRequests({
-        leave: response.data.leave_requests || [],
-        attestation: response.data.attestation_requests || [],
-        mission: response.data.mission_requests || [],
-        payslip: response.data.payslip_requests || []
+        leave:       res.data.leave_requests        || [],
+        attestation: res.data.attestation_requests  || [],
+        mission:     res.data.mission_requests      || [],
+        payslip:     res.data.payslip_requests      || [],
       });
-    } catch (error) {
-      console.error('Erreur lors du chargement des demandes:', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (_) {}
+    finally { setLoading(false); }
   };
 
-  const handleDirectAction = async (request, action) => {
-    if (!request) {
-      console.error('No request provided');
-      alert('Aucune demande sélectionnée');
-      return;
-    }
-
-    try {
-      console.log('=== DIRECT ACTION DEBUG ===');
-      console.log('Full request object:', JSON.stringify(request, null, 2));
-      console.log('Action type:', action);
-      console.log('Request type:', request.type);
-      console.log('Request ID:', request.id);
-      console.log('Request ID type:', typeof request.id);
-      
-      if (!request.type || !request.id) {
-        console.error('Missing data:', { type: request.type, id: request.id });
-        alert(`Données manquantes: type=${request.type}, id=${request.id}`);
-        return;
-      }
-      
-      const url = `/requests/${request.type}/${request.id}/${action}/`;
-      console.log('Generated URL:', url);
-      console.log('Full API URL will be:', `http://localhost:8000/api/v1${url}`);
-      
-      let response;
-      if (action === 'approve') {
-        console.log('Calling approveRequest with:', { type: request.type, id: request.id, comment: '' });
-        response = await approveRequest(request.type, request.id, '');
-        console.log('Approve response:', response);
-        alert('Demande approuvée avec succès!');
-      } else {
-        console.log('Calling rejectRequest with:', { type: request.type, id: request.id, comment: '' });
-        response = await rejectRequest(request.type, request.id, '');
-        console.log('Reject response:', response);
-        alert('Demande rejetée avec succès!');
-      }
-
-      await fetchRequests();
-    } catch (error) {
-      console.error('=== ERROR DEBUG ===');
-      console.error('Full error object:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error response status:', error.response?.status);
-      console.error('Error response headers:', error.response?.headers);
-      console.error('Error message:', error.message);
-      console.error('Error config:', error.config);
-      
-      const errorMsg = error.response?.data?.error || error.response?.data?.detail || error.message || 'Erreur inconnue';
-      alert(`Erreur: ${errorMsg}`);
-    }
+  const openDialog = (request, type, action) => {
+    setDialog({ open: true, request: { ...request, type }, action });
+    setComment('');
   };
+
+  const closeDialog = () => setDialog({ open: false, request: null, action: '' });
 
   const handleAction = async () => {
-    if (!selectedRequest) {
-      alert('Aucune demande sélectionnée');
-      return;
-    }
-
+    const { request, action } = dialog;
+    if (!request?.type || !request?.id) return;
+    setSaving(true);
     try {
-      console.log('Processing request:', selectedRequest);
-      console.log('Action type:', actionType);
-      console.log('Request type:', selectedRequest.type);
-      console.log('Request ID:', selectedRequest.id);
-      console.log('Comment:', comment);
-      
-      if (!selectedRequest.type || !selectedRequest.id) {
-        alert(`Données manquantes: type=${selectedRequest.type}, id=${selectedRequest.id}`);
-        return;
-      }
-      
-      console.log('Correct URL format should be:', `/requests/${selectedRequest.type}/${selectedRequest.id}/${actionType}/`);
-      
-      let response;
-      if (actionType === 'approve') {
-        response = await approveRequest(selectedRequest.type, selectedRequest.id, comment);
-        console.log('Approve response:', response);
-        alert('Demande approuvée avec succès!');
-      } else {
-        response = await rejectRequest(selectedRequest.type, selectedRequest.id, comment);
-        console.log('Reject response:', response);
-        alert('Demande rejetée avec succès!');
-      }
-
-      await fetchRequests();
-      setDialogOpen(false);
-      setComment('');
-      setSelectedRequest(null);
-    } catch (error) {
-      console.error('Erreur lors du traitement de la demande:', error);
-      console.error('Error details:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error message:', error.message);
-      
-      const errorMsg = error.response?.data?.error || error.response?.data?.detail || error.message || 'Erreur inconnue';
-      alert(`Erreur: ${errorMsg}`);
-    }
+      if (action === 'approve') await approveRequest(request.type, request.id, comment);
+      else                      await rejectRequest(request.type, request.id, comment);
+      setSnack({ open: true, msg: action === 'approve' ? 'Demande approuvée' : 'Demande rejetée', severity: action === 'approve' ? 'success' : 'info' });
+      closeDialog();
+      fetchRequests();
+    } catch (e) {
+      setSnack({ open: true, msg: e.response?.data?.error || 'Erreur lors du traitement', severity: 'error' });
+    } finally { setSaving(false); }
   };
 
+  const currentTab  = TAB_CONFIG[tabValue];
+  const currentList = requests[currentTab.key] || [];
+  const pending     = (req) => req.status === 'pending';
 
+  const RequestRow = ({ request, type }) => {
+    const tc = TAB_CONFIG.find(t => t.key === type);
+    const name = request.requester_name || '—';
+    return (
+      <Box sx={{ px: 2.5, py: 1.75, display: 'flex', alignItems: 'center', gap: 2,
+        transition: 'background 0.15s', '&:hover': { bgcolor: '#f8fafc' } }}>
 
-  const openActionDialog = (request, action) => {
-    setSelectedRequest(request);
-    setActionType(action);
-    setDialogOpen(true);
-  };
+        {/* Avatar */}
+        <Avatar sx={{ bgcolor: avatarColor(name), width: 38, height: 38, fontSize: '0.85rem', fontWeight: 700, flexShrink: 0 }}>
+          {name[0]?.toUpperCase() || '?'}
+        </Avatar>
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'approved': return 'success';
-      case 'rejected': return 'error';
-      default: return 'default';
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'approved': return 'Approuvé';
-      case 'rejected': return 'Rejeté';
-      default: return status;
-    }
-  };
-
-  const RequestCard = ({ request, type }) => (
-    <Card
-      elevation={0}
-      sx={{
-        mb: 2,
-        border: '1px solid #e0e0e0',
-        borderRadius: 2,
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          transform: 'translateY(-2px)',
-        }
-      }}
-    >
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar sx={{ mr: 2, backgroundColor: '#1976d2' }}>
-              <PersonIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight="600">
-                {request.requester_name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {request.requester_matricule}
-              </Typography>
-            </Box>
+        {/* Info */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{name}</Typography>
+            {request.requester_matricule && (
+              <Typography variant="caption" color="text.secondary">· {request.requester_matricule}</Typography>
+            )}
           </Box>
-          <Chip
-            label={getStatusLabel(request.status)}
-            color={getStatusColor(request.status)}
-            size="small"
-          />
+          <Box sx={{ display: 'flex', gap: 1.5, mt: 0.4, flexWrap: 'wrap', alignItems: 'center' }}>
+            {type === 'leave' && request.start_date && (
+              <Typography variant="caption" color="text.secondary">
+                {format(new Date(request.start_date), 'dd MMM', { locale: fr })} → {format(new Date(request.end_date), 'dd MMM yyyy', { locale: fr })}
+              </Typography>
+            )}
+            {type === 'attestation' && (
+              <Typography variant="caption" color="text.secondary">{request.attestation_type} · {request.purpose}</Typography>
+            )}
+            {type === 'mission' && request.start_date && (
+              <Typography variant="caption" color="text.secondary">
+                {request.destination} · {format(new Date(request.start_date), 'dd MMM', { locale: fr })} → {format(new Date(request.end_date), 'dd MMM', { locale: fr })}
+              </Typography>
+            )}
+            {type === 'payslip' && (
+              <Typography variant="caption" color="text.secondary">Période : {request.periode_mois}</Typography>
+            )}
+            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+              · {format(new Date(request.created_at), 'dd/MM/yyyy', { locale: fr })}
+            </Typography>
+          </Box>
         </Box>
 
-        {/* Détails spécifiques par type */}
-        {type === 'leave' && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              <CalendarIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} />
-              Du {format(new Date(request.start_date), 'dd MMMM yyyy', { locale: fr })} 
-              au {format(new Date(request.end_date), 'dd MMMM yyyy', { locale: fr })}
-            </Typography>
-            <Typography variant="body2">
-              Type: {request.leave_type}
-            </Typography>
-          </Box>
+        {/* Status chip */}
+        {!pending(request) && (
+          <Chip
+            label={request.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+            size="small"
+            sx={{ bgcolor: request.status === 'approved' ? '#e8f5e9' : '#ffebee',
+              color: request.status === 'approved' ? '#2e7d32' : '#c62828',
+              fontWeight: 700, fontSize: '0.68rem', height: 22 }} />
         )}
 
-        {type === 'attestation' && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              <DescriptionIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} />
-              {request.attestation_type} - {request.purpose}
-            </Typography>
-          </Box>
-        )}
-
-        {type === 'mission' && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              <CalendarIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} />
-              Du {format(new Date(request.start_date), 'dd MMMM yyyy', { locale: fr })} 
-              au {format(new Date(request.end_date), 'dd MMMM yyyy', { locale: fr })}
-            </Typography>
-            <Typography variant="body2">
-              Destination: {request.destination}
-            </Typography>
-          </Box>
-        )}
-
-        {type === 'payslip' && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              <DescriptionIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} />
-              Période: {request.periode_mois}
-            </Typography>
-          </Box>
-        )}
-
-        {request.comment && (
-          <Typography variant="body2" sx={{ fontStyle: 'italic', mb: 2 }}>
-            "{request.comment}"
-          </Typography>
-        )}
-
-        <Typography variant="caption" color="text.secondary">
-          Demandé le {format(new Date(request.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-        </Typography>
-
-        {request.status === 'pending' && (
-          <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              startIcon={<CheckIcon />}
-              onClick={() => {
-                if (type === 'attestation' || type === 'payslip') {
-                  handleDirectAction({ ...request, type }, 'approve');
-                } else {
-                  openActionDialog({ ...request, type }, 'approve');
-                }
-              }}
-            >
+        {/* Actions */}
+        {pending(request) && (
+          <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0 }}>
+            <Button variant="contained" size="small" startIcon={<CheckIcon sx={{ fontSize: 14 }} />}
+              onClick={() => openDialog(request, type, 'approve')}
+              sx={{ bgcolor: '#2e7d32', '&:hover': { bgcolor: '#1b5e20' }, borderRadius: 2,
+                textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', py: 0.5, px: 1.25 }}>
               Approuver
             </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<CancelIcon />}
-              onClick={() => {
-                if (type === 'attestation' || type === 'payslip') {
-                  handleDirectAction({ ...request, type }, 'reject');
-                } else {
-                  openActionDialog({ ...request, type }, 'reject');
-                }
-              }}
-            >
+            <Button variant="outlined" size="small" startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
+              onClick={() => openDialog(request, type, 'reject')}
+              sx={{ borderColor: '#c62828', color: '#c62828', '&:hover': { bgcolor: '#ffebee', borderColor: '#c62828' },
+                borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', py: 0.5, px: 1.25 }}>
               Rejeter
             </Button>
           </Box>
         )}
-      </CardContent>
-    </Card>
-  );
-
-  const tabLabels = [
-    { label: 'Congés', key: 'leave', icon: <CalendarIcon /> },
-    { label: 'Attestations', key: 'attestation', icon: <DescriptionIcon /> },
-    { label: 'Missions', key: 'mission', icon: <AssignmentIcon /> },
-    { label: 'Bulletins', key: 'payslip', icon: <DescriptionIcon /> }
-  ];
-
-  const currentRequests = requests[tabLabels[tabValue].key] || [];
-  const pendingCount = currentRequests.filter(r => r.status === 'pending').length;
+      </Box>
+    );
+  };
 
   return (
-    <Box>
-      {/* En-tête */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Gestion des Demandes
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Traitement des demandes des employés
-        </Typography>
-      </Box>
+    <Box sx={{ width: '100%' }}>
 
-      {/* Statistiques rapides */}
+      {/* Banner */}
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', mb: 3, overflow: 'hidden' }}>
+        <Box sx={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)',
+          px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button startIcon={<BackIcon />} onClick={() => navigate('/dashboard')} size="small"
+              sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', borderRadius: 2,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', color: 'white' } }}>
+              Retour
+            </Button>
+            <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)', display: 'inline-flex' }}>
+              <InboxIcon sx={{ fontSize: 22, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">Gestion des Demandes</Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mt: 0.3 }}>
+                {TAB_CONFIG.reduce((s, t) => s + (requests[t.key]?.filter(pending).length || 0), 0)} demande(s) en attente
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Card>
+
+      {/* Stat cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        {tabLabels.map((tab, index) => {
-          const tabRequests = requests[tab.key] || [];
-          const pending = tabRequests.filter(r => r.status === 'pending').length;
+        {TAB_CONFIG.map(tab => {
+          const count = (requests[tab.key] || []).filter(pending).length;
           return (
-            <Grid item xs={12} sm={3} key={tab.key}>
-              <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                    {tab.icon}
-                    <Typography variant="h5" fontWeight="bold" sx={{ ml: 1 }}>
-                      {pending}
-                    </Typography>
+            <Grid item xs={6} sm={3} key={tab.key}>
+              <Card elevation={0} onClick={() => setTabValue(TAB_CONFIG.indexOf(tab))}
+                sx={{ border: '1px solid', borderColor: tabValue === TAB_CONFIG.indexOf(tab) ? `${tab.color}50` : `${tab.color}15`,
+                  borderRadius: 3, cursor: 'pointer', transition: 'all 0.2s',
+                  bgcolor: tabValue === TAB_CONFIG.indexOf(tab) ? `${tab.color}06` : 'white',
+                  '&:hover': { boxShadow: `0 4px 16px ${tab.color}15`, borderColor: `${tab.color}40` } }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                    <Avatar sx={{ bgcolor: `${tab.color}12`, width: 30, height: 30 }}>
+                      {React.cloneElement(tab.icon, { sx: { color: tab.color, fontSize: 15 } })}
+                    </Avatar>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>{tab.label}</Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {tab.label} en attente
-                  </Typography>
+                  <Typography variant="h4" fontWeight={800} sx={{ color: tab.color, lineHeight: 1 }}>{count}</Typography>
+                  <Typography variant="caption" color="text.secondary">en attente</Typography>
                 </CardContent>
               </Card>
             </Grid>
@@ -371,88 +209,103 @@ const ManageRequests = () => {
         })}
       </Grid>
 
-      {/* Onglets */}
-      <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(e, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: '1px solid #e0e0e0' }}
-        >
-          {tabLabels.map((tab, index) => {
-            const pending = (requests[tab.key] || []).filter(r => r.status === 'pending').length;
-            return (
-              <Tab
-                key={index}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {tab.icon}
-                    <Typography sx={{ ml: 1 }}>{tab.label}</Typography>
-                    {pending > 0 && (
-                      <Badge badgeContent={pending} color="error" sx={{ ml: 1 }} />
+      {/* Tabs + content */}
+      <Card elevation={0} sx={{ border: '1px solid #e8ecf0', borderRadius: 3, overflow: 'hidden' }}>
+        <Box sx={{ borderBottom: '1px solid #e8ecf0', bgcolor: '#f8fafc' }}>
+          <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}
+            sx={{ minHeight: 48, '& .MuiTab-root': { minHeight: 48, textTransform: 'none', fontWeight: 600, fontSize: '0.85rem' },
+              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' } }}>
+            {TAB_CONFIG.map((tab, i) => {
+              const count = (requests[tab.key] || []).filter(pending).length;
+              return (
+                <Tab key={tab.key} label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    {tab.label}
+                    {count > 0 && (
+                      <Box sx={{ bgcolor: tab.color, color: 'white', borderRadius: '50%', width: 18, height: 18,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700 }}>
+                        {count}
+                      </Box>
                     )}
                   </Box>
-                }
-              />
-            );
-          })}
-        </Tabs>
+                } />
+              );
+            })}
+          </Tabs>
+        </Box>
 
-        <CardContent>
-          {loading ? (
-            <Typography>Chargement...</Typography>
-          ) : currentRequests.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <ScheduleIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
-                Aucune demande trouvée
-              </Typography>
+        {loading ? (
+          <Box sx={{ p: 2 }}>
+            {[1,2,3].map(i => <Skeleton key={i} height={64} sx={{ mb: 0.5, borderRadius: 2 }} />)}
+          </Box>
+        ) : currentList.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#f8fafc', display: 'inline-flex', mb: 1.5 }}>
+              <CheckIcon sx={{ fontSize: 40, color: '#2e7d32', opacity: 0.5 }} />
             </Box>
-          ) : (
-            <Box>
-              {currentRequests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  type={tabLabels[tabValue].key}
-                />
-              ))}
-            </Box>
-          )}
-        </CardContent>
+            <Typography variant="body1" fontWeight={600} color="text.secondary">Aucune demande</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Pas de demande {currentTab.label.toLowerCase()} pour le moment
+            </Typography>
+          </Box>
+        ) : (
+          currentList.map((req, i) => (
+            <React.Fragment key={req.id}>
+              <RequestRow request={req} type={currentTab.key} />
+              {i < currentList.length - 1 && <Divider />}
+            </React.Fragment>
+          ))
+        )}
       </Card>
 
-      {/* Dialog d'action */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {actionType === 'approve' ? 'Approuver la demande' : 'Rejeter la demande'}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {selectedRequest && `Demande de ${selectedRequest.requester_name}`}
+      {/* Action dialog */}
+      <Dialog open={dialog.open} onClose={closeDialog} maxWidth="sm" fullWidth
+        TransitionProps={{ onEntered: () => {} }}
+        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+        <Box sx={{ background: dialog.action === 'approve'
+          ? 'linear-gradient(135deg,#1b5e20,#2e7d32)' : 'linear-gradient(135deg,#7f0000,#c62828)',
+          px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" fontWeight={700} color="white">
+            {dialog.action === 'approve' ? 'Approuver la demande' : 'Rejeter la demande'}
           </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label="Commentaire (optionnel)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            sx={{ mt: 2 }}
-          />
+          <IconButton size="small" onClick={closeDialog} sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <DialogContent sx={{ pt: 2.5 }}>
+          {dialog.request && (
+            <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e8ecf0', mb: 2 }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}>
+                {dialog.request.requester_name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {currentTab.label} · {dialog.request.requester_matricule}
+              </Typography>
+            </Box>
+          )}
+          <TextField autoFocus fullWidth multiline rows={3} label="Commentaire (optionnel)"
+            value={comment} onChange={e => setComment(e.target.value)}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Annuler
-          </Button>
-          <Button
-            onClick={handleAction}
-            variant="contained"
-            color={actionType === 'approve' ? 'success' : 'error'}
-          >
-            {actionType === 'approve' ? 'Approuver' : 'Rejeter'}
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={closeDialog} sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b' }}>Annuler</Button>
+          <Button onClick={handleAction} disabled={saving} variant="contained"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600,
+              bgcolor: dialog.action === 'approve' ? '#2e7d32' : '#c62828',
+              '&:hover': { bgcolor: dialog.action === 'approve' ? '#1b5e20' : '#b71c1c' } }}>
+            {dialog.action === 'approve' ? 'Confirmer l\'approbation' : 'Confirmer le rejet'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar open={snack.open} autoHideDuration={3500} onClose={() => setSnack(p => ({ ...p, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snack.severity} onClose={() => setSnack(p => ({ ...p, open: false }))}
+          sx={{ borderRadius: 2, boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
+          {snack.msg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

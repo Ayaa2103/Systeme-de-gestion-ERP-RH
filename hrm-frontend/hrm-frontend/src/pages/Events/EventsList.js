@@ -17,8 +17,10 @@ import {
   CalendarToday as CalendarIcon,
   PendingActions as PendingIcon,
   TaskAlt as CompletedIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { getEvents, approveEvent, rejectEvent } from '../../services/hrService';
+import { getEvents, approveEvent, rejectEvent, deleteEvent } from '../../services/hrService';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -88,6 +90,12 @@ const EventsList = () => {
 
   const handleReject = async (id) => {
     try { await rejectEvent(id); await fetchEvents(); } catch (_) {}
+    setAnchorEl(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer cet événement définitivement ?')) return;
+    try { await deleteEvent(id); await fetchEvents(); } catch (_) {}
     setAnchorEl(null);
   };
 
@@ -333,20 +341,47 @@ const EventsList = () => {
       {/* ── Context menu ── */}
       <Menu
         anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}
-        PaperProps={{ elevation: 0, sx: { border: '1px solid #e8ecf0', borderRadius: 2, minWidth: 170 } }}
+        PaperProps={{ elevation: 0, sx: { border: '1px solid #e8ecf0', borderRadius: 2, minWidth: 190 } }}
       >
-        <MenuItem onClick={() => { navigate(`/events/${selectedEvent?.id}`); setAnchorEl(null); }} sx={{ fontSize: '0.875rem' }}>
-          <ViewIcon sx={{ mr: 1.5, fontSize: 18 }} />Voir détails
+        <MenuItem onClick={() => { navigate(`/events/${selectedEvent?.id}`); setAnchorEl(null); }}
+          sx={{ fontSize: '0.875rem', gap: 1.5 }}>
+          <ViewIcon sx={{ fontSize: 17, color: '#1976d2' }} /> Voir les détails
         </MenuItem>
+
+        {/* Modifier — hr_director */}
+        {isHRDirector && (
+          <MenuItem onClick={() => { navigate(`/events/${selectedEvent?.id}/edit`); setAnchorEl(null); }}
+            sx={{ fontSize: '0.875rem', gap: 1.5 }}>
+            <EditIcon sx={{ fontSize: 17, color: '#475569' }} /> Modifier
+          </MenuItem>
+        )}
+
+        {/* Approuver / Rejeter — hr_director sur pending */}
         {isHRDirector && selectedEvent?.status === 'pending' && (
-          <MenuItem onClick={() => handleApprove(selectedEvent.id)} sx={{ fontSize: '0.875rem', color: '#2e7d32' }}>
-            <ApproveIcon sx={{ mr: 1.5, fontSize: 18 }} />Approuver
+          <Divider />
+        )}
+        {isHRDirector && selectedEvent?.status === 'pending' && (
+          <MenuItem onClick={() => handleApprove(selectedEvent.id)}
+            sx={{ fontSize: '0.875rem', gap: 1.5, color: '#2e7d32' }}>
+            <ApproveIcon sx={{ fontSize: 17 }} /> Approuver
           </MenuItem>
         )}
         {isHRDirector && selectedEvent?.status === 'pending' && (
-          <MenuItem onClick={() => handleReject(selectedEvent.id)} sx={{ fontSize: '0.875rem', color: '#c62828' }}>
-            <CancelIcon sx={{ mr: 1.5, fontSize: 18 }} />Rejeter
+          <MenuItem onClick={() => handleReject(selectedEvent.id)}
+            sx={{ fontSize: '0.875rem', gap: 1.5, color: '#e65100' }}>
+            <CancelIcon sx={{ fontSize: 17 }} /> Rejeter
           </MenuItem>
+        )}
+
+        {/* Supprimer — hr_director */}
+        {isHRDirector && (
+          <>
+            <Divider />
+            <MenuItem onClick={() => handleDelete(selectedEvent?.id)}
+              sx={{ fontSize: '0.875rem', gap: 1.5, color: '#c62828' }}>
+              <DeleteIcon sx={{ fontSize: 17 }} /> Supprimer l'événement
+            </MenuItem>
+          </>
         )}
       </Menu>
 

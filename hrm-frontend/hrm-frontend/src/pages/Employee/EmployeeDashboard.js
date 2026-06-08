@@ -1,614 +1,463 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Card, CardContent, Typography, Grid, Button, Avatar,
-  Chip, Alert, CircularProgress, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField
+  Box, Card, CardContent, Typography, Grid, Avatar, Chip,
+  Button, Skeleton, Divider, LinearProgress, Snackbar, Alert,
 } from '@mui/material';
 import {
-  Person, Assignment, School, Business, Psychology,
-  TrendingUp, Work, Recommend, WorkOutline, Send, PersonAdd,
-  ChevronLeft, ChevronRight, Today
+  Assignment as RequestIcon,
+  School as TrainingIcon,
+  Event as EventIcon,
+  Work as WorkIcon,
+  CalendarToday as CalendarIcon,
+  CheckCircle as CheckIcon,
+  Celebration as CelebrationIcon,
+  ArrowForward as ArrowIcon,
+  Send as SendIcon,
+  Description as AttestationIcon,
+  FlightTakeoff as MissionIcon,
+  ReceiptLong as PayslipIcon,
+  BeachAccess as LeaveIcon,
+  Lightbulb as SuggestionIcon,
+  HowToReg as RecommendIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 import { getEmployeeDashboard } from '../../services/employeeService';
-import { jobService } from '../../services/jobService';
+import { getMyRequests, getMyTrainings } from '../../services/employeeService';
 import api from '../../services/api';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-const EmployeeCalendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+const COLORS = ['#1976d2','#388e3c','#d32f2f','#7b1fa2','#f57c00','#0097a7'];
+const avatarColor = (n = '') => COLORS[(n.charCodeAt(0) || 0) % COLORS.length];
 
-  const monthNames = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-
-  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-    
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      const prevDate = new Date(year, month, -i);
-      days.push({ date: prevDate, isCurrentMonth: false });
-    }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      days.push({ date, isCurrentMonth: true });
-    }
-    
-    const remainingDays = 42 - days.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      const nextDate = new Date(year, month + 1, day);
-      days.push({ date: nextDate, isCurrentMonth: false });
-    }
-    
-    return days;
-  };
-
-  const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  const isSelected = (date) => {
-    return date.toDateString() === selectedDate.toDateString();
-  };
-
-  const navigateMonth = (direction) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + direction);
-    setCurrentDate(newDate);
-  };
-
-  const days = getDaysInMonth(currentDate);
-
-  return (
-    <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" fontWeight="600">
-            📅 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </Typography>
-          <Box>
-            <Button size="small" onClick={() => navigateMonth(-1)} sx={{ minWidth: 'auto', p: 1 }}>
-              <ChevronLeft />
-            </Button>
-            <Button size="small" onClick={() => setCurrentDate(new Date())} sx={{ minWidth: 'auto', p: 1, mx: 1 }}>
-              <Today />
-            </Button>
-            <Button size="small" onClick={() => navigateMonth(1)} sx={{ minWidth: 'auto', p: 1 }}>
-              <ChevronRight />
-            </Button>
-          </Box>
-        </Box>
-        
-        <Grid container spacing={0} sx={{ mb: 1 }}>
-          {dayNames.map((day) => (
-            <Grid item key={day} sx={{ width: '14.28%', textAlign: 'center' }}>
-              <Typography variant="caption" fontWeight="600" color="text.secondary">
-                {day}
-              </Typography>
-            </Grid>
-          ))}
-        </Grid>
-        
-        <Grid container spacing={0}>
-          {days.map((dayObj, index) => (
-            <Grid item key={index} sx={{ width: '14.28%', textAlign: 'center' }}>
-              <Button
-                onClick={() => setSelectedDate(dayObj.date)}
-                sx={{
-                  minWidth: 'auto',
-                  width: '100%',
-                  height: 36,
-                  p: 0,
-                  fontSize: '0.875rem',
-                  backgroundColor: isToday(dayObj.date) 
-                    ? 'primary.main' 
-                    : isSelected(dayObj.date) 
-                    ? 'primary.light' 
-                    : 'transparent',
-                  color: isToday(dayObj.date) || isSelected(dayObj.date) ? 'white' : 
-                         dayObj.isCurrentMonth ? 'text.primary' : 'text.disabled',
-                  '&:hover': {
-                    backgroundColor: isToday(dayObj.date) 
-                      ? 'primary.dark' 
-                      : 'action.hover'
-                  },
-                  borderRadius: 1
-                }}
-              >
-                {dayObj.date.getDate()}
-              </Button>
-            </Grid>
-          ))}
-        </Grid>
-        
-        <Box sx={{ mt: 2, p: 2, backgroundColor: '#f8fafc', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="body2" color="primary" fontWeight="600">
-            📍 {selectedDate.toLocaleDateString('fr-FR', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+const REQUEST_STATUS = {
+  pending:  { label: 'En attente', color: '#f57c00', bg: '#fff8e1' },
+  approved: { label: 'Approuvée',  color: '#2e7d32', bg: '#e8f5e9' },
+  rejected: { label: 'Rejetée',    color: '#c62828', bg: '#ffebee' },
 };
 
-const EmployeeEventsList = () => {
-  const [events, setEvents] = useState([]);
-  
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await api.get('/events/');
-        setEvents(response.data.slice(0, 3));
-      } catch (error) {
-        console.error('Events fetch error:', error);
-      }
-    };
-    fetchEvents();
-  }, []);
-  
-  return (
-    <Box sx={{ mt: 2 }}>
-      {events.length > 0 ? events.map((event, index) => (
-        <Box
-          key={event.id || index}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            p: 2,
-            mb: 1,
-            backgroundColor: '#f8fafc',
-            borderRadius: 2,
-            border: '1px solid #e2e8f0',
-          }}
-        >
-          <Avatar
-            sx={{
-              backgroundColor: '#1976d2',
-              width: 32,
-              height: 32,
-              mr: 2
-            }}
-          >
-            <Business sx={{ fontSize: 16 }} />
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" fontWeight="600">
-              {event.title || event.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {new Date(event.date).toLocaleDateString('fr-FR')}
-            </Typography>
-          </Box>
-        </Box>
-      )) : (
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-          Aucun événement à venir
-        </Typography>
-      )}
-    </Box>
-  );
-};
+/* ── Section header ── */
+const NavHeader = ({ title, icon, action }) => (
+  <Box sx={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#1e40af)',
+    px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+    <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.12)', width: 28, height: 28, borderRadius: 1.5 }}>
+      {React.cloneElement(icon, { sx: { fontSize: 14, color: 'white' } })}
+    </Avatar>
+    <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '0.88rem', flex: 1 }}>{title}</Typography>
+    {action}
+  </Box>
+);
+
+/* ── Quick action tile ── */
+const ActionTile = ({ label, icon, color, bg, path, navigate }) => (
+  <Box onClick={() => navigate(path)}
+    sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, p: 1.75,
+      borderRadius: 2, border: '1px solid #e8ecf0', bgcolor: '#f8fafc', cursor: 'pointer',
+      transition: 'all 0.18s',
+      '&:hover': { bgcolor: bg, borderColor: `${color}30`,
+        transform: 'translateY(-2px)', boxShadow: `0 4px 12px ${color}15` } }}>
+    <Avatar sx={{ bgcolor: bg, width: 38, height: 38 }}>
+      {React.cloneElement(icon, { sx: { color, fontSize: 18 } })}
+    </Avatar>
+    <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, color: '#334155',
+      textAlign: 'center', lineHeight: 1.3 }}>
+      {label}
+    </Typography>
+  </Box>
+);
 
 const EmployeeDashboard = () => {
-  const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState(null);
-  const [jobOffers, setJobOffers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [applyDialog, setApplyDialog] = useState(false);
-  const [recommendDialog, setRecommendDialog] = useState(false);
-  const [applicationData, setApplicationData] = useState({ cover_letter: '', resume_text: '' });
-  const [recommendationData, setRecommendationData] = useState({ candidate_name: '', candidate_email: '', candidate_phone: '', relationship: '', recommendation_reason: '' });
+  const { user } = useAuth();
+  const navigate  = useNavigate();
 
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchDashboardData();
-      await fetchJobOffers();
-    };
-    loadData();
-  }, []);
+  const [dashData,     setDashData]     = useState(null);
+  const [myRequests,   setMyRequests]   = useState([]);
+  const [myTrainings,  setMyTrainings]  = useState([]);
+  const [events,       setEvents]       = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [snack,        setSnack]        = useState({ open: false, msg: '', severity: 'success' });
 
-  const fetchDashboardData = async () => {
-    try {
-      const response = await getEmployeeDashboard();
-      setDashboardData(response.data);
-    } catch (error) {
-      setError('Erreur lors du chargement du tableau de bord');
-      console.error('Dashboard fetch error:', error);
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    const [dashRes, reqRes, trainRes, evtRes] = await Promise.allSettled([
+      getEmployeeDashboard(),
+      getMyRequests(),
+      getMyTrainings(),
+      api.get('/events/'),
+    ]);
+    if (dashRes.status === 'fulfilled')  setDashData(dashRes.value.data);
+    if (reqRes.status === 'fulfilled') {
+      const d = reqRes.value.data;
+      const all = [...(d.leave_requests || []).map(r => ({ ...r, _type: 'leave', _label: 'Congé' })),
+                   ...(d.attestation_requests || []).map(r => ({ ...r, _type: 'attestation', _label: 'Attestation' })),
+                   ...(d.mission_requests || []).map(r => ({ ...r, _type: 'mission', _label: 'Mission' })),
+                   ...(d.payslip_requests || []).map(r => ({ ...r, _type: 'payslip', _label: 'Bulletin' }))];
+      all.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setMyRequests(all.slice(0, 5));
     }
+    if (trainRes.status === 'fulfilled') setMyTrainings((trainRes.value.data || []).slice(0, 3));
+    if (evtRes.status === 'fulfilled')
+      setEvents((evtRes.value.data?.results || evtRes.value.data || [])
+        .filter(e => e.status === 'approved' && new Date(e.date) >= new Date())
+        .slice(0, 3));
+    setLoading(false);
   };
 
-  const fetchJobOffers = async () => {
-    try {
-      const response = await api.get('/recruitment/public-jobs/');
-      setJobOffers(response.data.slice(0, 3) || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Job offers fetch error:', error);
-      setLoading(false);
-    }
-  };
+  const today = format(new Date(), "EEEE d MMMM yyyy", { locale: fr });
+  const pendingCount = myRequests.filter(r => r.status === 'pending').length;
+  const activeTrainings = myTrainings.filter(t => t.status === 'approved').length;
 
-  const handleApply = async () => {
-    try {
-      await jobService.applyToJob(selectedJob.id, applicationData);
-      setApplyDialog(false);
-      setApplicationData({ cover_letter: '', resume_text: '' });
-      alert('Candidature envoyée avec succès!');
-    } catch (error) {
-      alert('Erreur lors de l\'envoi de la candidature');
-    }
-  };
-
-  const handleRecommend = async () => {
-    try {
-      await jobService.recommendProfile(selectedJob.id, recommendationData);
-      setRecommendDialog(false);
-      setRecommendationData({ candidate_name: '', candidate_email: '', candidate_phone: '', relationship: '', recommendation_reason: '' });
-      alert('Recommandation envoyée avec succès!');
-    } catch (error) {
-      alert('Erreur lors de l\'envoi de la recommandation');
-    }
-  };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const quickActions = [
+    { label: 'Demande de congé',    icon: <LeaveIcon />,       color: '#1976d2', bg: '#eff6ff', path: '/employee/requests/create-leave' },
+    { label: 'Attestation',         icon: <AttestationIcon />, color: '#7b1fa2', bg: '#fdf4ff', path: '/employee/requests/create-attestation' },
+    { label: 'Ordre de mission',    icon: <MissionIcon />,     color: '#e65100', bg: '#fff7ed', path: '/employee/requests/create-mission' },
+    { label: 'Bulletin de paie',    icon: <PayslipIcon />,     color: '#2e7d32', bg: '#f0fdf4', path: '/employee/requests/create-payslip' },
+    { label: 'Voir les événements',  icon: <EventIcon />,       color: '#0288d1', bg: '#e1f5fe', path: '/employee/events' },
+    { label: 'Recommander un profil',icon: <RecommendIcon />,  color: '#0891b2', bg: '#ecfeff', path: '/employee/recommend' },
+  ];
 
   return (
-    <Box>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
-        Tableau de Bord Employé
-      </Typography>
+    <Box sx={{ width: '100%' }}>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {/* ── Banner ── */}
+      <Card elevation={0} sx={{ mb: 3, borderRadius: 3, overflow: 'hidden',
+        background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)', color: 'white', position: 'relative' }}>
+        <Box sx={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200,
+          borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+        <CardContent sx={{ p: 3, position: 'relative' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <CalendarIcon sx={{ fontSize: 14, opacity: 0.7 }} />
+                <Typography variant="caption" sx={{ opacity: 0.7, textTransform: 'capitalize' }}>{today}</Typography>
+              </Box>
+              <Typography variant="h5" fontWeight={700} sx={{ mb: 0.25 }}>
+                Bonjour, {user?.first_name || user?.username} 👋
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.7 }}>Bienvenue sur votre espace personnel</Typography>
+            </Box>
+            {/* Mini stats */}
+            <Box sx={{ display: 'flex', gap: 2.5 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.3rem', fontWeight: 800,
+                  color: pendingCount > 0 ? '#fbbf24' : '#86efac', lineHeight: 1 }}>
+                  {pendingCount}
+                </Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>Demandes en attente</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.3rem', fontWeight: 800, color: '#60a5fa', lineHeight: 1 }}>
+                  {activeTrainings}
+                </Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>Formations actives</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.3rem', fontWeight: 800, color: '#a78bfa', lineHeight: 1 }}>
+                  {events.length}
+                </Typography>
+                <Typography sx={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>Événements à venir</Typography>
+              </Box>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* ── Actions rapides ── */}
+      <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+        <NavHeader title="Actions rapides" icon={<RequestIcon />} />
+        <CardContent sx={{ p: 2 }}>
+          <Grid container spacing={1.5}>
+            {quickActions.map((a, i) => (
+              <Grid item xs={6} sm={4} md={2} key={i}>
+                <ActionTile {...a} navigate={navigate} />
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/profile')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Person sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Mon Profil</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Consulter et gérer mes informations personnelles
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/requests')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Assignment sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Mes Demandes</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Consulter le statut de mes demandes
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/requests/create-leave')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <TrendingUp sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Demande de Congé</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Demander un congé
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/requests/create-attestation')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Work sx={{ fontSize: 48, color: 'info.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Demande d'Attestation</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Demander une attestation de travail
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/trainings')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <School sx={{ fontSize: 48, color: 'warning.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Mes Formations</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Consulter mes formations assignées
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/knowledge')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Psychology sx={{ fontSize: 48, color: 'info.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Formation et Connaissances</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Consulter mes compétences et documents
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/events')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Business sx={{ fontSize: 48, color: 'secondary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Événements</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Consulter les événements d'entreprise
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate('/employee/culture')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Business sx={{ fontSize: 48, color: 'secondary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>Culture d'Entreprise</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Découvrir notre culture et faire des suggestions
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12}>
-          <Card 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 3, 
-              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-              color: 'white'
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: 'white' }}>
-                💼 Offres d'Emploi Actives
-              </Typography>
-              {jobOffers.length > 0 ? (
-                <Grid container spacing={2}>
-                  {jobOffers.map((job) => (
-                    <Grid item xs={12} md={4} key={job.id}>
-                      <Box
-                        sx={{
-                          background: 'rgba(255,255,255,0.1)',
-                          padding: 2,
-                          borderRadius: 2,
-                          minWidth: 280
-                        }}
-                      >
-                        <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1, color: 'white' }}>
-                          {job.title}
-                        </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5, color: 'white' }}>
-                          📍 {job.department}
-                        </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, color: 'white' }}>
-                          🎯 {job.experience_level_display || job.experience_level}
-                        </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.8, mb: 2, color: 'white' }}>
-                          {job.description?.substring(0, 100)}...
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          <Button 
-                            size="small" 
-                            variant="contained" 
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
-                            onClick={() => navigate(`/employee/apply/${job.id}`)}
-                            startIcon={<Send />}
-                          >
-                            Postuler
-                          </Button>
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: 'white' } }}
-                            onClick={() => navigate(`/employee/recommend/${job.id}`)}
-                            startIcon={<PersonAdd />}
-                          >
-                            Recommander
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Avatar sx={{ backgroundColor: 'rgba(255,255,255,0.1)', width: 60, height: 60, mx: 'auto', mb: 2 }}>
-                    <WorkOutline sx={{ color: 'white' }} />
-                  </Avatar>
-                  <Typography variant="body2" sx={{ color: 'white', opacity: 0.75 }}>
-                    Aucune offre d'emploi active
-                  </Typography>
+        {/* ── Mes demandes récentes ── */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden', height: '100%' }}>
+            <NavHeader title="Mes demandes récentes" icon={<RequestIcon />}
+              action={
+                <Button size="small" endIcon={<ArrowIcon sx={{ fontSize: 13 }} />}
+                  onClick={() => navigate('/employee/requests')}
+                  sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontSize: '0.75rem',
+                    '&:hover': { color: 'white' } }}>
+                  Toutes
+                </Button>
+              } />
+            <CardContent sx={{ p: 0 }}>
+              {loading ? (
+                <Box sx={{ p: 2 }}>{[1,2,3].map(i => <Skeleton key={i} height={52} sx={{ mb: 0.5, borderRadius: 2 }} />)}</Box>
+              ) : myRequests.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 5 }}>
+                  <CheckIcon sx={{ fontSize: 36, color: '#2e7d32', opacity: 0.4, mb: 0.75 }} />
+                  <Typography variant="caption" color="text.secondary" display="block">Aucune demande pour le moment</Typography>
+                  <Button size="small" onClick={() => navigate('/employee/requests/create-leave')}
+                    sx={{ mt: 1, textTransform: 'none', fontWeight: 600, fontSize: '0.78rem' }}>
+                    Créer une demande
+                  </Button>
                 </Box>
-              )}
+              ) : myRequests.map((req, i) => {
+                const sc = REQUEST_STATUS[req.status] || REQUEST_STATUS.pending;
+                return (
+                  <React.Fragment key={`${req._type}-${req.id}`}>
+                    <Box sx={{ px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5,
+                      '&:hover': { bgcolor: '#f8fafc' } }}>
+                      <Avatar sx={{ bgcolor: '#1976d212', width: 32, height: 32, borderRadius: 1.5, flexShrink: 0 }}>
+                        <RequestIcon sx={{ color: '#1976d2', fontSize: 15 }} />
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#1e293b' }}>
+                          {req._label}
+                          {req.start_date && ` · ${format(new Date(req.start_date), 'dd MMM', { locale: fr })}`}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {req.created_at ? format(new Date(req.created_at), 'dd MMM yyyy', { locale: fr }) : '—'}
+                        </Typography>
+                      </Box>
+                      <Chip label={sc.label} size="small"
+                        sx={{ bgcolor: sc.bg, color: sc.color, fontWeight: 700, fontSize: '0.65rem',
+                          height: 18, border: `1px solid ${sc.color}25` }} />
+                    </Box>
+                    {i < myRequests.length - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
 
-      {/* Événements à venir et Calendrier */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                🎉 Nouveaux Employés du Jour
-              </Typography>
-              {dashboardData?.new_employees_today?.length > 0 ? (
-                <Box sx={{ mt: 2 }}>
-                  {dashboardData.new_employees_today.map((emp) => (
-                    <Box
-                      key={emp.id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        p: 2,
-                        mb: 1,
-                        backgroundColor: '#f8fafc',
-                        borderRadius: 2,
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <Avatar
-                        src={emp.photo ? `http://localhost:8000${emp.photo}` : undefined}
-                        sx={{
-                          backgroundColor: '#10b981',
-                          width: 40,
-                          height: 40,
-                          mr: 2
-                        }}
-                      >
-                        {!emp.photo && `${emp.user_data?.first_name?.[0]}${emp.user_data?.last_name?.[0]}`}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" fontWeight="600">
-                          {emp.user_data?.first_name} {emp.user_data?.last_name}
+        {/* ── Mes formations ── */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden', height: '100%' }}>
+            <NavHeader title="Mes formations" icon={<TrainingIcon />}
+              action={
+                <Button size="small" endIcon={<ArrowIcon sx={{ fontSize: 13 }} />}
+                  onClick={() => navigate('/employee/trainings')}
+                  sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontSize: '0.75rem',
+                    '&:hover': { color: 'white' } }}>
+                  Toutes
+                </Button>
+              } />
+            <CardContent sx={{ p: 0 }}>
+              {loading ? (
+                <Box sx={{ p: 2 }}>{[1,2].map(i => <Skeleton key={i} height={64} sx={{ mb: 0.5, borderRadius: 2 }} />)}</Box>
+              ) : myTrainings.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 5 }}>
+                  <TrainingIcon sx={{ fontSize: 36, color: '#cbd5e1', mb: 0.75 }} />
+                  <Typography variant="caption" color="text.secondary" display="block">Aucune formation assignée</Typography>
+                </Box>
+              ) : myTrainings.map((t, i) => {
+                const isActive = t.status === 'approved';
+                const color = isActive ? '#2e7d32' : '#64748b';
+                return (
+                  <React.Fragment key={t.id}>
+                    <Box sx={{ px: 2.5, py: 1.75, '&:hover': { bgcolor: '#f8fafc' } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.75 }}>
+                        <Avatar sx={{ bgcolor: `${color}12`, width: 32, height: 32, borderRadius: 1.5, flexShrink: 0 }}>
+                          <TrainingIcon sx={{ color, fontSize: 15 }} />
+                        </Avatar>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#1e293b' }} noWrap>
+                            {t.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {t.start_date && (
+                              <Typography variant="caption" color="text.secondary">
+                                {format(new Date(t.start_date), 'dd MMM', { locale: fr })}
+                                {t.end_date && ` → ${format(new Date(t.end_date), 'dd MMM yyyy', { locale: fr })}`}
+                              </Typography>
+                            )}
+                            <Chip label={isActive ? 'Active' : t.status} size="small"
+                              sx={{ bgcolor: isActive ? '#e8f5e9' : '#f5f5f5',
+                                color: isActive ? '#2e7d32' : '#757575',
+                                fontWeight: 700, fontSize: '0.62rem', height: 16 }} />
+                          </Box>
+                        </Box>
+                        <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color,
+                          flexShrink: 0 }}>
+                          {t.duration_days ? `${t.duration_days}j` : ''}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          {emp.poste || 'Nouveau membre'}
+                      </Box>
+                      {isActive && (
+                        <LinearProgress variant="indeterminate"
+                          sx={{ height: 4, borderRadius: 2, bgcolor: '#e8f5e9',
+                            '& .MuiLinearProgress-bar': { bgcolor: '#2e7d32', borderRadius: 2 } }} />
+                      )}
+                    </Box>
+                    {i < myTrainings.length - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* ── Événements à venir ── */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+            <NavHeader title="Événements à venir" icon={<EventIcon />}
+              action={
+                <Button size="small" endIcon={<ArrowIcon sx={{ fontSize: 13 }} />}
+                  onClick={() => navigate('/employee/events')}
+                  sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontSize: '0.75rem',
+                    '&:hover': { color: 'white' } }}>
+                  Tous
+                </Button>
+              } />
+            <CardContent sx={{ p: 0 }}>
+              {loading ? (
+                <Box sx={{ p: 2 }}>{[1,2].map(i => <Skeleton key={i} height={56} sx={{ mb: 0.5, borderRadius: 2 }} />)}</Box>
+              ) : events.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <EventIcon sx={{ fontSize: 36, color: '#cbd5e1', mb: 0.75 }} />
+                  <Typography variant="caption" color="text.secondary" display="block">Aucun événement à venir</Typography>
+                </Box>
+              ) : events.map((ev, i) => {
+                const evDate = ev.date ? new Date(ev.date) : null;
+                return (
+                  <React.Fragment key={ev.id}>
+                    <Box sx={{ px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.75,
+                      '&:hover': { bgcolor: '#f8fafc' } }}>
+                      {/* Date block */}
+                      <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: '#f3e5f5',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        justifyContent: 'center', flexShrink: 0, border: '1px solid #e1bee7' }}>
+                        {evDate ? (
+                          <>
+                            <Typography sx={{ fontSize: '0.6rem', color: '#9c27b0', fontWeight: 700,
+                              textTransform: 'uppercase', lineHeight: 1 }}>
+                              {format(evDate, 'MMM', { locale: fr })}
+                            </Typography>
+                            <Typography sx={{ fontSize: '1rem', color: '#9c27b0', fontWeight: 800, lineHeight: 1.2 }}>
+                              {format(evDate, 'd')}
+                            </Typography>
+                          </>
+                        ) : (
+                          <EventIcon sx={{ fontSize: 18, color: '#9c27b0' }} />
+                        )}
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }} noWrap>
+                          {ev.name || ev.title}
                         </Typography>
-                        <Typography variant="caption" color="primary">
-                          {emp.department_name || 'Non assigné'}
-                        </Typography>
+                        {ev.location && (
+                          <Typography variant="caption" color="text.secondary">{ev.location}</Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    {i < events.length - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* ── Offres d'emploi + Nouveaux employés ── */}
+        <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+            {/* Offres actives */}
+            {dashData?.active_job_offers?.length > 0 && (
+              <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+                <NavHeader title="Offres d'emploi actives" icon={<WorkIcon />}
+                  action={
+                    <Button size="small" endIcon={<ArrowIcon sx={{ fontSize: 13 }} />}
+                      onClick={() => navigate('/job-offers')}
+                      sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontSize: '0.75rem',
+                        '&:hover': { color: 'white' } }}>
+                      Voir tout
+                    </Button>
+                  } />
+                <CardContent sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {dashData.active_job_offers.map(job => (
+                    <Box key={job.id} sx={{ p: 1.5, borderRadius: 2, border: '1px solid #e8ecf0',
+                      bgcolor: '#f8fafc', transition: 'all 0.15s',
+                      '&:hover': { bgcolor: '#eff6ff', borderColor: '#bfdbfe' } }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                          <Typography sx={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }} noWrap>
+                            {job.title}
+                          </Typography>
+                          {job.department && (
+                            <Typography variant="caption" color="text.secondary">{job.department}</Typography>
+                          )}
+                        </Box>
+                        <Chip label={job.experience_level} size="small"
+                          sx={{ bgcolor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: '0.65rem', height: 18 }} />
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button size="small" startIcon={<SendIcon sx={{ fontSize: 13 }} />}
+                          onClick={() => navigate(`/employee/apply/${job.id}`)}
+                          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.72rem',
+                            color: '#1976d2', border: '1px solid #bfdbfe',
+                            '&:hover': { bgcolor: '#dbeafe' }, py: 0.3 }}>
+                          Postuler
+                        </Button>
+                        <Button size="small" startIcon={<PersonAddIcon sx={{ fontSize: 13 }} />}
+                          onClick={() => navigate(`/employee/recommend/${job.id}`)}
+                          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.72rem',
+                            color: '#0891b2', border: '1px solid #a5f3fc',
+                            '&:hover': { bgcolor: '#cffafe' }, py: 0.3 }}>
+                          Recommander
+                        </Button>
                       </Box>
                     </Box>
                   ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                  Aucun nouvel employé aujourd'hui
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Nouveaux employés */}
+            {dashData?.new_employees_today?.length > 0 && (
+              <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e8ecf0', overflow: 'hidden' }}>
+                <NavHeader title="Nouveaux collègues aujourd'hui" icon={<CelebrationIcon />}
+                  count={dashData.new_employees_today.length} />
+                <CardContent sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {dashData.new_employees_today.map((emp, i) => {
+                    const name = `${emp.user_data?.first_name || ''} ${emp.user_data?.last_name || ''}`.trim();
+                    return (
+                      <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1, borderRadius: 2,
+                        bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                        <Avatar
+                          src={emp.photo ? `http://localhost:8000${emp.photo}` : undefined}
+                          sx={{ bgcolor: avatarColor(name), width: 32, height: 32, fontSize: '0.75rem', fontWeight: 700 }}>
+                          {!emp.photo && (name[0]?.toUpperCase() || '?')}
+                        </Avatar>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#1e293b' }} noWrap>{name}</Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap>
+                            {emp.poste || 'Poste non défini'}{emp.department_name ? ` · ${emp.department_name}` : ''}
+                          </Typography>
+                        </Box>
+                        <CelebrationIcon sx={{ fontSize: 14, color: '#ffc107' }} />
+                      </Box>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
+          </Box>
         </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e0e0e0' }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
-                Événements à venir
-              </Typography>
-              <EmployeeEventsList />
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <EmployeeCalendar />
-        </Grid>
+
       </Grid>
 
-      <Dialog open={applyDialog} onClose={() => setApplyDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Postuler pour {selectedJob?.title}</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Lettre de motivation"
-            value={applicationData.cover_letter}
-            onChange={(e) => setApplicationData({...applicationData, cover_letter: e.target.value})}
-            sx={{ mb: 2, mt: 1 }}
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={6}
-            label="CV (texte)"
-            value={applicationData.resume_text}
-            onChange={(e) => setApplicationData({...applicationData, resume_text: e.target.value})}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setApplyDialog(false)}>Annuler</Button>
-          <Button onClick={handleApply} variant="contained">Envoyer Candidature</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={recommendDialog} onClose={() => setRecommendDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Recommander un profil pour {selectedJob?.title}</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Nom du candidat *"
-            value={recommendationData.candidate_name}
-            onChange={(e) => setRecommendationData({...recommendationData, candidate_name: e.target.value})}
-            sx={{ mb: 2, mt: 1 }}
-            required
-          />
-          <TextField
-            fullWidth
-            label="Email du candidat *"
-            type="email"
-            value={recommendationData.candidate_email}
-            onChange={(e) => setRecommendationData({...recommendationData, candidate_email: e.target.value})}
-            sx={{ mb: 2 }}
-            required
-          />
-          <TextField
-            fullWidth
-            label="Téléphone"
-            value={recommendationData.candidate_phone}
-            onChange={(e) => setRecommendationData({...recommendationData, candidate_phone: e.target.value})}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Votre relation avec le candidat *"
-            value={recommendationData.relationship}
-            onChange={(e) => setRecommendationData({...recommendationData, relationship: e.target.value})}
-            sx={{ mb: 2 }}
-            required
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Pourquoi recommandez-vous ce profil? *"
-            value={recommendationData.recommendation_reason}
-            onChange={(e) => setRecommendationData({...recommendationData, recommendation_reason: e.target.value})}
-            required
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRecommendDialog(false)}>Annuler</Button>
-          <Button onClick={handleRecommend} variant="contained">Envoyer Recommandation</Button>
-        </DialogActions>
-      </Dialog>
+      <Snackbar open={snack.open} autoHideDuration={3000}
+        onClose={() => setSnack(p => ({ ...p, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snack.severity} sx={{ borderRadius: 2 }}>{snack.msg}</Alert>
+      </Snackbar>
     </Box>
   );
 };

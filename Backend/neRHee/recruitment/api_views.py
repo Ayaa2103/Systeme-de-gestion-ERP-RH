@@ -84,6 +84,16 @@ def close_job_offer(request, job_offer_id):
     serializer = JobOfferSerializer(job_offer)
     return Response(serializer.data)
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_job_offer(request, job_offer_id):
+    """Supprimer une offre d'emploi — administrateur et responsable RH"""
+    if request.user.role not in ['administrator', 'hr_manager']:
+        return Response({'error': 'Permission insuffisante pour supprimer une offre.'}, status=status.HTTP_403_FORBIDDEN)
+    job_offer = get_object_or_404(JobOffer, id=job_offer_id)
+    job_offer.delete()
+    return Response({'message': 'Offre supprimée avec succès.'}, status=status.HTTP_204_NO_CONTENT)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def applications_list(request):

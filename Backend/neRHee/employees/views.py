@@ -146,7 +146,7 @@ def employee_training_detail(request, training_id):
         'today': date.today()
     })
 
-@user_passes_test(is_hr_manager)
+@user_passes_test(is_hr_manager_or_director)
 def create_training(request):
     if request.method == 'POST':
         try:

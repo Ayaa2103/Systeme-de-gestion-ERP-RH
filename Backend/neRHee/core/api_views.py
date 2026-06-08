@@ -240,6 +240,35 @@ def reject_event(request, event_id):
     except Event.DoesNotExist:
         return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_event(request, event_id):
+    """Modifier un événement — hr_director uniquement"""
+    if request.user.role != 'hr_director':
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        event = Event.objects.get(id=event_id)
+        serializer = EventSerializer(event, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Event.DoesNotExist:
+        return Response({'error': 'Événement introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_event(request, event_id):
+    """Supprimer un événement — hr_director uniquement"""
+    if request.user.role != 'hr_director':
+        return Response({'error': 'Permission refusée'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        event = Event.objects.get(id=event_id)
+        event.delete()
+        return Response({'message': 'Événement supprimé'}, status=status.HTTP_204_NO_CONTENT)
+    except Event.DoesNotExist:
+        return Response({'error': 'Événement introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def hr_policies_list(request):

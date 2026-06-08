@@ -1,289 +1,225 @@
 {% extends 'base.html' %}
-
-{% block title %}Responsable RH Dashboard{% endblock %}
+{% block title %}Tableau de bord — Responsable RH{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+
+<!-- Banner -->
+<div class="card-modern mb-4 overflow-hidden border-0">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:1.75rem 2rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-50px;right:130px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.03);pointer-events:none;"></div>
+        <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:52px;height:52px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-person-workspace" style="font-size:1.4rem;color:white;"></i>
+                </div>
                 <div>
-                    <h1 class="h3 mb-0 text-gray-800">💼 Tableau de Bord Responsable RH</h1>
-                    <p class="text-muted mb-0">Bienvenue, {{ user.get_full_name }}!</p>
-                </div>
-                <div>
-                    <span class="badge bg-success fs-6">{{ "now"|date:"d/m/Y H:i" }}</span>
+                    <h4 class="mb-0 fw-bold" style="color:white;">Bonjour, {{ user.first_name }} 👋</h4>
+                    <p class="mb-0" style="color:rgba(255,255,255,0.65);font-size:0.85rem;">Tableau de bord — Responsable RH</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {% if new_employees_today %}
-    <!-- New Employees Today -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <div class="card-body">
-                    <h5 class="card-title mb-3"><i class="fas fa-star"></i> 🎉 Nouveau(x) Employé(s) du Jour</h5>
-                    <div class="d-flex flex-wrap gap-3">
-                        {% for employee in new_employees_today %}
-                        <div class="text-center" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 180px;">
-                            {% if employee.photo %}
-                                <img src="{{ employee.photo.url }}" alt="{{ employee.user.get_full_name }}" class="rounded-circle mb-2" style="width: 60px; height: 60px; object-fit: cover; border: 3px solid white;">
-                            {% else %}
-                                <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background: rgba(255,255,255,0.3); font-size: 24px;">👤</div>
-                            {% endif %}
-                            <div class="fw-bold mb-1">{{ employee.user.get_full_name }}</div>
-                            <div class="small opacity-75">{{ employee.poste|default:"Poste non défini" }}</div>
-                            <div class="small opacity-75">{{ employee.service|default:"Service non défini" }}</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if active_job_offers %}
-    <!-- Job Offers Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-                <div class="card-body">
-                    <h5 class="card-title mb-3"><i class="fas fa-briefcase"></i> 💼 Offres d'Emploi Actives</h5>
-                    <div class="d-flex flex-wrap gap-3">
-                        {% for job_offer in active_job_offers %}
-                        <div class="text-left" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 280px; flex: 1;">
-                            <div class="fw-bold mb-2" style="font-size: 16px;">{{ job_offer.title }}</div>
-                            <div class="small opacity-75 mb-1">📍 {{ job_offer.department }}</div>
-                            <div class="small opacity-75 mb-2">🎯 {{ job_offer.get_experience_level_display }}</div>
-                            <div class="small opacity-75 mb-3">{{ job_offer.description|truncatewords:15 }}</div>
-                            <div class="d-flex gap-2">
-                                <a href="{% url 'recruitment:job_offer_detail' job_offer.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none;">Gérer</a>
-                                <a href="{% url 'recruitment:public_job_detail' job_offer.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.3); color: white; border: none;">Voir Public</a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Quick Stats -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Employés Actifs</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_employees|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Demandes Pendantes</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_requests|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Formations Actives</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_trainings|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Contrats Expirants</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ expiring_contracts|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-file-contract fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="mb-3">🛠️ Actions Principales</h4>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-users fa-3x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Gestion Employés</h5>
-                    <p class="card-text">Consulter et gérer les profils des employés et stagiaires</p>
-                    <a href="{% url 'employee_list' %}" class="btn btn-primary">Voir Employés</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-tasks fa-3x text-warning"></i>
-                    </div>
-                    <h5 class="card-title">Gestion Demandes</h5>
-                    <p class="card-text">Traiter et approuver les demandes des employés</p>
-                    <a href="{% url 'manage_requests' %}" class="btn btn-warning">Gérer Demandes</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-file-contract fa-3x text-success"></i>
-                    </div>
-                    <h5 class="card-title">Gestion Contrats</h5>
-                    <p class="card-text">Gérer les contrats et renouvellements</p>
-                    <a href="{% url 'manage_contracts' %}" class="btn btn-success">Voir Contrats</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-graduation-cap fa-3x text-info"></i>
-                    </div>
-                    <h5 class="card-title">Formations</h5>
-                    <p class="card-text">Créer et gérer les programmes de formation</p>
-                    <a href="{% url 'manage_training' %}" class="btn btn-info">Gérer Formations</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-book fa-3x text-secondary"></i>
-                    </div>
-                    <h5 class="card-title">Politiques RH</h5>
-                    <p class="card-text">Consulter les politiques de l'entreprise</p>
-                    <a href="{% url 'hr_policies' %}" class="btn btn-secondary">Voir Politiques</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-calendar-alt fa-3x text-danger"></i>
-                    </div>
-                    <h5 class="card-title">Événements</h5>
-                    <p class="card-text">Créer et gérer les événements d'entreprise</p>
-                    <a href="{% url 'manage_events' %}" class="btn btn-danger">Gérer Événements</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user-tie fa-3x text-purple"></i>
-                    </div>
-                    <h5 class="card-title">Recrutement</h5>
-                    <p class="card-text">Gérer les offres d'emploi et candidatures</p>
-                    <a href="{% url 'recruitment:recruitment_dashboard' %}" class="btn btn-purple">Gérer Recrutement</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-rocket fa-3x text-success"></i>
-                    </div>
-                    <h5 class="card-title">Onboarding</h5>
-                    <p class="card-text">Intégration des nouveaux employés</p>
-                    <a href="{% url 'onboarding_dashboard' %}" class="btn btn-success">Gérer Onboarding</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-primary">⚡ Actions Rapides</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{% url 'create_employee' %}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-user-plus"></i> Nouvel Employé
-                        </a>
-                        <a href="{% url 'create_contract_general' %}" class="btn btn-outline-success btn-sm">
-                            <i class="fas fa-file-plus"></i> Nouveau Contrat
-                        </a>
-                        <a href="{% url 'create_training' %}" class="btn btn-outline-info btn-sm">
-                            <i class="fas fa-plus"></i> Nouvelle Formation
-                        </a>
-                        <a href="{% url 'expiring_contracts' %}" class="btn btn-outline-warning btn-sm">
-                            <i class="fas fa-exclamation-triangle"></i> Contrats Expirants
-                        </a>
-                        <a href="{% url 'create_event' %}" class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-calendar-plus"></i> Nouvel Événement
-                        </a>
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-3">
+                <span style="color:rgba(255,255,255,0.6);font-size:0.8rem;text-transform:capitalize;">
+                    <i class="bi bi-calendar3 me-1"></i>{{ "now"|date:"l d F Y" }}
+                </span>
+                <span style="background:rgba(76,175,80,0.25);color:#86efac;border:1px solid rgba(76,175,80,0.4);padding:0.35rem 0.85rem;border-radius:50px;font-size:0.78rem;font-weight:600;">
+                    <i class="bi bi-check-circle-fill me-1"></i>Système opérationnel
+                </span>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
-.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
-.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
-.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
-.text-xs { font-size: 0.7rem; }
-.shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
-</style>
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-sm-3">
+        <a href="{% url 'employee_list' %}" style="text-decoration:none;">
+            <div class="card-modern bg-white h-100" style="border-left:3px solid #1976d2;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(25,118,210,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <div class="p-3">
+                    <div style="width:36px;height:36px;background:#1976d215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                        <i class="bi bi-people-fill" style="color:#1976d2;font-size:1rem;"></i>
+                    </div>
+                    <div class="fw-bold" style="font-size:1.75rem;color:#1976d2;line-height:1;">{{ total_employees|default:"0" }}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">Employés actifs</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-sm-3">
+        <a href="{% url 'manage_requests' %}" style="text-decoration:none;">
+            <div class="card-modern bg-white h-100" style="border-left:3px solid #f57c00;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(245,124,0,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <div class="p-3">
+                    <div style="width:36px;height:36px;background:#f57c0015;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                        <i class="bi bi-clipboard-check" style="color:#f57c00;font-size:1rem;"></i>
+                    </div>
+                    <div class="fw-bold" style="font-size:1.75rem;color:#f57c00;line-height:1;">{{ pending_requests|default:"0" }}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">Demandes en attente</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-sm-3">
+        <a href="{% url 'manage_training' %}" style="text-decoration:none;">
+            <div class="card-modern bg-white h-100" style="border-left:3px solid #2e7d32;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(46,125,50,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <div class="p-3">
+                    <div style="width:36px;height:36px;background:#2e7d3215;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                        <i class="bi bi-mortarboard-fill" style="color:#2e7d32;font-size:1rem;"></i>
+                    </div>
+                    <div class="fw-bold" style="font-size:1.75rem;color:#2e7d32;line-height:1;">{{ active_trainings|default:"0" }}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">Formations actives</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-sm-3">
+        <a href="{% url 'expiring_contracts' %}" style="text-decoration:none;">
+            <div class="card-modern bg-white h-100" style="border-left:3px solid {% if expiring_contracts > 0 %}#c62828{% else %}#64748b{% endif %};transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                <div class="p-3">
+                    <div style="width:36px;height:36px;background:{% if expiring_contracts > 0 %}#c6282815{% else %}#f1f5f9{% endif %};border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:{% if expiring_contracts > 0 %}#c62828{% else %}#64748b{% endif %};font-size:1rem;"></i>
+                    </div>
+                    <div class="fw-bold" style="font-size:1.75rem;color:{% if expiring_contracts > 0 %}#c62828{% else %}#64748b{% endif %};line-height:1;">{{ expiring_contracts|default:"0" }}</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">Contrats expirants (30j)</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Nouveaux employés du jour -->
+    {% if new_employees_today %}
+    <div class="col-12 col-lg-6">
+        <div class="card-modern bg-white overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-star-fill"></i></div>
+                <span class="card-header-title">Nouveaux employés aujourd'hui</span>
+                <span class="ms-auto badge" style="background:rgba(255,255,255,0.15);color:white;font-size:0.75rem;">{{ new_employees_today|length }}</span>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                {% for emp in new_employees_today %}
+                <a href="/employees/{{ emp.id }}/" style="text-decoration:none;" class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#f8fafc;border:1px solid #e8ecf0;">
+                    <div style="width:38px;height:38px;border-radius:50%;background:#1976d2;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0;">
+                        {{ emp.user.first_name|first|upper|default:"?" }}
+                    </div>
+                    <div class="overflow-hidden flex-grow-1">
+                        <div class="fw-semibold" style="font-size:0.875rem;color:#1e293b;">{{ emp.user.get_full_name }}</div>
+                        <div style="font-size:0.75rem;color:#64748b;">{{ emp.poste|default:"Poste non défini" }}</div>
+                    </div>
+                    <i class="bi bi-star-fill ms-auto" style="color:#ffc107;font-size:0.8rem;"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Offres actives -->
+    {% if active_job_offers %}
+    <div class="col-12 {% if new_employees_today %}col-lg-6{% endif %}">
+        <div class="card-modern bg-white overflow-hidden">
+            <div class="card-header-navy">
+                <div class="card-header-icon"><i class="bi bi-briefcase-fill"></i></div>
+                <span class="card-header-title">Offres d'emploi actives</span>
+                <a href="{% url 'recruitment:job_offer_list' %}" class="ms-auto" style="color:rgba(255,255,255,0.65);font-size:0.78rem;text-decoration:none;">Voir tout <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="p-3 d-flex flex-column gap-2">
+                {% for offer in active_job_offers %}
+                <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#f8fafc;border:1px solid #e8ecf0;">
+                    <div style="width:36px;height:36px;border-radius:10px;background:#1976d215;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-briefcase" style="color:#1976d2;font-size:0.9rem;"></i>
+                    </div>
+                    <div class="overflow-hidden flex-grow-1">
+                        <div class="fw-semibold" style="font-size:0.875rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ offer.title }}</div>
+                        <div style="font-size:0.72rem;color:#64748b;">{{ offer.department|default:"—" }}</div>
+                    </div>
+                    <span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3230;padding:2px 8px;border-radius:50px;font-size:0.68rem;font-weight:700;flex-shrink:0;">Publiée</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Accès rapide -->
+<div class="card-modern bg-white overflow-hidden mt-4">
+    <div class="card-header-navy">
+        <div class="card-header-icon"><i class="bi bi-grid-fill"></i></div>
+        <span class="card-header-title">Accès rapide</span>
+    </div>
+    <div class="p-3">
+        <div class="row g-2">
+            {% url 'employee_list' as url_emp %}
+            {% url 'manage_requests' as url_req %}
+            {% url 'manage_contracts' as url_con %}
+            {% url 'recruitment:job_offer_list' as url_off %}
+            {% url 'manage_events' as url_evt %}
+            {% url 'manage_training' as url_tra %}
+            {% url 'onboarding_dashboard' as url_onb %}
+            {% url 'expiring_contracts' as url_exp %}
+
+            {% for tile in tiles %}{% endfor %}
+
+            <!-- Employés -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_emp }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#1976d215;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="color:#1976d2;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Employés</span>
+                </a>
+            </div>
+            <!-- Demandes -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_req }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fed7aa'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#f57c0015;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-clipboard-check-fill" style="color:#f57c00;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Demandes</span>
+                </a>
+            </div>
+            <!-- Contrats -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_con }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#7b1fa215;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-file-earmark-text-fill" style="color:#7b1fa2;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Contrats</span>
+                </a>
+            </div>
+            <!-- Offres -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_off }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fed7aa'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#e6510015;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-briefcase-fill" style="color:#e65100;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Offres d'emploi</span>
+                </a>
+            </div>
+            <!-- Événements -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_evt }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fdf4ff';this.style.borderColor='#e9d5ff'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#9c27b015;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-calendar-event-fill" style="color:#9c27b0;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Événements</span>
+                </a>
+            </div>
+            <!-- Formations -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_tra }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#2e7d3215;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-mortarboard-fill" style="color:#2e7d32;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Formations</span>
+                </a>
+            </div>
+            <!-- Onboarding -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_onb }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#0891b215;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-person-check-fill" style="color:#0891b2;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Intégration</span>
+                </a>
+            </div>
+            <!-- Contrats expirants -->
+            <div class="col-6 col-sm-4 col-md-3">
+                <a href="{{ url_exp }}" class="d-flex flex-column align-items-center gap-2 p-3 rounded-3 text-decoration-none" style="border:1px solid #e8ecf0;background:#f8fafc;transition:all 0.2s;height:100%;" onmouseover="this.style.background='#fff1f2';this.style.borderColor='#fecdd3'" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e8ecf0'">
+                    <div style="width:42px;height:42px;background:#c6282815;border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-exclamation-triangle-fill" style="color:#c62828;font-size:1.2rem;"></i></div>
+                    <span style="font-size:0.78rem;font-weight:600;color:#334155;text-align:center;">Contrats expirants</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -30,6 +30,7 @@ import RecruitmentDashboard from './pages/Recruitment/RecruitmentDashboard';
 import JobOfferDetail from './pages/Recruitment/JobOfferDetail';
 import JobOffersList from './pages/Recruitment/JobOffersList';
 import CreateJobOffer from './pages/Recruitment/CreateJobOffer';
+import EditJobOffer from './pages/Recruitment/EditJobOffer';
 import ApplicationDetail from './pages/Recruitment/ApplicationDetail';
 import ApplicationsList from './pages/Recruitment/ApplicationsList';
 import ProfileRecommendations from './pages/Recruitment/ProfileRecommendations';
@@ -63,20 +64,22 @@ import ManagePages from './pages/CompanyCulture/ManagePages';
 import ViewPage from './pages/CompanyCulture/ViewPage';
 import ApiTest from './components/ApiTest';
 import AdminSpecialDashboard from './pages/Admin/AdminSpecialDashboard';
+import HRManagerDashboard from './pages/HRManagerDashboard';
+import HRDirectorDashboard from './pages/HRDirectorDashboard';
 import UserManagement from './pages/Admin/UserManagement';
 import DepartmentStructure from './pages/Admin/DepartmentStructure';
 import SystemConfiguration from './pages/Admin/SystemConfiguration';
 import RecommendProfile from './pages/Employee/RecommendProfile';
+import EmployeeRecommend from './pages/Employee/EmployeeRecommend';
 import ApplyJob from './pages/Employee/ApplyJob';
 import { useAuth } from './contexts/AuthContext';
 
 const ConditionalDashboard = () => {
   const { user } = useAuth();
-  
-  if (user?.role === 'employee') {
-    return <EmployeeDashboard />;
-  }
-  
+  if (user?.role === 'employee')      return <EmployeeDashboard />;
+  if (user?.role === 'hr_manager')    return <HRManagerDashboard />;
+  if (user?.role === 'hr_director')   return <HRDirectorDashboard />;
+  if (user?.role === 'administrator') return <AdminSpecialDashboard />;
   return <Dashboard />;
 };
 
@@ -283,6 +286,18 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Modifier offre d'emploi */}
+            <Route
+              path="/job-offers/:id/edit"
+              element={
+                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                  <MainLayout>
+                    <EditJobOffer />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
             
             {/* Onboarding */}
             <Route
@@ -396,7 +411,7 @@ function App() {
             <Route
               path="/trainings/create"
               element={
-                <ProtectedRoute roles={['hr_manager']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
                   <MainLayout>
                     <CreateTraining />
                   </MainLayout>
@@ -428,11 +443,11 @@ function App() {
               }
             />
             
-            {/* Créer suggestion */}
+            {/* Créer suggestion — RH uniquement */}
             <Route
               path="/culture/suggestions/create"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <CreateSuggestion />
                   </MainLayout>
@@ -564,7 +579,7 @@ function App() {
             <Route
               path="/events/:id/edit"
               element={
-                <ProtectedRoute roles={['hr_manager']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
                   <MainLayout>
                     <EditEvent />
                   </MainLayout>
@@ -734,6 +749,19 @@ function App() {
               }
             />
             
+            {/* Liste des offres pour recommandation */}
+            <Route
+              path="/employee/recommend"
+              element={
+                <ProtectedRoute roles={['employee']}>
+                  <MainLayout>
+                    <EmployeeRecommend />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Formulaire de recommandation pour une offre */}
             <Route
               path="/employee/recommend/:jobId"
               element={

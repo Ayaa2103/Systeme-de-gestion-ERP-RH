@@ -326,6 +326,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 
+CORS_EXPOSE_HEADERS = ['Content-Disposition']
+
 # Additional CORS headers
 CORS_ALLOW_HEADERS = [
     'accept',

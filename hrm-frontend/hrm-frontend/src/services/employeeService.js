@@ -14,16 +14,32 @@ export const createLeaveRequest = (data) => {
   return api.post('/requests/leave/create/', data);
 };
 
+export const downloadLeaveRequestTemplate = (data) => {
+  return api.post('/requests/leave/template/', data, { responseType: 'blob' });
+};
+
 export const createAttestationRequest = (data) => {
   return api.post('/requests/attestation/create/', data);
+};
+
+export const downloadAttestationRequestTemplate = (data) => {
+  return api.post('/requests/attestation/template/', data, { responseType: 'blob' });
 };
 
 export const createMissionRequest = (data) => {
   return api.post('/requests/mission/create/', data);
 };
 
+export const downloadMissionRequestTemplate = (data) => {
+  return api.post('/requests/mission/template/', data, { responseType: 'blob' });
+};
+
 export const createPayslipRequest = (data) => {
   return api.post('/requests/payslip/create/', data);
+};
+
+export const downloadPayslipRequestTemplate = (data) => {
+  return api.post('/requests/payslip/template/', data, { responseType: 'blob' });
 };
 
 // Profile

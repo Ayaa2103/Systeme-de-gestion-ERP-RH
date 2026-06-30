@@ -14,8 +14,10 @@ import {
   CheckCircle as CheckIcon,
   Send as SendIcon,
   Info as PurposeIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
-import { createAttestationRequest } from '../../services/employeeService';
+import { createAttestationRequest, downloadAttestationRequestTemplate } from '../../services/employeeService';
+import { downloadBlobResponse } from '../../utils/downloadFile';
 
 const ATTEST_TYPES = [
   { value: 'employment', label: 'Travail',      icon: <WorkIcon />,   color: '#1976d2', bg: '#eff6ff',
@@ -56,6 +58,7 @@ const NavHeader = ({ title, icon }) => (
 const CreateAttestationRequest = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [form,    setForm]    = useState({ purpose: '', attestation_type: 'employment', comment: '' });
@@ -74,6 +77,17 @@ const CreateAttestationRequest = () => {
     } catch (e) {
       setError(e.response?.data?.error || 'Erreur lors de la soumission');
     } finally { setLoading(false); }
+  };
+
+  const handleDownloadTemplate = async () => {
+    if (!form.purpose) { setError("Renseignez l'objectif avant de télécharger le formulaire."); return; }
+    setDownloading(true); setError('');
+    try {
+      const response = await downloadAttestationRequestTemplate(form);
+      downloadBlobResponse(response, 'Demande_Attestation.docx');
+    } catch (e) {
+      setError('Erreur lors de la génération du formulaire.');
+    } finally { setDownloading(false); }
   };
 
   return (
@@ -225,6 +239,31 @@ const CreateAttestationRequest = () => {
                 sx={{ py: 1, borderRadius: 2, textTransform: 'none', color: '#94a3b8',
                   border: '1px solid #e2e8f0', '&:hover': { bgcolor: '#f8fafc' } }}>
                 Annuler
+              </Button>
+            </Box>
+
+            <Box sx={{ borderRadius: 3, border: '1.5px dashed #ce93d890', bgcolor: '#f3e5f5', p: 2.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.25 }}>
+                <Avatar sx={{ bgcolor: '#e1bee7', width: 38, height: 38, borderRadius: 2 }}>
+                  <PrintIcon sx={{ color: '#7b1fa2', fontSize: 19 }} />
+                </Avatar>
+                <Box>
+                  <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b' }}>
+                    Besoin d'une version papier ?
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.7rem', color: '#6a1b9a', fontWeight: 600 }}>
+                    À signer et remettre en main propre
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography sx={{ fontSize: '0.76rem', color: '#5a1d7a', mb: 1.75, lineHeight: 1.5 }}>
+                Téléchargez le formulaire Word pré-rempli avec vos informations, imprimez-le, signez-le et remettez-le au service RH.
+              </Typography>
+              <Button fullWidth variant="contained" startIcon={<PrintIcon />}
+                onClick={handleDownloadTemplate} disabled={downloading}
+                sx={{ py: 1, borderRadius: 2, textTransform: 'none', fontWeight: 700, boxShadow: 'none',
+                  bgcolor: '#7b1fa2', '&:hover': { bgcolor: '#6a1b9a', boxShadow: 'none' } }}>
+                {downloading ? 'Génération…' : 'Télécharger le formulaire'}
               </Button>
             </Box>
           </Box>

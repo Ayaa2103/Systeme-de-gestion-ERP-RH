@@ -3,6 +3,7 @@ from core.api_views import (
     login_api, dashboard_stats, events_list, create_event, approve_event, reject_event, update_event, delete_event,
     hr_policies_list, new_employees_today, recent_job_offers, health_check, employee_dashboard_data, kpi_data,
     users_list, create_user, update_user, reset_user_password, toggle_user_active,
+    notifications_list, mark_notification_read, mark_all_notifications_read,
 )
 from employees.api_views import (
     employees_list, employee_detail, create_employee, update_employee, delete_employee,
@@ -14,7 +15,9 @@ from employees.api_views import (
 )
 from requests_app.api_views import (
     pending_requests, my_requests, create_leave_request, create_attestation_request,
-    create_mission_request, create_payslip_request, approve_request, reject_request
+    create_mission_request, create_payslip_request, approve_request, reject_request,
+    generate_leave_request_template, generate_attestation_request_template,
+    generate_mission_request_template, generate_payslip_request_template
 )
 from recruitment.api_views import (
     job_offers_list, create_job_offer, job_offer_detail, update_job_offer, publish_job_offer, close_job_offer, delete_job_offer,
@@ -29,7 +32,7 @@ from knowledge_management.api_views import (
     documents_list, upload_document, employee_skills, employee_documents
 )
 from onboarding.api_views import (
-    OnboardingPlanViewSet, ChecklistItemViewSet, new_employees_today, onboarding_stats, start_employee_onboarding, all_employees, onboarding_employees_list, employee_checklist, employee_trainings, complete_training, my_onboarding
+    OnboardingPlanViewSet, ChecklistItemViewSet, new_employees_today, onboarding_stats, start_employee_onboarding, all_employees, onboarding_employees_list, employee_checklist, employee_trainings, complete_training, my_onboarding, complete_onboarding_task
 )
 from rest_framework.routers import DefaultRouter
 
@@ -42,6 +45,11 @@ urlpatterns = [
     
     # Dashboard
     path('dashboard/stats/', dashboard_stats, name='dashboard_stats'),
+
+    # Notifications
+    path('notifications/', notifications_list, name='notifications_list'),
+    path('notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/read-all/', mark_all_notifications_read, name='mark_all_notifications_read'),
     
     # Events
     path('events/', events_list, name='events_list'),
@@ -112,9 +120,13 @@ urlpatterns = [
     path('requests/pending/', pending_requests, name='pending_requests'),
     path('requests/my/', my_requests, name='my_requests'),
     path('requests/leave/create/', create_leave_request, name='create_leave_request'),
+    path('requests/leave/template/', generate_leave_request_template, name='generate_leave_request_template'),
     path('requests/attestation/create/', create_attestation_request, name='create_attestation_request'),
+    path('requests/attestation/template/', generate_attestation_request_template, name='generate_attestation_request_template'),
     path('requests/mission/create/', create_mission_request, name='create_mission_request'),
+    path('requests/mission/template/', generate_mission_request_template, name='generate_mission_request_template'),
     path('requests/payslip/create/', create_payslip_request, name='create_payslip_request'),
+    path('requests/payslip/template/', generate_payslip_request_template, name='generate_payslip_request_template'),
     path('requests/<str:request_type>/<int:request_id>/approve/', approve_request, name='approve_request'),
     path('requests/<str:request_type>/<int:request_id>/reject/', reject_request, name='reject_request'),
     
@@ -167,6 +179,7 @@ urlpatterns = [
     path('onboarding/employee/<int:employee_id>/checklist/', employee_checklist, name='employee_checklist'),
     path('onboarding/employee/<int:employee_id>/trainings/', employee_trainings, name='employee_trainings'),
     path('onboarding/training/<int:training_id>/complete/', complete_training, name='complete_training'),
+    path('onboarding/task/<int:task_id>/complete/', complete_onboarding_task, name='complete_onboarding_task'),
     path('onboarding/my-onboarding/', my_onboarding, name='my_onboarding'),
 ]
 

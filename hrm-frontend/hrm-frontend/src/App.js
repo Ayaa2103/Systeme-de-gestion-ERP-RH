@@ -24,7 +24,6 @@ import MyTrainings from './pages/Employee/MyTrainings';
 import KnowledgeSkills from './pages/Employee/KnowledgeSkills';
 import Events from './pages/Employee/Events';
 import MyOnboarding from './pages/Employee/MyOnboarding';
-import EmployeeOnboarding from './pages/Employee/EmployeeOnboarding';
 import JobOffers from './pages/Recruitment/JobOffers';
 import RecruitmentDashboard from './pages/Recruitment/RecruitmentDashboard';
 import JobOfferDetail from './pages/Recruitment/JobOfferDetail';
@@ -733,17 +732,6 @@ function App() {
                 <ProtectedRoute roles={['employee']}>
                   <MainLayout>
                     <Events />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/employee/onboarding"
-              element={
-                <ProtectedRoute roles={['employee']}>
-                  <MainLayout>
-                    <EmployeeOnboarding />
                   </MainLayout>
                 </ProtectedRoute>
               }

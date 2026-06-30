@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Event, HRPolicy
+from .models import User, Event, HRPolicy, Notification
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,3 +24,15 @@ class HRPolicySerializer(serializers.ModelSerializer):
         model = HRPolicy
         fields = ['id', 'name', 'description', 'created_by', 'created_by_name', 
                  'created_at', 'is_active']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    actor_name = serializers.CharField(source='actor.get_full_name', read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'notification_type', 'title', 'message', 'link', 'is_read',
+            'created_at', 'actor', 'actor_name',
+        ]
+        read_only_fields = fields

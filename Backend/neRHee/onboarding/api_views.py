@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import ChecklistItem, OnboardingPlan, OnboardingTask
 from .api_serializers import ChecklistItemSerializer, OnboardingPlanSerializer, OnboardingTaskSerializer, NewEmployeeSerializer
 from employees.models import Employee
+from core.notifications import create_notification
 from datetime import date, timedelta
 
 class OnboardingPlanViewSet(viewsets.ModelViewSet):
@@ -145,7 +146,16 @@ def start_employee_onboarding(request):
         # Mettre à jour le statut de l'employé
         employee.onboarding_status = 'in_progress'
         employee.save()
-        
+
+        create_notification(
+            employee.user,
+            title='Votre intégration a démarré',
+            message="Bienvenue dans l'équipe ! Votre plan d'intégration est disponible.",
+            notification_type='onboarding_started',
+            actor=request.user,
+            link='/employee/onboarding',
+        )
+
         return Response({
             'message': 'Plan d\'intégration complet créé avec succès',
             'plan_id': plan.id,
@@ -283,11 +293,30 @@ def complete_training(request, training_id):
             })
         else:
             return Response({'error': 'Date de completion requise'}, status=400)
-            
     except OnboardingTraining.DoesNotExist:
         return Response({'error': 'Formation non trouvée'}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_onboarding_task(request, task_id):
+    """Marquer une tâche d'intégration comme terminée"""
+    try:
+        task = OnboardingTask.objects.get(id=task_id)
+    except OnboardingTask.DoesNotExist:
+        return Response({'error': 'Tâche non trouvée'}, status=404)
+
+    if task.assigned_to_id != request.user.id:
+        return Response({'error': 'Permission denied'}, status=403)
+
+    task.mark_completed(request.user)
+
+    return Response({
+        'id': task.id,
+        'is_completed': task.is_completed,
+        'completion_date': task.completed_at,
+    })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -355,7 +384,7 @@ def my_onboarding(request):
             'description': task.description,
             'due_date': task.due_date,
             'is_completed': task.is_completed,
-            'completion_date': task.completion_date,
+            'completion_date': task.completed_at,
             'priority': task.priority
         } for task in tasks],
         'trainings': [{

@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from .models import Employee, Contract, Training, Department
 from .serializers import EmployeeSerializer, ContractSerializer, TrainingSerializer, DepartmentSerializer
 from core.models import User
+from core.notifications import create_notification
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -272,7 +273,15 @@ def create_contract(request):
     try:
         serializer = ContractSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            contract = serializer.save()
+            create_notification(
+                contract.employee.user,
+                title='Nouveau contrat',
+                message=f"Un contrat {contract.type} a été créé pour vous.",
+                notification_type='contract_created',
+                actor=request.user,
+                link='/profile',
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'error': 'Données invalides', 'details': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -348,6 +357,14 @@ def renew_contract(request, contract_id):
         serializer = ContractSerializer(data=new_contract_data)
         if serializer.is_valid():
             new_contract = serializer.save()
+            create_notification(
+                new_contract.employee.user,
+                title='Contrat renouvelé',
+                message=f"Votre contrat a été renouvelé ({new_contract.type}).",
+                notification_type='contract_renewed',
+                actor=request.user,
+                link='/profile',
+            )
             return Response(ContractSerializer(new_contract).data, status=status.HTTP_201_CREATED)
         
         # Si erreur, réactiver l'ancien contrat

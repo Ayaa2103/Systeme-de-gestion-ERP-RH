@@ -12,8 +12,10 @@ import {
   Description as ReasonIcon,
   CheckCircle as CheckIcon,
   Send as SendIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
-import { createMissionRequest } from '../../services/employeeService';
+import { createMissionRequest, downloadMissionRequestTemplate } from '../../services/employeeService';
+import { downloadBlobResponse } from '../../utils/downloadFile';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -45,6 +47,7 @@ const NavHeader = ({ title, icon }) => (
 const CreateMissionRequest = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [form,    setForm]    = useState({ destination: '', start_date: '', end_date: '', reason: '', comment: '' });
@@ -74,6 +77,22 @@ const CreateMissionRequest = () => {
     } catch (e) {
       setError(e.response?.data?.error || 'Erreur lors de la soumission');
     } finally { setLoading(false); }
+  };
+
+  const handleDownloadTemplate = async () => {
+    if (!form.destination || !form.start_date || !form.end_date) {
+      setError('Renseignez la destination et les dates avant de télécharger le formulaire.'); return;
+    }
+    if (new Date(form.end_date) < new Date(form.start_date)) {
+      setError('La date de fin doit être postérieure à la date de début.'); return;
+    }
+    setDownloading(true); setError('');
+    try {
+      const response = await downloadMissionRequestTemplate(form);
+      downloadBlobResponse(response, 'Demande_Mission.docx');
+    } catch (e) {
+      setError('Erreur lors de la génération du formulaire.');
+    } finally { setDownloading(false); }
   };
 
   return (
@@ -244,6 +263,31 @@ const CreateMissionRequest = () => {
                 sx={{ py: 1, borderRadius: 2, textTransform: 'none', color: '#94a3b8',
                   border: '1px solid #e2e8f0', '&:hover': { bgcolor: '#f8fafc' } }}>
                 Annuler
+              </Button>
+            </Box>
+
+            <Box sx={{ borderRadius: 3, border: '1.5px dashed #fdba7490', bgcolor: '#fff7ed', p: 2.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.25 }}>
+                <Avatar sx={{ bgcolor: '#ffe0b2', width: 38, height: 38, borderRadius: 2 }}>
+                  <PrintIcon sx={{ color: '#e65100', fontSize: 19 }} />
+                </Avatar>
+                <Box>
+                  <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b' }}>
+                    Besoin d'une version papier ?
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.7rem', color: '#c2660d', fontWeight: 600 }}>
+                    À signer et remettre en main propre
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography sx={{ fontSize: '0.76rem', color: '#9a5b13', mb: 1.75, lineHeight: 1.5 }}>
+                Téléchargez le formulaire Word pré-rempli avec vos informations, imprimez-le, signez-le et remettez-le au service RH.
+              </Typography>
+              <Button fullWidth variant="contained" startIcon={<PrintIcon />}
+                onClick={handleDownloadTemplate} disabled={downloading}
+                sx={{ py: 1, borderRadius: 2, textTransform: 'none', fontWeight: 700, boxShadow: 'none',
+                  bgcolor: '#e65100', '&:hover': { bgcolor: '#bf360c', boxShadow: 'none' } }}>
+                {downloading ? 'Génération…' : 'Télécharger le formulaire'}
               </Button>
             </Box>
           </Box>

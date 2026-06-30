@@ -5,6 +5,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import JobOffer, Application, Interview, ProfileRecommendation
 from .serializers import JobOfferSerializer, ApplicationSerializer, InterviewSerializer, ProfileRecommendationSerializer
+from core.notifications import create_notification, create_notifications_for_roles
 
 def check_hr_permission(user):
     """Vérifier les permissions HR"""
@@ -227,12 +228,21 @@ def update_recommendation_status(request, recommendation_id):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
     
     recommendation = get_object_or_404(ProfileRecommendation, id=recommendation_id)
-    
+
     new_status = request.data.get('status')
     if new_status in ['pending', 'contacted', 'rejected']:
         recommendation.status = new_status
         recommendation.save()
-    
+        status_labels = {'pending': 'en attente', 'contacted': 'contactée', 'rejected': 'rejetée'}
+        create_notification(
+            recommendation.recommended_by,
+            title='Mise à jour de votre recommandation',
+            message=f"Votre recommandation de {recommendation.candidate_name} est désormais « {status_labels.get(new_status, new_status)} ».",
+            notification_type='recommendation_status',
+            actor=request.user,
+            link='/employee/recommend',
+        )
+
     serializer = ProfileRecommendationSerializer(recommendation)
     return Response(serializer.data)
 
@@ -286,7 +296,15 @@ def apply_to_job(request, job_offer_id):
     
     serializer = ApplicationSerializer(data=data)
     if serializer.is_valid():
-        serializer.save()
+        application = serializer.save()
+        create_notifications_for_roles(
+            ['hr_manager', 'hr_director', 'administrator'],
+            title='Nouvelle candidature reçue',
+            message=f"{application.first_name} {application.last_name} a postulé à « {job_offer.title} ».",
+            notification_type='application_received',
+            actor=request.user,
+            link='/recruitment/applications',
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

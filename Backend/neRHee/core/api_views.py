@@ -5,11 +5,12 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import date, timedelta
-from .models import User, Event, HRPolicy
+from .models import User, Event, HRPolicy, Notification
 from employees.models import Employee, Contract, Training
 from requests_app.models import LeaveRequest, AttestationRequest, MissionOrderRequest, PayslipRequest
 from recruitment.models import JobOffer, Application
-from .serializers import UserSerializer, EventSerializer, HRPolicySerializer
+from .serializers import UserSerializer, EventSerializer, HRPolicySerializer, NotificationSerializer
+from .notifications import create_notification, create_notifications_for_roles
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -198,7 +199,16 @@ def create_event(request):
     
     serializer = EventSerializer(data=data)
     if serializer.is_valid():
-        serializer.save()
+        event = serializer.save()
+        create_notifications_for_roles(
+            ['hr_director'],
+            title='Nouvel événement à valider',
+            message=f"{request.user.get_full_name() or request.user.username} a créé l'événement « {event.name} ».",
+            notification_type='event_created',
+            actor=request.user,
+            link='/events',
+            exclude_user=request.user,
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -215,6 +225,22 @@ def approve_event(request, event_id):
         event.approved_by = request.user
         event.approved_at = timezone.now()
         event.save()
+        create_notification(
+            event.created_by,
+            title='Événement approuvé',
+            message=f"L'événement « {event.name} » a été approuvé.",
+            notification_type='event_status',
+            actor=request.user,
+            link='/events',
+        )
+        create_notifications_for_roles(
+            ['employee', 'hr_manager', 'administrator'],
+            title='Nouvel événement publié',
+            message=f"L'événement « {event.name} » est maintenant visible.",
+            notification_type='event_status',
+            actor=request.user,
+            link='/events',
+        )
         
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -234,6 +260,14 @@ def reject_event(request, event_id):
         event.approved_by = request.user
         event.approved_at = timezone.now()
         event.save()
+        create_notification(
+            event.created_by,
+            title='Événement rejeté',
+            message=f"L'événement « {event.name} » a été rejeté.",
+            notification_type='event_status',
+            actor=request.user,
+            link='/events',
+        )
         
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -577,3 +611,34 @@ def kpi_data(request):
             'chart_data': [],
             'training_stats': {'employees_training_data': [], 'total_trainings': 0, 'participation_rate': 0}
         })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notifications_list(request):
+    notifications = request.user.notifications.all()[:30]
+    serializer = NotificationSerializer(notifications, many=True)
+    return Response({
+        'unread_count': request.user.notifications.filter(is_read=False).count(),
+        'notifications': serializer.data,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(id=notification_id, recipient=request.user)
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    notification.is_read = True
+    notification.save(update_fields=['is_read'])
+    return Response(NotificationSerializer(notification).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+    return Response({'message': 'Notifications marquées comme lues', 'unread_count': 0})

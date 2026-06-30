@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, HRPolicy, Event
+from .models import User, HRPolicy, Event, Notification
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -27,3 +27,11 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('status', 'date', 'created_at')
     search_fields = ('name', 'description', 'location')
     readonly_fields = ('created_at', 'approved_at')
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'recipient', 'notification_type', 'is_read', 'created_at')
+    list_filter = ('notification_type', 'is_read', 'created_at')
+    search_fields = ('title', 'message', 'recipient__username', 'recipient__first_name', 'recipient__last_name')
+    readonly_fields = ('created_at',)

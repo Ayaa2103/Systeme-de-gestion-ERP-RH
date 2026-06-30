@@ -131,7 +131,6 @@ const Sidebar = ({ collapsed, onToggle }) => {
       { title: 'Ordre de mission',    icon: <MissionIcon />,   path: '/employee/requests/create-mission' },
       { title: 'Bulletin de paie',    icon: <PayslipIcon />,   path: '/employee/requests/create-payslip' },
       { divider: true, label: 'Mon espace' },
-      { title: 'Mon intégration',     icon: <OnboardingIcon />,path: '/employee/onboarding' },
       { title: 'Mes formations',      icon: <TrainingIcon />,  path: '/employee/trainings' },
       { title: 'Mes connaissances',   icon: <AssessmentIcon />,path: '/employee/knowledge' },
       { divider: true, label: 'Entreprise' },

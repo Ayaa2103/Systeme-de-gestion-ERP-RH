@@ -77,3 +77,40 @@ class Event(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.get_status_display()}"
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('request_created', 'Demande créée'),
+        ('request_status', 'Statut de demande'),
+        ('event_created', 'Événement créé'),
+        ('event_status', 'Statut événement'),
+        ('application_received', 'Candidature reçue'),
+        ('recommendation_status', 'Statut de recommandation'),
+        ('onboarding_started', 'Intégration démarrée'),
+        ('culture_suggestion', 'Nouvelle suggestion'),
+        ('culture_response', 'Réponse à une suggestion'),
+        ('contract_created', 'Contrat créé'),
+        ('contract_renewed', 'Contrat renouvelé'),
+        ('contract_expiring', 'Contrat expirant'),
+        ('system', 'Système'),
+    ]
+
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='sent_notifications')
+    notification_type = models.CharField(max_length=40, choices=NOTIFICATION_TYPES, default='system')
+    title = models.CharField(max_length=160)
+    message = models.TextField(blank=True)
+    link = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read', '-created_at']),
+            models.Index(fields=['notification_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} -> {self.recipient}"

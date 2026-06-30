@@ -36,12 +36,13 @@ class EmployeeSuggestionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         suggestion = serializer.save(employee=self.request.user)
         create_notifications_for_roles(
-            ['hr_manager', 'hr_director'],
+            ['hr_manager', 'hr_director', 'administrator'],
             title='Nouvelle suggestion reçue',
             message=f"{self.request.user.get_full_name() or self.request.user.username} a soumis une nouvelle suggestion.",
             notification_type='culture_suggestion',
             actor=self.request.user,
             link='/culture/suggestions',
+            exclude_user=self.request.user,
         )
 
     @action(detail=True, methods=['post'])

@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
             days_left = (contract.date_fin - date.today()).days
             create_notifications_for_roles(
-                ['hr_manager', 'hr_director'],
+                ['hr_manager', 'hr_director', 'administrator'],
                 title='Contrat arrivant à expiration',
                 message=(
                     f"Le contrat {contract.type} de "

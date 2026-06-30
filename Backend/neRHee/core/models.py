@@ -86,6 +86,8 @@ class Notification(models.Model):
         ('event_created', 'Événement créé'),
         ('event_status', 'Statut événement'),
         ('application_received', 'Candidature reçue'),
+        ('interview_scheduled', 'Entretien programmé'),
+        ('application_status', 'Statut de candidature'),
         ('recommendation_status', 'Statut de recommandation'),
         ('onboarding_started', 'Intégration démarrée'),
         ('culture_suggestion', 'Nouvelle suggestion'),
@@ -93,6 +95,9 @@ class Notification(models.Model):
         ('contract_created', 'Contrat créé'),
         ('contract_renewed', 'Contrat renouvelé'),
         ('contract_expiring', 'Contrat expirant'),
+        ('job_offer_created', 'Offre d\'emploi créée'),
+        ('training_created', 'Formation créée'),
+        ('training_status', 'Statut de formation'),
         ('system', 'Système'),
     ]
 

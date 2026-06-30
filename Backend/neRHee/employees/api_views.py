@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from .models import Employee, Contract, Training, Department
 from .serializers import EmployeeSerializer, ContractSerializer, TrainingSerializer, DepartmentSerializer
 from core.models import User
-from core.notifications import create_notification
+from core.notifications import create_notification, create_notifications_for_roles
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -282,6 +282,14 @@ def create_contract(request):
                 actor=request.user,
                 link='/profile',
             )
+            create_notifications_for_roles(
+                ['administrator'],
+                title='Nouveau contrat créé',
+                message=f"Un contrat {contract.type} a été créé pour {contract.employee.user.get_full_name() or contract.employee.user.username}.",
+                notification_type='contract_created',
+                actor=request.user,
+                link='/contracts',
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'error': 'Données invalides', 'details': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -365,6 +373,14 @@ def renew_contract(request, contract_id):
                 actor=request.user,
                 link='/profile',
             )
+            create_notifications_for_roles(
+                ['administrator'],
+                title='Contrat renouvelé',
+                message=f"Le contrat de {new_contract.employee.user.get_full_name() or new_contract.employee.user.username} a été renouvelé ({new_contract.type}).",
+                notification_type='contract_renewed',
+                actor=request.user,
+                link='/contracts',
+            )
             return Response(ContractSerializer(new_contract).data, status=status.HTTP_201_CREATED)
         
         # Si erreur, réactiver l'ancien contrat
@@ -422,13 +438,37 @@ def create_training(request):
     serializer = TrainingSerializer(data=data)
     if serializer.is_valid():
         training = serializer.save()
-        
+
         # Ajouter les employés sélectionnés
         employee_ids = request.data.get('employee_ids', [])
         if employee_ids:
-            employees = Employee.objects.filter(id__in=employee_ids)
-            training.employees.set(employees)
-        
+            employees_assigned = Employee.objects.filter(id__in=employee_ids)
+            training.employees.set(employees_assigned)
+
+        # Notifier le directeur RH qu'une formation attend validation
+        create_notifications_for_roles(
+            ['hr_director'],
+            title='Nouvelle formation à valider',
+            message=f"{request.user.get_full_name() or request.user.username} a créé la formation « {training.name} » ({training.employees.count()} participant(s)).",
+            notification_type='training_created',
+            actor=request.user,
+            link='/manage-trainings',
+            exclude_user=request.user,
+        )
+
+        # Notifier immédiatement chaque employé inscrit
+        for employee in training.employees.all():
+            create_notification(
+                employee.user,
+                title='Inscription à une formation',
+                message=f"Vous avez été inscrit(e) à la formation « {training.name} »"
+                        + (f" du {training.start_date.strftime('%d/%m/%Y')}." if training.start_date else ".")
+                        + " En attente de validation.",
+                notification_type='training_created',
+                actor=request.user,
+                link='/employee/trainings',
+            )
+
         return Response(TrainingSerializer(training).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -448,7 +488,31 @@ def approve_training(request, training_id):
     training.approved_by = request.user
     training.approved_at = timezone.now()
     training.save()
-    
+
+    # Notifier le créateur (hr_manager)
+    if training.created_by and training.created_by != request.user:
+        create_notification(
+            training.created_by,
+            title='Formation approuvée',
+            message=f"La formation « {training.name} » a été approuvée par {request.user.get_full_name() or request.user.username}.",
+            notification_type='training_status',
+            actor=request.user,
+            link='/manage-trainings',
+        )
+
+    # Confirmer la formation à chaque employé inscrit
+    for employee in training.employees.all():
+        create_notification(
+            employee.user,
+            title='Formation confirmée ✓',
+            message=f"Votre participation à « {training.name} »"
+                    + (f" du {training.start_date.strftime('%d/%m/%Y')} au {training.end_date.strftime('%d/%m/%Y')}" if training.start_date else "")
+                    + " est confirmée.",
+            notification_type='training_status',
+            actor=request.user,
+            link='/employee/trainings',
+        )
+
     serializer = TrainingSerializer(training)
     return Response(serializer.data)
 
@@ -468,7 +532,18 @@ def reject_training(request, training_id):
     training.approved_by = request.user
     training.approved_at = timezone.now()
     training.save()
-    
+
+    # Notifier le créateur (hr_manager)
+    if training.created_by and training.created_by != request.user:
+        create_notification(
+            training.created_by,
+            title='Formation rejetée',
+            message=f"La formation « {training.name} » a été rejetée par {request.user.get_full_name() or request.user.username}.",
+            notification_type='training_status',
+            actor=request.user,
+            link='/manage-trainings',
+        )
+
     serializer = TrainingSerializer(training)
     return Response(serializer.data)
 

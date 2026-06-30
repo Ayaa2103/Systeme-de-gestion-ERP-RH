@@ -35,6 +35,7 @@ import {
   HowToReg as OnboardingIcon,
   BarChart as KpiIcon,
   GroupWork as RecommendIcon,
+  AddCircleOutline as AddSuggestionIcon,
 } from '@mui/icons-material';
 
 export const SIDEBAR_EXPANDED = 240;
@@ -65,8 +66,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
       { title: 'Utilisateurs',        icon: <UsersIcon />,     path: '/admin/users' },
       { title: 'Employés',            icon: <PeopleIcon />,    path: '/employees' },
       { title: 'Contrats',            icon: <AssignmentIcon />,path: '/contracts' },
+      { divider: true, label: 'Recrutement' },
       { title: 'Offres d\'emploi',    icon: <WorkIcon />,      path: '/job-offers' },
+      { title: 'Candidatures',        icon: <PersonIcon />,    path: '/recruitment/applications' },
+      { title: 'Recommandations',     icon: <RecommendIcon />, path: '/recruitment/recommendations' },
+      { divider: true, label: 'Autre' },
       { title: 'Événements',          icon: <EventsIcon />,    path: '/events' },
+      { title: 'Culture',             icon: <CorporateIcon />, path: '/culture' },
+      { title: 'Suggestions',         icon: <SuggestionIcon />,path: '/culture/suggestions' },
       { divider: true, label: 'Configuration' },
       { title: 'Départements & Postes', icon: <StructureIcon />, path: '/admin/structures' },
       { title: 'Configuration',       icon: <ConfigIcon />,    path: '/admin/configuration' },
@@ -120,6 +127,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
       { divider: true, label: 'Autre' },
       { title: 'Événements',          icon: <EventsIcon />,    path: '/events' },
       { title: 'Culture',             icon: <CorporateIcon />, path: '/culture' },
+      { title: 'Suggestions',         icon: <SuggestionIcon />,path: '/culture/suggestions' },
     ],
 
     employee: [
@@ -133,10 +141,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
       { divider: true, label: 'Mon espace' },
       { title: 'Mes formations',      icon: <TrainingIcon />,  path: '/employee/trainings' },
       { title: 'Mes connaissances',   icon: <AssessmentIcon />,path: '/employee/knowledge' },
+      { title: 'Mon intégration',     icon: <OnboardingIcon />,path: '/employee/onboarding' },
+      { divider: true, label: 'Recrutement' },
+      { title: 'Offres d\'emploi',    icon: <WorkIcon />,      path: '/employee/recommend' },
       { divider: true, label: 'Entreprise' },
       { title: 'Événements',          icon: <EventsIcon />,    path: '/employee/events' },
       { title: 'Culture',             icon: <CorporateIcon />, path: '/culture' },
-      { title: 'Voir les suggestions', icon: <SuggestionIcon />,path: '/culture/suggestions' },
+      { title: 'Mes suggestions',     icon: <SuggestionIcon />,path: '/culture/suggestions' },
+      { title: 'Nouvelle suggestion', icon: <AddSuggestionIcon />,path: '/culture/suggestions/create' },
     ],
   };
 

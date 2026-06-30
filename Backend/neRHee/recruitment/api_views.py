@@ -40,7 +40,25 @@ def create_job_offer(request):
     
     serializer = JobOfferSerializer(data=data)
     if serializer.is_valid():
-        serializer.save()
+        job_offer = serializer.save()
+        create_notifications_for_roles(
+            ['hr_director', 'administrator'],
+            title='Nouvelle offre d\'emploi créée',
+            message=f"{request.user.get_full_name() or request.user.username} a créé l'offre « {job_offer.title} ».",
+            notification_type='job_offer_created',
+            actor=request.user,
+            link='/job-offers',
+            exclude_user=request.user,
+        )
+        if job_offer.status == 'published':
+            create_notifications_for_roles(
+                ['employee'],
+                title='Nouvelle offre d\'emploi disponible',
+                message=f"Un nouveau poste est ouvert : « {job_offer.title} ». Postulez ou recommandez un profil.",
+                notification_type='job_offer_created',
+                actor=request.user,
+                link='/employee/recommend',
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -68,7 +86,14 @@ def publish_job_offer(request, job_offer_id):
     
     job_offer = get_object_or_404(JobOffer, id=job_offer_id)
     job_offer.publish()
-    
+    create_notifications_for_roles(
+        ['employee'],
+        title='Nouvelle offre d\'emploi disponible',
+        message=f"Un nouveau poste est ouvert : « {job_offer.title} ». Postulez ou recommandez un profil.",
+        notification_type='job_offer_created',
+        actor=request.user,
+        link='/employee/recommend',
+    )
     serializer = JobOfferSerializer(job_offer)
     return Response(serializer.data)
 
@@ -146,7 +171,21 @@ def update_application_status(request, application_id):
         from django.utils import timezone
         application.reviewed_at = timezone.now()
         application.save()
-    
+
+        if application.applicant and new_status in ('accepted', 'rejected'):
+            status_label = 'acceptée' if new_status == 'accepted' else 'rejetée'
+            message = f"Votre candidature pour « {application.job_offer.title} » a été {status_label}."
+            if notes:
+                message += f" {notes}"
+            create_notification(
+                application.applicant,
+                title=f'Candidature {status_label}',
+                message=message,
+                notification_type='application_status',
+                actor=request.user,
+                link='/employee/dashboard',
+            )
+
     serializer = ApplicationSerializer(application)
     return Response(serializer.data)
 
@@ -184,6 +223,21 @@ def create_interview(request, application_id):
         # Mettre à jour le statut de la candidature
         application.status = 'interview'
         application.save()
+
+        if application.applicant:
+            message = f"Un entretien pour « {application.job_offer.title} » est programmé le " \
+                      f"{interview.scheduled_date.strftime('%d/%m/%Y à %H:%M')}."
+            if interview.location:
+                message += f" Lieu : {interview.location}."
+            create_notification(
+                application.applicant,
+                title='Entretien programmé',
+                message=message,
+                notification_type='interview_scheduled',
+                actor=request.user,
+                link='/employee/dashboard',
+            )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -293,7 +347,8 @@ def apply_to_job(request, job_offer_id):
     
     data = request.data.copy()
     data['job_offer'] = job_offer.id
-    
+    data['applicant'] = request.user.id
+
     serializer = ApplicationSerializer(data=data)
     if serializer.is_valid():
         application = serializer.save()
@@ -326,7 +381,16 @@ def recommend_profile(request, job_offer_id):
             recommendation_reason=request.data.get('recommendation_reason'),
             status='pending'
         )
-        
+
+        create_notifications_for_roles(
+            ['hr_manager', 'hr_director', 'administrator'],
+            title='Nouvelle recommandation de profil',
+            message=f"{request.user.get_full_name() or request.user.username} a recommandé {recommendation.candidate_name} pour « {job_offer.title} ».",
+            notification_type='recommendation_status',
+            actor=request.user,
+            link='/recruitment/recommendations',
+        )
+
         serializer = ProfileRecommendationSerializer(recommendation)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:

@@ -194,55 +194,55 @@ function App() {
             <Route
               path="/recruitment"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <RecruitmentDashboard />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Détail offre d'emploi */}
             <Route
               path="/recruitment/job-offers/:id"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <JobOfferDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Détail candidature */}
             <Route
               path="/recruitment/applications/:id"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <ApplicationDetail />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Candidatures */}
             <Route
               path="/recruitment/applications"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <ApplicationsList />
                   </MainLayout>
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Recommandations de profils */}
             <Route
               path="/recruitment/recommendations"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director']}>
+                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
                   <MainLayout>
                     <ProfileRecommendations />
                   </MainLayout>
@@ -442,11 +442,11 @@ function App() {
               }
             />
             
-            {/* Créer suggestion — RH uniquement */}
+            {/* Créer suggestion */}
             <Route
               path="/culture/suggestions/create"
               element={
-                <ProtectedRoute roles={['hr_manager', 'hr_director', 'administrator']}>
+                <ProtectedRoute>
                   <MainLayout>
                     <CreateSuggestion />
                   </MainLayout>
@@ -767,6 +767,17 @@ function App() {
                 <ProtectedRoute roles={['employee']}>
                   <MainLayout>
                     <ApplyJob />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/employee/onboarding"
+              element={
+                <ProtectedRoute roles={['employee']}>
+                  <MainLayout>
+                    <MyOnboarding />
                   </MainLayout>
                 </ProtectedRoute>
               }

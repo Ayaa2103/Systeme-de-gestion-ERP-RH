@@ -234,12 +234,22 @@ def approve_event(request, event_id):
             link='/events',
         )
         create_notifications_for_roles(
-            ['employee', 'hr_manager', 'administrator'],
+            ['employee'],
+            title='Nouvel événement publié',
+            message=f"L'événement « {event.name} » est maintenant visible.",
+            notification_type='event_status',
+            actor=request.user,
+            link='/employee/events',
+            exclude_user=event.created_by,
+        )
+        create_notifications_for_roles(
+            ['hr_manager', 'administrator'],
             title='Nouvel événement publié',
             message=f"L'événement « {event.name} » est maintenant visible.",
             notification_type='event_status',
             actor=request.user,
             link='/events',
+            exclude_user=event.created_by,
         )
         
         serializer = EventSerializer(event)
@@ -618,9 +628,27 @@ def kpi_data(request):
 def notifications_list(request):
     notifications = request.user.notifications.all()[:30]
     serializer = NotificationSerializer(notifications, many=True)
+    data = [dict(n) for n in serializer.data]
+
+    # Normaliser les liens selon le rôle pour corriger les anciennes notifications
+    user_role = request.user.role
+    if user_role == 'employee':
+        FIXES = {
+            '/events': '/employee/events',
+            '/recruitment': '/employee/recommend',
+            '/recruitment/applications': '/employee/dashboard',
+            '/recruitment/recommendations': '/employee/recommend',
+            '/manage-requests': '/employee/requests',
+            '/job-offers': '/employee/recommend',
+        }
+        for notif in data:
+            corrected = FIXES.get(notif.get('link', ''))
+            if corrected:
+                notif['link'] = corrected
+
     return Response({
         'unread_count': request.user.notifications.filter(is_read=False).count(),
-        'notifications': serializer.data,
+        'notifications': data,
     })
 
 
